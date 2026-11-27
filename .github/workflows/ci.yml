@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: 26
+
+jobs:
+  quality:
+    name: Lint, tipos e testes unitários
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:cov
+      - name: Vulnerabilidades nas dependências de produção
+        run: npm audit --omit=dev --audit-level=high
+
+  e2e:
+    name: Migrations e testes e2e
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: canal_denuncias
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_superuser_pw
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d canal_denuncias"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      DATABASE_MIGRATOR_URL: postgres://app_migrator:ci_migrator_pw@localhost:5432/canal_denuncias
+      DATABASE_URL: postgres://app_runtime:ci_runtime_pw@localhost:5432/canal_denuncias
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - name: Cria os perfis app_migrator e app_runtime
+        run: sh docker/postgres/01-roles.sh
+        env:
+          PGHOST: localhost
+          PGPASSWORD: ci_superuser_pw
+          POSTGRES_USER: postgres
+          POSTGRES_DB: canal_denuncias
+          APP_MIGRATOR_PASSWORD: ci_migrator_pw
+          APP_RUNTIME_PASSWORD: ci_runtime_pw
+      - run: npm run migration:run
+      - name: Entidades e banco sem divergência (falha se gerar migration)
+        run: |
+          node node_modules/typeorm/cli.js migration:generate -d dist/database/data-source.js /tmp/DriftCheck 2>&1 | tee /tmp/drift.log
+          grep -q "No changes in database schema" /tmp/drift.log
+      - run: npm run test:e2e
+
+  docker:
+    name: Imagem Docker e varredura
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker build --target runtime -t canal-denuncias-api:ci .
+      - name: Trivy (falha com vulnerabilidade HIGH/CRITICAL corrigível)
+        run: >-
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.76.2
+          image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed canal-denuncias-api:ci
+
+  secrets:
+    name: Segredos no histórico
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - run: docker run --rm -v "$PWD":/repo zricethezav/gitleaks:v8.30.1 git /repo --redact --verbose

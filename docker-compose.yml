@@ -1,0 +1,110 @@
+# Ambiente de DESENVOLVIMENTO. Senhas e tokens abaixo são só para uso local.
+#
+#   docker compose up -d                      -> infraestrutura (Postgres, Vault, Redis, S3, Mailpit)
+#   docker compose --profile av up -d         -> + ClamAV (pesado: ~1 GB de RAM e download de assinaturas)
+#   docker compose --profile app up -d --build -> + migrations e API em container
+name: canal-denuncias
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: canal_denuncias
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: dev_superuser_pw
+      APP_MIGRATOR_PASSWORD: dev_migrator_pw
+      APP_RUNTIME_PASSWORD: dev_runtime_pw
+    ports: ['5432:5432']
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./docker/postgres:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d canal_denuncias']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  vault:
+    image: hashicorp/vault:2.2
+    command: server -dev -dev-listen-address=0.0.0.0:8200
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: dev-root-token
+    cap_add: [IPC_LOCK]
+    ports: ['8200:8200']
+    healthcheck:
+      test: ['CMD', 'vault', 'status', '-address=http://127.0.0.1:8200']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  vault-init:
+    image: hashicorp/vault:2.2
+    depends_on:
+      vault: { condition: service_healthy }
+    environment:
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: dev-root-token
+    volumes:
+      - ./docker/vault/init-transit.sh:/init-transit.sh:ro
+    entrypoint: ['/bin/sh', '/init-transit.sh']
+    restart: 'no'
+
+  redis:
+    image: redis:8.8-alpine
+    ports: ['6379:6379']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Storage S3-compatível para os anexos (substitui o MinIO, que deixou de publicar imagens no Docker Hub).
+  s3:
+    image: chrislusf/seaweedfs:4.55
+    command: server -dir=/data -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json
+    ports: ['8333:8333']
+    volumes:
+      - s3data:/data
+      - ./docker/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+
+  mailpit:
+    image: axllent/mailpit:v1.34
+    ports:
+      - '1025:1025' # SMTP
+      - '8025:8025' # interface web
+
+  clamav:
+    image: clamav/clamav:1.5-debian13-slim
+    profiles: [av]
+    ports: ['3310:3310']
+    volumes:
+      - clamdb:/var/lib/clamav
+
+  migrate:
+    build: { context: ., target: runtime }
+    profiles: [app]
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgres://app_migrator:dev_migrator_pw@postgres:5432/canal_denuncias
+    command: ['node', 'node_modules/typeorm/cli.js', 'migration:run', '-d', 'dist/database/data-source.js']
+    restart: 'no'
+
+  api:
+    build: { context: ., target: runtime }
+    profiles: [app]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      vault-init: { condition: service_completed_successfully }
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      LOG_LEVEL: info
+      DATABASE_URL: postgres://app_runtime:dev_runtime_pw@postgres:5432/canal_denuncias
+      CORS_ORIGINS: http://localhost:4200,http://localhost:4300
+    ports: ['3000:3000']
+
+volumes:
+  pgdata:
+  s3data:
+  clamdb:

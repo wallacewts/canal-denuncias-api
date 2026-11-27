@@ -1,0 +1,5 @@
+.agents/
+.claude/
+dist/
+coverage/
+package-lock.json

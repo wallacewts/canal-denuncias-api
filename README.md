@@ -4,7 +4,8 @@ API do sistema de denúncias de vazamento de dados. Recebe relatos anônimos de 
 sobre vazamentos, práticas inadequadas de segurança e atividades suspeitas, e precisa ser ela mesma um exemplo de
 conformidade com a LGPD.
 
-As decisões de arquitetura estão em [`docs/adr/`](docs/adr/README.md).
+As decisões de arquitetura estão em [`docs/adr/`](docs/adr/README.md) e o backlog de implementação, quebrado em
+tarefas por módulo, em [`docs/tarefas/`](docs/tarefas/README.md).
 
 ## Stack
 

@@ -43,3 +43,7 @@ Regras que não podem ser quebradas:
 - `synchronize` do TypeORM fica sempre desligado. Mudança de schema = migration revisada. Toda entidade nova entra em `src/database/entities.ts`.
 - Migrations geradas tentam recriar enums compartilhados (`actor_type`, `report_status`, `report_outcome`): remova as duplicatas antes do commit.
 - Propriedades de relação nas entidades usam `Relation<T>` (evita referência circular de metadados em ESM).
+
+## Princípios
+
+A constituição do projeto, em `.specify/memory/constitution.md`, prevalece sobre qualquer outra orientação. Todo plano do Spec Kit precisa passar pela checagem dela.

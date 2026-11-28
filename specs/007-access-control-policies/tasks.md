@@ -137,34 +137,34 @@ trilha conferidos; teste de tempo isolado.
 
 ### Tests for User Story 2 ⚠️ (escrever antes, devem falhar)
 
-- [ ] T021 [P] [US2] Rota só de teste em `test/support/fixtures/report-access-fixture.module.ts` (nunca importada por
+- [x] T021 [P] [US2] Rota só de teste em `test/support/fixtures/report-access-fixture.module.ts` (nunca importada por
       `src/`): `GET /api/admin/v1/report-access-fixture/:id` com `@Can(ReportsPolicy, 'readAny')`, id validado como
       UUID, `resolve(user, id, 'reports.read', { content: true })`; e `POST .../:id/treat` com
       `@Can(ReportsPolicy, 'treatAny')`, `resolve` + `authorize(ReportsPolicy, 'treat')`; e `POST .../:id/decide` com
       `@Can(IdentityRevealPolicy, 'decideAny')`, `resolve` + `authorize('decide', request)` sobre um pedido em
       `identity_reveal_requests`
-- [ ] T022 [US2] E2e (depois do T021) `test/access-control/report-access.e2e-spec.ts` (sessão real,
+- [x] T022 [US2] E2e (depois do T021) `test/access-control/report-access.e2e-spec.ts` (sessão real,
       `createTestApp({ vault: 'api' })`): analista atribuído 200; outro analista e id inexistente → 404 com código e corpo idênticos (SC-006) e um
       `ACCESS_DENIED` cada (`resource_type = 'report'`, `resource_id` = id, `code: 'reports.read'`, `reason`
       `OUT_OF_SCOPE`/`NOT_FOUND`); Gestora e DPO bloqueados → 404; expurgada no escopo → 410 `REPORT_SHREDDED`, fora
       do escopo → 404; ADMIN e AUDITOR → 403 na rota (sem consulta à denúncia); DPO tratando → 403; analista tratando
       a de outro → 404; reatribuição vale na requisição seguinte; aprovar o próprio pedido de revelação → 403; id
       malformado → 400 sem `ACCESS_DENIED`; nenhum conteúdo nem texto na metadata (inclusive `XQZ`)
-- [ ] T023 [US2] Teste de tempo (depois do T021) `test/access-control/report-not-found.timing-spec.ts` (molde do
+- [x] T023 [US2] Teste de tempo (depois do T021) `test/access-control/report-not-found.timing-spec.ts` (molde do
       `test/auth/sign-in.timing-spec.ts`): 40 amostras alternadas de "existe fora do escopo" e "id inexistente" na
       rota do T021; diferença das medianas < 10% da menor mediana, piso de 1 ms; imprime as medianas no stderr
-- [ ] T024 [P] [US2] Teste unitário `src/modules/access-control/report-access.service.spec.ts`: ordem fixa consulta →
+- [x] T024 [P] [US2] Teste unitário `src/modules/access-control/report-access.service.spec.ts`: ordem fixa consulta →
       escopo → expurgo; os dois 404 chamam a mesma consulta e o mesmo `record()` (só o `reason` muda); 410 só com
       `content: true` e dentro do escopo; dentro do escopo devolve os fatos sem gravar nada
 
 ### Implementation for User Story 2
 
-- [ ] T025 [US2] `ReportAccessService` em `src/modules/access-control/report-access.service.ts` (research R2):
+- [x] T025 [US2] `ReportAccessService` em `src/modules/access-control/report-access.service.ts` (research R2):
       consulta única `FROM (VALUES ($1::uuid)) q(id) LEFT JOIN reports r ... LEFT JOIN report_access_blocks b ...`;
       decisão por `allowsReport(reportScope(user, ability), facts)`; negação por `AuditService.record()` com
       `ACCESS_DENIED`, `REPORT`, `resourceId`, `code`, `reason`, seguida da mesma `NotFoundException`; 410 com
       `DomainError` `REPORT_SHREDDED` (D56) (depois do T021–T024)
-- [ ] T026 [US2] Exportar o `ReportAccessService` no `src/modules/access-control/access-control.module.ts`
+- [x] T026 [US2] Exportar o `ReportAccessService` no `src/modules/access-control/access-control.module.ts`
       (dependência do `AuditModule`) (depois do T025)
 
 **Checkpoint**: T022, T024 verdes; `npm run test:timing` verde com o T023.

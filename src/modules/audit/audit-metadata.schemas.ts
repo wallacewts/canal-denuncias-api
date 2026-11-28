@@ -4,6 +4,7 @@ import { ReportOutcome } from '../../common/enums/report-outcome.enum.js';
 import { ReportStatus } from '../../common/enums/report-status.enum.js';
 import { Role } from '../../common/enums/role.enum.js';
 import { UserStatus } from '../../common/enums/user-status.enum.js';
+import { ABILITY_CATALOG, type Ability } from '../access-control/abilities.js';
 import { AuditAction, AuditResourceType } from './audit-action.enum.js';
 import { AuditEntryRejected, type AuditRejectionReason } from './audit.errors.js';
 
@@ -86,6 +87,9 @@ const SPECIFIC: Partial<Record<AuditAction, z.ZodType>> = {
         .regex(/^[a-z][A-Za-z0-9-]{0,39}$/)
         .nullable()
         .optional(),
+      // Código do catálogo de habilidades (D61) e motivo do 404 de denúncia (D59): só enums fechados.
+      code: z.enum(Object.keys(ABILITY_CATALOG) as [Ability, ...Ability[]]).optional(),
+      reason: z.enum(['OUT_OF_SCOPE', 'NOT_FOUND']).optional(),
     })
     .optional(),
   [AuditAction.KEYS_REWRAPPED]: z.strictObject({

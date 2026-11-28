@@ -79,3 +79,40 @@ export async function createEncryptedReport(
   });
   return { report: await repo.findOneByOrFail({ id }) };
 }
+
+/**
+ * Denúncia SEM conteúdo cifrado, só com o que as regras de acesso leem (feature 007): atribuição e expurgo. As
+ * políticas nunca leem o relato, então o teste não precisa do Vault.
+ */
+export async function createBareReport(
+  ds: DataSource,
+  options: { assignedToId?: string | null; shreddedAt?: Date | null; categoryId?: string } = {},
+): Promise<{ id: string }> {
+  const categoryId = options.categoryId ?? (await createCategory(ds)).id;
+  const [row] = (await ds.query(
+    `INSERT INTO reports (protocol, access_key_hash, reporter_type, category_id, assigned_to_id, shredded_at)
+     VALUES ($1, '$test$sem-acesso', $2, $3, $4, $5) RETURNING id::text AS id`,
+    [
+      `DV-${unique().toUpperCase().slice(0, 12)}`,
+      ReporterType.EMPLOYEE,
+      categoryId,
+      options.assignedToId ?? null,
+      options.shreddedAt ?? null,
+    ],
+  )) as Array<{ id: string }>;
+  return { id: row.id };
+}
+
+/** Conflito de interesse: a pessoa fica impedida de acessar a denúncia (quem marca é a própria pessoa no teste). */
+export async function blockReport(
+  ds: DataSource,
+  reportId: string,
+  userId: string,
+  createdById = userId,
+): Promise<void> {
+  await ds.query(`INSERT INTO report_access_blocks (report_id, user_id, created_by_id) VALUES ($1, $2, $3)`, [
+    reportId,
+    userId,
+    createdById,
+  ]);
+}

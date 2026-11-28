@@ -1,6 +1,7 @@
 import type { AuthenticationEvent } from '@nestjs/authentication';
-import { AuditAction } from '../../modules/audit/audit-action.enum.js';
-import { toAuditEntries, toAuditEntry } from './auth-audit.subscriber.js';
+import type { AuthorizationEvent } from '@nestjs/authorization';
+import { AuditAction, AuditResourceType } from '../../modules/audit/audit-action.enum.js';
+import { toAuditEntries, toAuditEntry, toDeniedEntry } from './auth-audit.subscriber.js';
 
 const USER = '01900000-0000-7000-8000-000000000001';
 const actions = (event: AuthenticationEvent) => toAuditEntries(event).map((e) => [e.action, e.metadata ?? null]);
@@ -48,5 +49,42 @@ describe('Mapeamento de eventos de autenticação para a trilha (features 004 e 
       AuditAction.AUTH_SIGNED_IN,
     );
     expect(toAuditEntry({ type: 'mfa-disabled', userId: USER })).toBeNull();
+  });
+});
+
+describe('Negação da autorização para a trilha (feature 007, D61)', () => {
+  const denied = (over: Partial<AuthorizationEvent>): AuthorizationEvent =>
+    ({
+      type: 'denied',
+      policy: 'UsersPolicy',
+      ability: 'manage',
+      reason: 'forbidden',
+      user: { id: USER, roles: [] },
+      args: [],
+      ...over,
+    }) as AuthorizationEvent;
+
+  it('grava política, método, código do catálogo e o tipo de recurso da política, sem id de registro', () => {
+    expect(toDeniedEntry(denied({ args: ['01900000-0000-7000-8000-0000000000aa'], ability: 'actOnOther' }))).toEqual({
+      userId: USER,
+      action: AuditAction.ACCESS_DENIED,
+      result: 'DENIED',
+      metadata: { policy: 'UsersPolicy', ability: 'actOnOther', code: 'users.manage' },
+      resourceType: AuditResourceType.USER,
+      resourceId: null,
+    });
+  });
+
+  it('rota sem declaração: SYSTEM, sem código', () => {
+    expect(toDeniedEntry(denied({ policy: null, ability: null }))).toMatchObject({
+      metadata: { policy: null, ability: null },
+      resourceType: AuditResourceType.SYSTEM,
+      resourceId: null,
+    });
+  });
+
+  it('sem pessoa (401) ou motivo diferente de forbidden: nada', () => {
+    expect(toDeniedEntry(denied({ reason: 'unauthenticated' }))).toBeNull();
+    expect(toDeniedEntry(denied({ user: null }))).toBeNull();
   });
 });

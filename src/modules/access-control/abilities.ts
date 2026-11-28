@@ -9,10 +9,18 @@ export const ABILITY_CODE_PATTERN = /^[a-z][a-z-]*\.[a-z][a-z-]*$/;
 
 export type AbilityScope = 'global' | 'record';
 
-interface AbilityEntry {
+/** Alcance de um perfil numa habilidade por registro (D60): todas as denúncias ou só as atribuídas à pessoa. */
+export type RecordReach = 'all' | 'assigned';
+
+export interface CatalogEntry {
   readonly roles: readonly Role[];
   /** `record`: a pessoa pode exercer a habilidade em algum registro; a decisão final continua no servidor. */
   readonly scope: AbilityScope;
+  /**
+   * Só nas habilidades `record`, com os mesmos perfis de `roles`: até onde cada perfil alcança. É o único lugar que
+   * liga perfil a alcance; a função de escopo (`report-scope.ts`) lê daqui. Não sai no `GET /me`.
+   */
+  readonly recordScope?: Partial<Readonly<Record<Role, RecordReach>>>;
 }
 
 const { ADMIN, COMPLIANCE_MANAGER, ANALYST, DPO, AUDITOR } = Role;
@@ -21,16 +29,32 @@ export const ABILITY_CATALOG = {
   'users.manage': { roles: [ADMIN], scope: 'global' },
   'categories.manage': { roles: [ADMIN], scope: 'global' },
   'settings.sla': { roles: [ADMIN], scope: 'global' },
-  'retention.manage': { roles: [DPO], scope: 'record' },
-  'reports.list': { roles: [COMPLIANCE_MANAGER, ANALYST, DPO], scope: 'record' },
-  'reports.read': { roles: [COMPLIANCE_MANAGER, ANALYST, DPO], scope: 'record' },
-  'reports.triage': { roles: [COMPLIANCE_MANAGER], scope: 'record' },
-  'reports.treat': { roles: [COMPLIANCE_MANAGER, ANALYST], scope: 'record' },
-  'identity.request': { roles: [COMPLIANCE_MANAGER, ANALYST], scope: 'record' },
-  'identity.approve': { roles: [DPO], scope: 'record' },
+  'retention.manage': { roles: [DPO], scope: 'record', recordScope: { DPO: 'all' } },
+  'reports.list': {
+    roles: [COMPLIANCE_MANAGER, ANALYST, DPO],
+    scope: 'record',
+    recordScope: { COMPLIANCE_MANAGER: 'all', ANALYST: 'assigned', DPO: 'all' },
+  },
+  'reports.read': {
+    roles: [COMPLIANCE_MANAGER, ANALYST, DPO],
+    scope: 'record',
+    recordScope: { COMPLIANCE_MANAGER: 'all', ANALYST: 'assigned', DPO: 'all' },
+  },
+  'reports.triage': { roles: [COMPLIANCE_MANAGER], scope: 'record', recordScope: { COMPLIANCE_MANAGER: 'all' } },
+  'reports.treat': {
+    roles: [COMPLIANCE_MANAGER, ANALYST],
+    scope: 'record',
+    recordScope: { COMPLIANCE_MANAGER: 'all', ANALYST: 'assigned' },
+  },
+  'identity.request': {
+    roles: [COMPLIANCE_MANAGER, ANALYST],
+    scope: 'record',
+    recordScope: { COMPLIANCE_MANAGER: 'all', ANALYST: 'assigned' },
+  },
+  'identity.approve': { roles: [DPO], scope: 'record', recordScope: { DPO: 'all' } },
   'audit.read': { roles: [AUDITOR], scope: 'global' },
   'dashboard.read': { roles: [COMPLIANCE_MANAGER, DPO, AUDITOR], scope: 'global' },
-} as const satisfies Record<string, AbilityEntry>;
+} as const satisfies Record<string, CatalogEntry>;
 
 export type Ability = keyof typeof ABILITY_CATALOG;
 

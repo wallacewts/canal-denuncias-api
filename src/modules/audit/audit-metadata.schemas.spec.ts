@@ -93,6 +93,33 @@ describe('Metadata por ação (AUDIT-05, D45)', () => {
     });
   });
 
+  describe('ACCESS_DENIED com código do catálogo e motivo (feature 007, D59, D61)', () => {
+    it('aceita code do catálogo e reason do 404, com ou sem política', () => {
+      for (const metadata of [
+        { policy: 'ReportsPolicy', ability: 'readAny', code: 'reports.read' },
+        { code: 'reports.read', reason: 'OUT_OF_SCOPE' },
+        { code: 'reports.treat', reason: 'NOT_FOUND' },
+        { required: Role.ADMIN, code: 'users.manage' },
+      ]) {
+        expect(() => validateAuditMetadata(AuditAction.ACCESS_DENIED, metadata)).not.toThrow();
+      }
+    });
+
+    it.each([SHORT, LONG])('recusa código inventado, motivo fora do enum, campo extra e texto, sem eco (%#)', (s) => {
+      for (const metadata of [
+        { code: s },
+        { code: 'reports.delete' },
+        { code: 'reports.read', reason: s },
+        { code: 'reports.read', reason: 'FORBIDDEN' },
+        { code: 'reports.read', reason: 'NOT_FOUND', reportTitle: s },
+      ]) {
+        const error = rejection(AuditAction.ACCESS_DENIED, metadata);
+        expect(JSON.stringify(error)).not.toContain(s);
+        expect(error.message).not.toContain(s);
+      }
+    });
+  });
+
   describe('ações da equipe (feature 005, T009)', () => {
     it('USER_CREATED aceita forced ausente (cadastro pela API) e presente (create-admin)', () => {
       expect(() => validateAuditMetadata(AuditAction.USER_CREATED, { roles: [Role.ANALYST] })).not.toThrow();

@@ -6,6 +6,7 @@ import { ActorType } from '../../common/enums/actor-type.enum.js';
 import { AuditResult } from '../../common/enums/audit-result.enum.js';
 import { AuditAction, AuditResourceType } from '../../modules/audit/audit-action.enum.js';
 import { AuditContext, type ActorContext } from '../../modules/audit/audit-context.js';
+import { policyAbility } from '../../modules/access-control/policy-abilities.js';
 import { AuditService } from '../../modules/audit/audit.service.js';
 
 /**
@@ -13,7 +14,8 @@ import { AuditService } from '../../modules/audit/audit.service.js';
  * - login verificado (sessão sem MFA pendente, ou MFA aceito) → `AUTH_SIGNED_IN`;
  * - código recusado → `AUTH_MFA_FAILED`;
  * - saída → `AUTH_SIGNED_OUT`; saída de todos os lugares → `AUTH_SESSION_REVOKED`;
- * - negação de permissão (403) → `ACCESS_DENIED`, só com o nome da política e da habilidade (FR-020).
+ * - negação de permissão (403) → `ACCESS_DENIED` com política, método, código do catálogo e o tipo de recurso da
+ *   política (FR-020 da 004, D61), sem id de registro.
  *
  * O evento chega dentro da requisição (o contexto do ator está aberto pelo interceptor); o usuário vem do evento,
  * porque nas rotas de entrar ainda não há identidade. Fora de requisição, o ator é a equipe sem IP.
@@ -45,15 +47,8 @@ export class AuthAuditSubscriber implements OnModuleInit, OnModuleDestroy {
    * IP. Negações em serviços (`authorize()`) acontecem dentro do contexto e levam o IP da requisição.
    */
   private handleDenied(event: AuthorizationEvent): void {
-    if (event.type !== 'denied' || event.reason !== 'forbidden') return;
-    const userId = (event.user as { id?: unknown } | null)?.id;
-    if (typeof userId !== 'string') return;
-    this.write(userId, {
-      userId,
-      action: AuditAction.ACCESS_DENIED,
-      result: AuditResult.DENIED,
-      metadata: { policy: event.policy, ability: event.ability },
-    });
+    const entry = toDeniedEntry(event);
+    if (entry) this.write(entry.userId, entry);
   }
 
   private handle(event: AuthenticationEvent): void {
@@ -71,11 +66,13 @@ export class AuthAuditSubscriber implements OnModuleInit, OnModuleDestroy {
     AuditContext.run(actor, () =>
       this.audit.record({
         action: entry.action,
-        // A negação não carrega o registro (só nomes de código): o recurso é registrado como sistema.
-        resourceType:
-          entry.resourceType ??
-          (entry.action === AuditAction.ACCESS_DENIED ? AuditResourceType.SYSTEM : AuditResourceType.SESSION),
-        resourceId: entry.resourceType === AuditResourceType.USER ? userId : null,
+        resourceType: entry.resourceType ?? AuditResourceType.SESSION,
+        resourceId:
+          entry.resourceId !== undefined
+            ? entry.resourceId
+            : entry.resourceType === AuditResourceType.USER
+              ? userId
+              : null,
         result: entry.result,
         metadata: entry.metadata,
       }),
@@ -92,6 +89,8 @@ interface AuthAuditEntry {
   result: AuditResult;
   metadata?: Record<string, unknown>;
   resourceType?: AuditResourceType;
+  /** Explícito quando o recurso não é a própria pessoa (negação: nunca o id lido do `@Can()`, que não foi validado). */
+  resourceId?: string | null;
 }
 
 const signedIn = (userId: string): AuthAuditEntry => ({
@@ -153,4 +152,24 @@ export function toAuditEntries(event: AuthenticationEvent): AuthAuditEntry[] {
 /** Primeiro registro do evento (o login, quando houver), usado pelo último login (feature 005). */
 export function toAuditEntry(event: AuthenticationEvent): AuthAuditEntry | null {
   return toAuditEntries(event)[0] ?? null;
+}
+
+/**
+ * Registro de uma negação da autorização (403). O código do catálogo e o tipo de recurso vêm do mapa das políticas
+ * (D61); sem política (rota sem declaração), `SYSTEM`. Os argumentos do `@Can()` foram lidos antes da validação: nunca
+ * viram id de recurso. 401 (sem pessoa) não é negação de permissão.
+ */
+export function toDeniedEntry(event: AuthorizationEvent): AuthAuditEntry | null {
+  if (event.type !== 'denied' || event.reason !== 'forbidden') return null;
+  const userId = (event.user as { id?: unknown } | null)?.id;
+  if (typeof userId !== 'string') return null;
+  const { code, resourceType } = policyAbility(event.policy, event.ability);
+  return {
+    userId,
+    action: AuditAction.ACCESS_DENIED,
+    result: AuditResult.DENIED,
+    metadata: { policy: event.policy, ability: event.ability, ...(code ? { code } : {}) },
+    resourceType,
+    resourceId: null,
+  };
 }

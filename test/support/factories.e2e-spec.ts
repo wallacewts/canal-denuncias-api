@@ -5,7 +5,15 @@ import { DecryptionFailedError } from '../../src/modules/crypto/crypto.errors.js
 import { encryptionContext } from '../../src/modules/crypto/encryption-context.js';
 import { newRecordId } from '../../src/modules/crypto/record-id.js';
 import { ReportContentV1Schema } from '../../src/modules/reports/report-content.js';
-import { createCategory, createEncryptedReport, createUser, cryptoDeps, type CryptoDeps } from './factories.js';
+import {
+  blockReport,
+  createBareReport,
+  createCategory,
+  createEncryptedReport,
+  createUser,
+  cryptoDeps,
+  type CryptoDeps,
+} from './factories.js';
 import { PublicFixtureModule } from './fixtures/public-fixture.module.js';
 import { createTestApp, type TestApp } from './test-app.js';
 
@@ -32,6 +40,20 @@ describe('Factories da base de testes (e2e)', () => {
     expect(JSON.stringify(user)).not.toContain('$test$');
     const [{ count }] = await ds.query(`SELECT count(*)::int AS count FROM user_roles WHERE user_id = $1`, [user.id]);
     expect(count).toBe(2);
+  });
+
+  it('cria denúncia sem conteúdo (atribuição e expurgo) e bloqueio por conflito', async () => {
+    const analyst = await createUser(ds, { roles: [Role.ANALYST] });
+    const shreddedAt = new Date('2026-01-02T03:04:05Z');
+    const { id } = await createBareReport(ds, { assignedToId: analyst.id, shreddedAt });
+    await blockReport(ds, id, analyst.id);
+    const [row] = (await ds.query(
+      `SELECT r.assigned_to_id::text AS assigned, r.shredded_at AS shredded, r.content_enc IS NULL AS bare,
+              EXISTS (SELECT 1 FROM report_access_blocks b WHERE b.report_id = r.id AND b.user_id = $2) AS blocked
+         FROM reports r WHERE r.id = $1`,
+      [id, analyst.id],
+    )) as Array<{ assigned: string; shredded: Date; bare: boolean; blocked: boolean }>;
+    expect(row).toEqual({ assigned: analyst.id, shredded: shreddedAt, bare: true, blocked: true });
   });
 
   it('cria categoria com código único', async () => {

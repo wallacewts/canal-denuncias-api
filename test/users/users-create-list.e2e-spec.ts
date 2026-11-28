@@ -177,14 +177,16 @@ describe('Equipe: cadastro e consulta (e2e)', () => {
       let rows: Array<{ metadata: unknown }> = [];
       while (rows.length < 2 && Date.now() < deadline) {
         rows = (await ds.query(
-          `SELECT metadata FROM audit_logs WHERE action = 'ACCESS_DENIED' AND actor_user_id = $1`,
+          `SELECT metadata, resource_type, resource_id FROM audit_logs WHERE action = 'ACCESS_DENIED' AND actor_user_id = $1`,
           [other.id],
         )) as Array<{ metadata: unknown }>;
         if (rows.length < 2) await new Promise((r) => setTimeout(r, 50));
       }
-      expect(rows.map((r) => r.metadata)).toEqual([
-        { policy: 'UsersPolicy', ability: 'manage' },
-        { policy: 'UsersPolicy', ability: 'manage' },
+      // Código do catálogo e tipo de recurso da política (D61); nenhum id de registro vindo da rota.
+      const denied = { policy: 'UsersPolicy', ability: 'manage', code: 'users.manage' };
+      expect(rows).toEqual([
+        { metadata: denied, resource_type: 'user', resource_id: null },
+        { metadata: denied, resource_type: 'user', resource_id: null },
       ]);
     },
   );

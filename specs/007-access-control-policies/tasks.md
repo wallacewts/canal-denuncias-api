@@ -50,33 +50,33 @@ teste é escrito antes da implementação e precisa falhar primeiro.
 **Purpose**: alcance por registro no catálogo, descritor de escopo, mapa de políticas e metadata padronizada de
 `ACCESS_DENIED`. Nenhuma user story começa antes.
 
-- [ ] T003 [P] Teste antes em `src/modules/access-control/abilities.spec.ts`: `recordScope` só nas habilidades
+- [x] T003 [P] Teste antes em `src/modules/access-control/abilities.spec.ts`: `recordScope` só nas habilidades
       `scope: 'record'`, com chaves iguais aos `roles` de cada uma; valores da tabela da research R1; as células "✅
       (se atribuída)" da matriz de `docs/tarefas/05-access-control.md` correspondem a `assigned` e os ✅ simples das
       habilidades por registro a `all` (FR-002); `abilitiesFor` e códigos inalterados (SC-007)
-- [ ] T004 `recordScope` aditivo em `src/modules/access-control/abilities.ts` (depois do T003), sem mudar códigos,
+- [x] T004 `recordScope` aditivo em `src/modules/access-control/abilities.ts` (depois do T003), sem mudar códigos,
       perfis nem `abilitiesFor`; conferir que `src/modules/users/me.schema.ts` e o `GET /me` não mudam
-- [ ] T005 [P] Teste unitário antes em `src/modules/access-control/report-scope.spec.ts`: `reportScope(user, ability)`
+- [x] T005 [P] Teste unitário antes em `src/modules/access-control/report-scope.spec.ts`: `reportScope(user, ability)`
       para perfis isolados e combinados (`all` vence `assigned`; nenhum perfil com a habilidade → `none`; ADMIN e
       AUDITOR sozinhos → `none`); `allowsReport` nega sempre com `blockedForUser`, nega `exists = false`, nega `none`,
       `assigned` só com `assignedToId` igual ao `userId`
-- [ ] T006 `reportScope` e `allowsReport` em `src/modules/access-control/report-scope.ts` (depois do T005), lendo só
+- [x] T006 `reportScope` e `allowsReport` em `src/modules/access-control/report-scope.ts` (depois do T005), lendo só
       `recordScope` do catálogo (único lugar que liga perfil a alcance)
-- [ ] T007 [P] Teste antes em `src/modules/audit/audit-metadata.schemas.spec.ts`: `ACCESS_DENIED` aceita `code` (só
+- [x] T007 [P] Teste antes em `src/modules/audit/audit-metadata.schemas.spec.ts`: `ACCESS_DENIED` aceita `code` (só
       códigos do catálogo) e `reason` (`OUT_OF_SCOPE`, `NOT_FOUND`), recusa código inventado, motivo fora do enum,
       campo extra e texto (inclusive `XQZ`); `required`, `policy` e `ability` continuam aceitos
-- [ ] T008 Schema de `ACCESS_DENIED` em `src/modules/audit/audit-metadata.schemas.ts` (depois do T007)
-- [ ] T009 [P] Teste antes em `src/modules/access-control/policy-abilities.spec.ts`: todo método de política de
+- [x] T008 Schema de `ACCESS_DENIED` em `src/modules/audit/audit-metadata.schemas.ts` (depois do T007)
+- [x] T009 [P] Teste antes em `src/modules/access-control/policy-abilities.spec.ts`: todo método de política de
       `src/modules/access-control/policies/` registrado no `AccessControlModule` tem entrada no mapa com um código do
       catálogo; toda política tem `resourceType`; a `UsersPolicy` mapeia `manage` e `actOnOther` para `users.manage` e
       `USER`
-- [ ] T010 Mapa `POLICY_ABILITIES` tipado em `src/modules/access-control/policy-abilities.ts` (depois do T009),
+- [x] T010 Mapa `POLICY_ABILITIES` tipado em `src/modules/access-control/policy-abilities.ts` (depois do T009),
       começando pela `UsersPolicy` (as demais entram nas histórias)
-- [ ] T011 [P] Teste antes em `src/infra/auth/auth-audit.subscriber.spec.ts`: negação do guard ou do `authorize()`
+- [x] T011 [P] Teste antes em `src/infra/auth/auth-audit.subscriber.spec.ts`: negação do guard ou do `authorize()`
       grava `metadata { policy, ability, code }` e o `resourceType` do mapa; rota sem declaração (`policy = null`)
       continua `SYSTEM` sem `code`; nenhum id de registro vindo dos argumentos do `@Can()`
-- [ ] T012 `AuthAuditSubscriber` em `src/infra/auth/auth-audit.subscriber.ts` usando o mapa (depois do T010, T011)
-- [ ] T013 [P] Fábrica de teste para denúncias sem cifragem em `test/support/factories.ts` (`createBareReport(ds, opções)`, opções
+- [x] T012 `AuthAuditSubscriber` em `src/infra/auth/auth-audit.subscriber.ts` usando o mapa (depois do T010, T011)
+- [x] T013 [P] Fábrica de teste para denúncias sem cifragem em `test/support/factories.ts` (`createBareReport(ds, opções)`, opções
       `assignedToId` e `shreddedAt`, com `INSERT` mínimo em `reports`, e `blockReport(ds, reportId, userId)` em
       `report_access_blocks`), com caso em `test/support/factories.e2e-spec.ts`
 
@@ -213,7 +213,8 @@ permitida" no Postgres real.
       `code: users.manage`, `resource_type = 'user'`), na trilha (`AuditPolicy`), na rota de teste (`ReportsPolicy`),
       403 do `authorize()` (DPO tratando) e os dois 404 de denúncia: exatamente um `ACCESS_DENIED` por negação,
       `result = 'DENIED'`, metadata só com nomes de código e enums (SC-005); rota sem declaração continua `SYSTEM`
-- [ ] T031 [P] [US4] Ajustar `test/users/users-status.e2e-spec.ts` e `test/users/users-create-list.e2e-spec.ts` para a
+- [ ] T031 [P] [US4] (parte da `policy`/`ability`/`code` do guard já feita na fase 2, junto com o T012, para a suíte
+      continuar verde; falta a reconferência do T032) Ajustar `test/users/users-status.e2e-spec.ts` e `test/users/users-create-list.e2e-spec.ts` para a
       metadata nova (`code` além de `policy`/`ability`; `required: ADMIN` mais `code: 'users.manage'` na reconferência
       dentro da transação)
 

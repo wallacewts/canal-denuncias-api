@@ -1,7 +1,14 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Role } from '../../common/enums/role.enum.js';
-import { ABILITY_CATALOG, ABILITY_CODE_PATTERN, abilitiesFor, hasAbility, type Ability } from './abilities.js';
+import {
+  ABILITY_CATALOG,
+  ABILITY_CODE_PATTERN,
+  abilitiesFor,
+  hasAbility,
+  type Ability,
+  type CatalogEntry,
+} from './abilities.js';
 
 const { ADMIN, COMPLIANCE_MANAGER: MANAGER, ANALYST, DPO, AUDITOR } = Role;
 
@@ -79,6 +86,27 @@ describe('Catálogo de habilidades (D55)', () => {
     expect(hasAbility(staff(), 'audit.read')).toBe(false);
   });
 
+  it('recordScope só nas habilidades por registro, com as mesmas chaves dos perfis (D60)', () => {
+    for (const [code, entry] of Object.entries(ABILITY_CATALOG) as Array<[Ability, CatalogEntry]>) {
+      if (entry.scope === 'global') {
+        expect(entry.recordScope, code).toBeUndefined();
+      } else {
+        expect(Object.keys(entry.recordScope ?? {}).sort(), code).toEqual([...entry.roles].sort());
+      }
+    }
+  });
+
+  it('alcance esperado (research R1 da feature 007)', () => {
+    const reach = (code: Ability) => (ABILITY_CATALOG[code] as CatalogEntry).recordScope;
+    expect(reach('reports.list')).toEqual({ [MANAGER]: 'all', [ANALYST]: 'assigned', [DPO]: 'all' });
+    expect(reach('reports.read')).toEqual({ [MANAGER]: 'all', [ANALYST]: 'assigned', [DPO]: 'all' });
+    expect(reach('reports.triage')).toEqual({ [MANAGER]: 'all' });
+    expect(reach('reports.treat')).toEqual({ [MANAGER]: 'all', [ANALYST]: 'assigned' });
+    expect(reach('identity.request')).toEqual({ [MANAGER]: 'all', [ANALYST]: 'assigned' });
+    expect(reach('identity.approve')).toEqual({ [DPO]: 'all' });
+    expect(reach('retention.manage')).toEqual({ [DPO]: 'all' });
+  });
+
   it('marca o escopo: só as globais dispensam o registro', () => {
     const global = Object.entries(ABILITY_CATALOG)
       .filter(([, entry]) => entry.scope === 'global')
@@ -102,6 +130,32 @@ describe('Catálogo × matriz do documento (docs/tarefas/05-access-control.md)',
 
   it('toda linha da matriz está mapeada e nenhuma mapeada sumiu', () => {
     expect(rows.map((r) => r[1]).sort()).toEqual(Object.keys(MATRIX_ROWS).sort());
+  });
+
+  /** Alcance por registro lido da matriz (FR-002, D60): "(se atribuída)" e a linha "atribuídas a si" valem `assigned`. */
+  it('o alcance por registro (recordScope) bate com as células da matriz', () => {
+    const fromDoc = new Map<Ability, Map<Role, 'all' | 'assigned'>>();
+    for (const row of rows) {
+      const onlyOwn = row[1] === 'Listar denúncias atribuídas a si';
+      roleColumns.forEach((role, i) => {
+        const cell = row[i + 2];
+        if (!cell.startsWith('✅')) return;
+        const reach = onlyOwn || cell.includes('se atribuída') ? 'assigned' : 'all';
+        for (const code of MATRIX_ROWS[row[1]]) {
+          if (ABILITY_CATALOG[code].scope !== 'record') continue;
+          const byRole = fromDoc.get(code) ?? new Map<Role, 'all' | 'assigned'>();
+          if (byRole.get(role) !== 'all') byRole.set(role, reach);
+          fromDoc.set(code, byRole);
+        }
+      });
+    }
+    for (const [code, entry] of Object.entries(ABILITY_CATALOG) as Array<[Ability, CatalogEntry]>) {
+      if (entry.scope === 'global') {
+        expect(entry.recordScope, code).toBeUndefined();
+        continue;
+      }
+      expect(entry.recordScope, code).toEqual(Object.fromEntries(fromDoc.get(code) ?? []));
+    }
   });
 
   it('os perfis marcados em cada linha batem com o catálogo', () => {

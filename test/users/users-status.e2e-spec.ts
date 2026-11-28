@@ -93,7 +93,11 @@ describe('Equipe: status (e2e)', () => {
       ])) as Array<{ metadata: unknown }>;
       if (rows.length === 0) await new Promise((r) => setTimeout(r, 50));
     }
-    expect(rows.map((r) => r.metadata)).toContainEqual({ policy: 'UsersPolicy', ability: 'actOnOther' });
+    expect(rows.map((r) => r.metadata)).toContainEqual({
+      policy: 'UsersPolicy',
+      ability: 'actOnOther',
+      code: 'users.manage',
+    });
   });
 
   it('Analista com denúncia aberta atribuída: desativar dá 409 com a quantidade; bloquear funciona', async () => {

@@ -94,14 +94,14 @@ com versão desconhecida.
 
 ### Tests for User Story 1 (mandatory for security and privacy rules) ⚠️
 
-- [ ] T013 [P] [US1] Testes de `src/modules/crypto/field-cipher.spec.ts`: ida e volta; contexto de outro id, campo ou
+- [x] T013 [P] [US1] Testes de `src/modules/crypto/field-cipher.spec.ts`: ida e volta; contexto de outro id, campo ou
       tabela falha; alterar um byte do nonce, do ciphertext ou da tag falha; versão `0x02` e valor com menos de 29 bytes
       geram `UnsupportedFormatError`; chave diferente falha; texto vazio abre como vazio; dois cifrados do mesmo texto
       diferem; um valor no formato gravado pelas factories da 001 abre (compatibilidade)
 
 ### Implementation for User Story 1
 
-- [ ] T014 [US1] Implementar `sealField`/`openField` em `src/modules/crypto/field-cipher.ts`
+- [x] T014 [US1] Implementar `sealField`/`openField` em `src/modules/crypto/field-cipher.ts`
       (`contracts/field-format.md`), sem repassar o erro do OpenSSL
 
 **Checkpoint**: US1 verde e independente.

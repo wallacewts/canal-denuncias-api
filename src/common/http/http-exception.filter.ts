@@ -35,6 +35,30 @@ function isBodyParserError(e: unknown): e is BodyParserError {
   );
 }
 
+/** Erro do http-errors (body parser, Express): status numérico e flag `expose` ou `type`. */
+function isHttpErrorLike(e: unknown): e is { status?: number; statusCode?: number; type?: string } {
+  if (typeof e !== 'object' || e === null) return false;
+  const candidate = e as { status?: unknown; statusCode?: unknown };
+  const hasStatus = typeof candidate.status === 'number' || typeof candidate.statusCode === 'number';
+  return hasStatus && ('expose' in e || 'type' in e);
+}
+
+/**
+ * Erro de transporte da requisição: corpo malformado, grande demais, charset ou encoding inválido, parâmetro de caminho
+ * mal codificado. O Express gera e o Nest converte em `HttpException` com a mensagem original (que pode conter um
+ * trecho do corpo ou do caminho) e o erro original em `cause`. Os dois formatos são tratados aqui.
+ */
+function transportErrorStatus(e: unknown): { status: number; uri: boolean } | undefined {
+  if (isBodyParserError(e)) return { status: e.status ?? 400, uri: false };
+  if (!(e instanceof HttpException)) return undefined;
+  const cause = e.cause;
+  if (cause instanceof URIError) return { status: e.getStatus(), uri: true };
+  if (cause instanceof SyntaxError || isBodyParserError(cause) || isHttpErrorLike(cause)) {
+    return { status: e.getStatus(), uri: false };
+  }
+  return undefined;
+}
+
 function isValidationIssues(value: unknown): value is ApiValidationIssue[] {
   return (
     Array.isArray(value) &&
@@ -68,11 +92,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
   private resolve(exception: unknown, req: RequestLike, requestId: string): Resolved {
     const logContext = { req: { id: requestId, method: req.method, path: req.url?.split('?')[0] } };
 
-    if (isBodyParserError(exception)) {
-      const status = exception.status === 413 || exception.status === 415 ? exception.status : 400;
-      this.logger.warn({ ...logContext, bodyParserError: exception.type }, 'Corpo da requisição recusado');
-      const message =
-        status === 413
+    const transport = transportErrorStatus(exception);
+    if (transport && transport.status < 500) {
+      const { status } = transport;
+      this.logger.warn({ ...logContext, transportErrorStatus: status }, 'Requisição recusada antes da rota');
+      const message = transport.uri
+        ? ERROR_MESSAGES.invalidRequest
+        : status === 413
           ? ERROR_MESSAGES.bodyTooLarge
           : status === 415
             ? ERROR_MESSAGES.unsupportedMediaType

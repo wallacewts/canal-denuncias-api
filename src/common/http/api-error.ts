@@ -18,6 +18,7 @@ export const ERROR_MESSAGES = {
   internal: 'Erro interno. Tente novamente mais tarde.',
   unavailable: 'Serviço temporariamente indisponível. Tente novamente em instantes.',
   invalidBody: 'Corpo da requisição inválido.',
+  invalidRequest: 'Requisição inválida.',
   bodyTooLarge: 'Corpo da requisição grande demais.',
   unsupportedMediaType: 'Tipo de conteúdo não suportado.',
   notFound: 'Recurso não encontrado.',

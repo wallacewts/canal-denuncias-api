@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  HttpException,
   NotFoundException,
   ServiceUnavailableException,
   UnauthorizedException,
@@ -110,6 +111,35 @@ describe('HttpExceptionFilter', () => {
     const { statusCode, body } = run(parseError);
     expect(statusCode).toBe(400);
     expect(body.error).toBe('Bad Request');
+    expect(JSON.stringify(body)).not.toContain(SEGREDO);
+  });
+
+  it('erro de parse já convertido pelo Nest (BadRequestException com cause) também tem mensagem fixa', () => {
+    const cause = Object.assign(new SyntaxError(`Unexpected token 'X', "${SEGREDO}" is not valid JSON`), {
+      status: 400,
+      type: 'entity.parse.failed',
+    });
+    const { statusCode, body } = run(new BadRequestException(cause.message, { cause }));
+    expect(statusCode).toBe(400);
+    expect(JSON.stringify(body)).not.toContain(SEGREDO);
+  });
+
+  it('URIError de parâmetro mal codificado (convertido pelo Nest) não repete o caminho', () => {
+    const cause = Object.assign(new URIError(`Failed to decode param '%FF${SEGREDO}'`), { status: 400 });
+    const { statusCode, body } = run(new BadRequestException(cause.message, { cause }));
+    expect(statusCode).toBe(400);
+    expect(JSON.stringify(body)).not.toContain(SEGREDO);
+  });
+
+  it('http-error de corpo grande (convertido pelo Nest) tem mensagem fixa', () => {
+    const cause = Object.assign(new Error(`request entity too large ${SEGREDO}`), {
+      statusCode: 413,
+      status: 413,
+      expose: true,
+      type: 'entity.too.large',
+    });
+    const { statusCode, body } = run(new HttpException(cause.message, 413, { cause }));
+    expect(statusCode).toBe(413);
     expect(JSON.stringify(body)).not.toContain(SEGREDO);
   });
 

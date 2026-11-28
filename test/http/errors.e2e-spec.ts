@@ -65,6 +65,26 @@ describe('Erros da API (e2e)', () => {
     expect(t.logs.text()).not.toContain(RELATO_SECRETO);
   });
 
+  // Texto curto: o Node inclui só ~10 caracteres do corpo na mensagem do JSON.parse, então um texto longo
+  // nunca apareceria inteiro e o teste passaria mesmo com vazamento.
+  it.each([
+    ['JSON malformado curto', '{"a": XQZRELATO'],
+    ['texto curto que não é JSON', 'XQZRELATO'],
+  ])('%s responde 400 sem ecoar o trecho do corpo', async (_caso, raw) => {
+    const res = await request(t.app.getHttpServer())
+      .post('/api/fixtures/errors/echo')
+      .set('Content-Type', 'application/json')
+      .send(raw)
+      .expect(400);
+    expect(JSON.stringify(res.body)).not.toContain('XQZRELATO');
+    expect(t.logs.text()).not.toContain('XQZRELATO');
+  });
+
+  it('parâmetro de caminho mal codificado responde 400 sem repetir o caminho', async () => {
+    const res = await request(t.app.getHttpServer()).get('/api/fixtures/errors/%FFXQZRELATO').expect(400);
+    expect(JSON.stringify(res.body)).not.toContain('XQZRELATO');
+  });
+
   it('corpo vazio com content-type JSON não ecoa nada', async () => {
     const res = await request(t.app.getHttpServer())
       .post('/api/fixtures/errors/echo')

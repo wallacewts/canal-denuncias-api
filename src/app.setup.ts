@@ -26,6 +26,9 @@ export function setupApp(app: NestExpressApplication, options: SetupAppOptions =
   // A API roda atrás do proxy reverso. O IP real só é usado na auditoria de ações da equipe interna.
   app.set('trust proxy', 1);
   app.enableCors({ origin: config.get('CORS_ORIGINS', { infer: true }), credentials: true });
+  // Escrita só da mesma origem ou das origens confiáveis (AUTH-07, feature 006, R10): decide pelo `Sec-Fetch-Site` e,
+  // sem ele, compara `Origin` com `Host` (o proxy repassa o `Host` original). GET, HEAD e OPTIONS passam sempre.
+  app.enableCsrfProtection({ trustedOrigins: config.get('CORS_ORIGINS', { infer: true }) });
 
   // Rotas: /api/public/v1/* (denunciante, anônimo) e /api/admin/v1/* (equipe). Health checks fora do prefixo.
   app.setGlobalPrefix('api', { exclude: ['health', 'ready'] });

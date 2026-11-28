@@ -1,4 +1,4 @@
-import { Body, HttpCode, HttpStatus, Inject, Post, Req, UnauthorizedException } from '@nestjs/common';
+import { Body, HttpCode, HttpStatus, Inject, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { CurrentSession, CurrentUser, SessionService, SignInService, type SessionRecord } from '@nestjs/authentication';
 import type { Request } from 'express';
 import { DomainError } from '../../common/http/domain-error.js';
@@ -6,6 +6,7 @@ import { AdminApi, OpenAdminRoute, StepRoute } from '../../common/http/route-dec
 import { AUTH_CLOCK, type AuthClock } from '../../infra/auth/auth-clock.js';
 import type { StaffUser } from '../../infra/auth/staff-user.js';
 import { PgMfaStore } from '../../infra/auth/stores/pg-mfa.store.js';
+import { AuthThrottleGuard } from '../../infra/throttle/auth-throttle.guard.js';
 import {
   challengeSchema,
   enrollmentConfirmationSchema,
@@ -45,6 +46,7 @@ export class AuthController {
   ) {}
 
   @OpenAdminRoute()
+  @UseGuards(AuthThrottleGuard)
   @Post('sign-in')
   @HttpCode(200)
   async signIn(@Body({ schema: signInSchema }) body: SignInInput, @Req() req: Request): Promise<StepResponse> {
@@ -58,6 +60,7 @@ export class AuthController {
   }
 
   @OpenAdminRoute()
+  @UseGuards(AuthThrottleGuard)
   @Post('mfa/challenge')
   @HttpCode(200)
   async challenge(@Body({ schema: challengeSchema }) body: ChallengeInput, @Req() req: Request): Promise<StepResponse> {

@@ -24,6 +24,10 @@ const FORCED: Record<string, string> = {
   NODE_ENV: 'test',
   // Custo mínimo do scrypt nos testes (FR-035). Fora de NODE_ENV=test o schema recusa este valor.
   PASSWORD_HASH_LOG_N: '10',
+  // As suítes entram muitas vezes do mesmo IP e dividem o Redis: o limite de tentativas real fica no teste dele
+  // (test/auth/rate-limit.e2e-spec.ts), com números próprios e prefixo exclusivo.
+  AUTH_RATE_LIMIT_IP_LIMIT: '1000000',
+  AUTH_RATE_LIMIT_ACCOUNT_LIMIT: '1000000',
 };
 
 export function applyTestEnv(): void {

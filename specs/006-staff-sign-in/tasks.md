@@ -216,22 +216,22 @@ now)` (incremento e bloqueio numa instrução, `RETURNING`), `resetLoginFailures
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T034 [P] [US5] e2e `test/auth/origin-protection.e2e-spec.ts`: `POST` administrativo com `Origin` de fora → 403;
+- [x] T034 [P] [US5] e2e `test/auth/origin-protection.e2e-spec.ts`: `POST` administrativo com `Origin` de fora → 403;
       com `Sec-Fetch-Site: cross-site` → 403; mesma origem e cliente sem `Origin` → aceitos; origem do backoffice
       recebe CORS com credenciais; outra origem não
-- [ ] T035 [P] [US5] e2e `test/auth/rate-limit.e2e-spec.ts`: 21 entradas do mesmo IP em 1 min → 429 com
+- [x] T035 [P] [US5] e2e `test/auth/rate-limit.e2e-spec.ts`: 21 entradas do mesmo IP em 1 min → 429 com
       `Retry-After`; 11 para a mesma conta em 15 min → 429, igual para e-mail existente e inexistente; desafio com o
       mesmo limite por pessoa; números trocados por ambiente valem; chave no Redis sem o e-mail em claro; duas
       instâncias da API somam o mesmo contador
-- [ ] T036 [P] [US5] Teste do storage `test/infra/redis-throttler.storage.e2e-spec.ts`: incremento e expiração
+- [x] T036 [P] [US5] Teste do storage `test/infra/redis-throttler.storage.e2e-spec.ts`: incremento e expiração
       atômicos, `timeToExpire` correto, concorrência
 
 ### Implementation for User Story 5
 
-- [ ] T037 [US5] `src/infra/throttle/redis-throttler.storage.ts` (script atômico `INCR` + `PEXPIRE`) e módulo do
+- [x] T037 [US5] `src/infra/throttle/redis-throttler.storage.ts` (script atômico `INCR` + `PEXPIRE`) e módulo do
       throttler com os números do ambiente; guard nas rotas `sign-in` e `mfa/challenge` com chaves por IP e por conta
       (HMAC com a chave `throttle-account`, R4 e R4a)
-- [ ] T038 [US5] `app.enableCsrfProtection({ trustedOrigins: CORS_ORIGINS })` em `src/app.setup.ts` (R10)
+- [x] T038 [US5] `app.enableCsrfProtection({ trustedOrigins: CORS_ORIGINS })` em `src/app.setup.ts` (R10)
 
 ---
 

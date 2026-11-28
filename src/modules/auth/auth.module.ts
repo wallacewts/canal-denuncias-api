@@ -4,6 +4,7 @@ import { RecoveryCode } from './entities/recovery-code.entity.js';
 import { Session } from './entities/session.entity.js';
 import { passwordHasherProvider } from './password/password-hasher.provider.js';
 import { PasswordHasher } from '@nestjs/authentication';
+import { ThrottleModule } from '../../infra/throttle/throttle.module.js';
 import { AuditModule } from '../audit/audit.module.js';
 import { AuthController } from './auth.controller.js';
 import { CredentialsService } from './credentials.service.js';
@@ -18,7 +19,7 @@ import { StaffCredentialsRepository } from './staff-credentials.repository.js';
  * o `@nestjs/authentication` e os stores da feature 004. Sem renovação por tokens (D53).
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([RecoveryCode, Session]), AuditModule],
+  imports: [TypeOrmModule.forFeature([RecoveryCode, Session]), AuditModule, ThrottleModule],
   controllers: [AuthController, MeSecurityController],
   providers: [
     passwordHasherProvider,

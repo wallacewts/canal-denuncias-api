@@ -10,20 +10,25 @@
 
 ## Permissões
 
-| Caminho                                | `api` | `maintenance` | `identity-worker` |
-| -------------------------------------- | :---: | :-----------: | :---------------: |
-| `transit/datakey/plaintext/report-kek` |  ✅   |               |                   |
-| `transit/decrypt/report-kek`           |  ✅   |               |                   |
-| `transit/rewrap/report-kek`            |       |      ✅       |                   |
-| `transit/keys/report-kek` (read)       |       |      ✅       |                   |
-| `transit/encrypt/app-kek`              |  ✅   |               |                   |
-| `transit/decrypt/app-kek`              |  ✅   |               |                   |
-| `transit/encrypt/identity-kek`         |       |               |        ✅         |
-| `transit/decrypt/identity-kek`         |       |               |        ✅         |
-| qualquer outro caminho                 |       |               |                   |
+| Caminho                                  | `api` | `maintenance` | `identity-worker` |
+| ---------------------------------------- | :---: | :-----------: | :---------------: |
+| `transit/datakey/plaintext/report-kek`   |  ✅   |               |                   |
+| `transit/decrypt/report-kek`             |  ✅   |               |                   |
+| `transit/rewrap/report-kek`              |       |      ✅       |                   |
+| `transit/keys/report-kek` (read)         |       |      ✅       |                   |
+| `transit/encrypt/app-kek`                |  ✅   |               |                   |
+| `transit/decrypt/app-kek`                |  ✅   |               |                   |
+| `transit/datakey/plaintext/identity-kek` |       |               |        ✅         |
+| `transit/decrypt/identity-kek`           |       |               |        ✅         |
+| `transit/encrypt/identity-kek`           |       |               |                   |
+| qualquer outro caminho                   |       |               |                   |
 
 Os arquivos ficam em `docs/deploy/vault/policies/`. No ambiente local, `docker/vault/api-dev-policy.hcl` e
 `docker/vault/maintenance-dev-policy.hcl` seguem a mesma tabela.
+
+Nota (implementação, 2026-11-28): o `identity-worker` usa envelope encryption como a API (`reporter_identities` tem
+`wrapped_dek` e `payload_enc`), então precisa de `datakey` e `decrypt`, e não de `encrypt`. A primeira versão desta tabela
+dava `encrypt` e `decrypt`.
 
 ## Verificação automática (`test/crypto/vault-policies.e2e-spec.ts`)
 

@@ -294,7 +294,7 @@ wrapped_dek = antigo` (conferindo `affected`) e o `KEYS_REWRAPPED` do lote pelo 
 
 ### Tests for User Story 8 (mandatory for security and privacy rules) ⚠️
 
-- [ ] T036 [P] [US8] Testes de integração em `test/crypto/vault-policies.e2e-spec.ts`: com o token root de
+- [x] T036 [P] [US8] Testes de integração em `test/crypto/vault-policies.e2e-spec.ts`: com o token root de
       desenvolvimento, gravar as políticas de `docs/deploy/vault/policies/` com nomes de teste, criar um token por
       política e conferir cada célula de `contracts/vault-policies.md` (200 ou 403); conferir também que
       `docker/vault/api-dev-policy.hcl` e `docker/vault/maintenance-dev-policy.hcl` concedem exatamente o mesmo que as
@@ -302,8 +302,8 @@ wrapped_dek = antigo` (conferindo `affected`) e o `KEYS_REWRAPPED` do lote pelo 
 
 ### Implementation for User Story 8
 
-- [ ] T037 [P] [US8] Criar `docs/deploy/vault/policies/api.hcl`, `maintenance.hcl` e `identity-worker.hcl`
-- [ ] T038 [US8] Escrever `docs/deploy/vault/README.md`: inicialização com 5 partes e quórum de 3, raft, snapshots de
+- [x] T037 [P] [US8] Criar `docs/deploy/vault/policies/api.hcl`, `maintenance.hcl` e `identity-worker.hcl`
+- [x] T038 [US8] Escrever `docs/deploy/vault/README.md`: inicialização com 5 partes e quórum de 3, raft, snapshots de
       backup, audit device em arquivo, entrega dos `secret_id` por segredo, container da API sem core dump, sem
       `--inspect` e sem heap snapshot, e como rodar o `rewrap-keys` com o perfil de manutenção
 

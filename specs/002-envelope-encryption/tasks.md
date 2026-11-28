@@ -180,14 +180,14 @@ chamada ao Vault acontece com transação aberta.
 
 ### Tests for User Story 4 (mandatory for security and privacy rules) ⚠️
 
-- [ ] T024 [P] [US4] Testes de integração em `test/crypto/app-secret.e2e-spec.ts` contra o Vault local, com o AppRole
+- [x] T024 [P] [US4] Testes de integração em `test/crypto/app-secret.e2e-spec.ts` contra o Vault local, com o AppRole
       `api`: ida e volta; o
       valor guardado (`vault:vN:...`) não contém o segredo; abrir com o contexto de outro usuário falha com erro de
       mensagem fixa; nenhuma linha de log contém o segredo (`XQZ` e longo)
 
 ### Implementation for User Story 4
 
-- [ ] T025 [US4] Implementar `seal`/`open` em `src/modules/crypto/app-secret.service.ts` (R6) e registrar/exportar no
+- [x] T025 [US4] Implementar `seal`/`open` em `src/modules/crypto/app-secret.service.ts` (R6) e registrar/exportar no
       `CryptoModule`
 
 **Checkpoint**: US4 verde; o cadastro de MFA (AUTH) pode usar.

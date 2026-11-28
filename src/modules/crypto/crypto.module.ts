@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { VaultModule } from '../../infra/vault/vault.module.js';
+import { AppSecretService } from './app-secret.service.js';
 import { DataKeyService } from './data-key.service.js';
 import { RecordCipher } from './record-cipher.service.js';
 
@@ -9,7 +10,7 @@ import { RecordCipher } from './record-cipher.service.js';
  */
 @Module({
   imports: [VaultModule],
-  providers: [DataKeyService, RecordCipher],
-  exports: [DataKeyService, RecordCipher],
+  providers: [DataKeyService, RecordCipher, AppSecretService],
+  exports: [DataKeyService, RecordCipher, AppSecretService],
 })
 export class CryptoModule {}

@@ -1,9 +1,11 @@
+import { StandardSchemaValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
 import { HttpExceptionFilter } from './common/http/http-exception.filter.js';
+import { validationExceptionFactory } from './common/validation/validation-error.mapper.js';
 import type { Env } from './config/env.schema.js';
 
 export interface SetupAppOptions {
@@ -28,6 +30,7 @@ export function setupApp(app: NestExpressApplication, options: SetupAppOptions =
   // Rotas: /api/public/v1/* (denunciante, anônimo) e /api/admin/v1/* (equipe). Health checks fora do prefixo.
   app.setGlobalPrefix('api', { exclude: ['health', 'ready'] });
   app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalPipes(new StandardSchemaValidationPipe({ exceptionFactory: validationExceptionFactory }));
 
   if (options.enableShutdownHooks ?? true) {
     app.enableShutdownHooks();

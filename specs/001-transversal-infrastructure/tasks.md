@@ -123,19 +123,19 @@ log capturadas.
 
 ### Tests for User Story 2 (mandatory for security and privacy rules) ⚠️
 
-- [ ] T020 [P] [US2] Teste unitário em `src/common/validation/validation-error.mapper.spec.ts`: `unrecognized_keys`
+- [x] T020 [P] [US2] Teste unitário em `src/common/validation/validation-error.mapper.spec.ts`: `unrecognized_keys`
       sem a lista de chaves, `too_big` e `invalid_type` sem o valor recebido, saída `{ path, code, message }`
-- [ ] T021 [P] [US2] Teste de integração em `test/http/validation.e2e-spec.ts`: 400 para campo extra, texto longo e
+- [x] T021 [P] [US2] Teste de integração em `test/http/validation.e2e-spec.ts`: 400 para campo extra, texto longo e
       tipo errado; nem a resposta nem o log contêm os valores enviados
 
 ### Implementation for User Story 2
 
-- [ ] T022 [P] [US2] Criar os helpers `text({ max })` (padrão 2000), `uuid()` e `strictObject` em
+- [x] T022 [P] [US2] Criar os helpers `text({ max })` (padrão 2000), `uuid()` e `strictObject` em
       `src/common/validation/schemas.ts`
-- [ ] T023 [P] [US2] Criar a rota de fixture com body validado por schema zod em
+- [x] T023 [P] [US2] Criar a rota de fixture com body validado por schema zod em
       `test/support/fixtures/validation-fixture.module.ts`
-- [ ] T024 [US2] Implementar o mapeamento de issues em `src/common/validation/validation-error.mapper.ts`
-- [ ] T025 [US2] Registrar o `StandardSchemaValidationPipe` global com `exceptionFactory` usando o mapper em
+- [x] T024 [US2] Implementar o mapeamento de issues em `src/common/validation/validation-error.mapper.ts`
+- [x] T025 [US2] Registrar o `StandardSchemaValidationPipe` global com `exceptionFactory` usando o mapper em
       `src/app.setup.ts`
 
 **Checkpoint**: entrada validada em toda a API.

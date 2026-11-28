@@ -27,7 +27,8 @@
     "migration:revert": "npm run build && node --env-file-if-exists=.env node_modules/typeorm/cli.js migration:revert -d dist/database/data-source.js",
     "migration:show": "npm run build && node --env-file-if-exists=.env node_modules/typeorm/cli.js migration:show -d dist/database/data-source.js",
     "prepare": "husky",
-    "openapi:export": "npm run build && node dist/scripts/export-openapi.js"
+    "openapi:export": "npm run build && node dist/scripts/export-openapi.js",
+    "cli": "node --env-file-if-exists=.env dist/cli.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1179.0",

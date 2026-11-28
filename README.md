@@ -50,6 +50,21 @@ docker compose --profile app up -d --build
 
 O ClamAV é pesado (cerca de 1 GB de RAM) e fica num perfil próprio: `docker compose --profile av up -d`.
 
+## Primeiro administrador
+
+O primeiro ADMIN é criado pela CLI. A senha é digitada no terminal, sem eco, e nunca vai em argumento, variável de
+ambiente ou pipe (o comando recusa rodar sem terminal interativo).
+
+```bash
+npm run build && npm run cli -- create-admin --name "Nome" --email "admin@empresa.com"
+# no container de produção:
+docker compose --profile app run --rm api node dist/cli.js create-admin --name "Nome" --email "admin@empresa.com"
+```
+
+- Recusa se já existir um ADMIN ativo, a menos que receba `--force` (a criação forçada também é auditada).
+- Senha com no mínimo 12 caracteres e fora da lista de senhas comuns.
+- Grava `USER_CREATED` na trilha de auditoria, na mesma transação. O cadastro do MFA é exigido no primeiro login.
+
 ## Scripts
 
 | Script                                                          | Faz                                                          |

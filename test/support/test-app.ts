@@ -19,6 +19,8 @@ export interface TestApp {
 export interface CreateTestAppOptions {
   /** Módulos de fixture (rotas só de teste) importados junto com o AppModule. */
   imports?: Array<Type<unknown> | DynamicModule>;
+  /** Substitui providers (ex.: um prompt de senha falso nos testes da CLI). */
+  overrides?: Array<{ provide: unknown; useValue: unknown }>;
 }
 
 /**
@@ -36,10 +38,13 @@ export async function createTestApp(options: CreateTestAppOptions = {}): Promise
   const { AppModule } = await import('../../src/app.module.js');
 
   const logs = new LogCapture();
-  const moduleRef = await Test.createTestingModule({ imports: [AppModule, ...(options.imports ?? [])] })
+  let builder = Test.createTestingModule({ imports: [AppModule, ...(options.imports ?? [])] })
     .overrideProvider(LOG_DESTINATION)
-    .useValue(logs)
-    .compile();
+    .useValue(logs);
+  for (const { provide, useValue } of options.overrides ?? []) {
+    builder = builder.overrideProvider(provide).useValue(useValue);
+  }
+  const moduleRef = await builder.compile();
 
   const app = moduleRef.createNestApplication<NestExpressApplication>({ bufferLogs: true });
   setupApp(app, { enableShutdownHooks: false });

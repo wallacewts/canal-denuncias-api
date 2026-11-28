@@ -382,43 +382,43 @@ ficam nos módulos definitivos e são reaproveitados pelas features users, auth 
 
 ### Tests for User Story 11 (mandatory for security and privacy rules) ⚠️
 
-- [ ] T063 [P] [US11] Teste unitário em `src/modules/auth/password/password-policy.spec.ts`: menos de 12 caracteres
+- [x] T063 [P] [US11] Teste unitário em `src/modules/auth/password/password-policy.spec.ts`: menos de 12 caracteres
       recusado, senha da lista local recusada (sem diferenciar maiúsculas), senha válida aceita
-- [ ] T064 [P] [US11] Teste unitário em `src/modules/auth/password/password-hasher.provider.spec.ts`: o provider usa
+- [x] T064 [P] [US11] Teste unitário em `src/modules/auth/password/password-hasher.provider.spec.ts`: o provider usa
       `PASSWORD_HASH_LOG_N`, gera `$scrypt$ln=...` e `verify` responde certo e errado
-- [ ] T065 [P] [US11] Teste de integração em `test/modules/users.repository.e2e-spec.ts`: só `findCredentialsByEmail`
+- [x] T065 [P] [US11] Teste de integração em `test/modules/users.repository.e2e-spec.ts`: só `findCredentialsByEmail`
       devolve `password_hash`; os demais métodos devolvem o usuário com perfis e sem hash nem segredo de MFA; e-mail
       repetido vira 409 sem consulta prévia
-- [ ] T066 [P] [US11] Teste de integração em `test/modules/audit.service.e2e-spec.ts`: gênese com `prev_hash` de 32
+- [x] T066 [P] [US11] Teste de integração em `test/modules/audit.service.e2e-spec.ts`: gênese com `prev_hash` de 32
       bytes zerados; cada registro encadeia o anterior; 50 gravações concorrentes sem bifurcação; com `EntityManager`
       da transação do chamador, um rollback desfaz o registro; `occurred_at` definido pela aplicação confere com o
       hash
-- [ ] T067 [P] [US11] Teste de integração em `test/cli/create-admin.e2e-spec.ts`: cria admin `ACTIVE` com perfil
+- [x] T067 [P] [US11] Teste de integração em `test/cli/create-admin.e2e-spec.ts`: cria admin `ACTIVE` com perfil
       `ADMIN`, `mfa_enabled_at` nulo (sem segundo fator; a exigência no login fica em AUTH-03) e hash scrypt; grava `USER_CREATED` com ator `SYSTEM` e metadata sem dado pessoal;
       recusa o segundo sem `--force`; com `--force` audita `forced: true`; e-mail repetido sai com código 1; a saída
       nunca contém a senha nem o hash; duas execuções simultâneas criam um único admin
 
 ### Implementation for User Story 11
 
-- [ ] T068 [P] [US11] Implementar `UsersRepository` (USERS-01: `findCredentialsByEmail`, `findById`,
+- [x] T068 [P] [US11] Implementar `UsersRepository` (USERS-01: `findCredentialsByEmail`, `findById`,
       `createWithRoles` mapeando `23505` para 409) em `src/modules/users/users.repository.ts` e exportá-lo em
       `src/modules/users/users.module.ts`
-- [ ] T069 [P] [US11] Implementar a política de senha em `src/modules/auth/password/password-policy.ts`, com a lista
+- [x] T069 [P] [US11] Implementar a política de senha em `src/modules/auth/password/password-policy.ts`, com a lista
       local em `src/modules/auth/password/common-passwords.txt` (copiada para `dist/` no build)
-- [ ] T070 [P] [US11] Criar o provider `PasswordHasher` por factory (`new PasswordHasher({ logN })`), sem importar
+- [x] T070 [P] [US11] Criar o provider `PasswordHasher` por factory (`new PasswordHasher({ logN })`), sem importar
       `AuthenticationModule`, em `src/modules/auth/password/password-hasher.provider.ts` e exportá-lo em
       `src/modules/auth/auth.module.ts`
-- [ ] T071 [P] [US11] Implementar o cálculo do hash com metadata canônica (chaves ordenadas) em
+- [x] T071 [P] [US11] Implementar o cálculo do hash com metadata canônica (chaves ordenadas) em
       `src/modules/audit/audit-hash.ts`
-- [ ] T072 [US11] Implementar `AuditService.record()` (advisory lock, último hash, `occurred_at` da aplicação,
+- [x] T072 [US11] Implementar `AuditService.record()` (advisory lock, último hash, `occurred_at` da aplicação,
       `EntityManager` opcional) em `src/modules/audit/audit.service.ts` e exportá-lo em
       `src/modules/audit/audit.module.ts`
-- [ ] T073 [P] [US11] Implementar a leitura de senha sem eco por `node:readline` em `src/cli/password-prompt.ts`
-- [ ] T074 [US11] Implementar o comando em `src/cli/create-admin.command.ts` (advisory lock próprio, checagem de admin
+- [x] T073 [P] [US11] Implementar a leitura de senha sem eco por `node:readline` em `src/cli/password-prompt.ts`
+- [x] T074 [US11] Implementar o comando em `src/cli/create-admin.command.ts` (advisory lock próprio, checagem de admin
       ativo, criação e auditoria numa transação, códigos de saída de `contracts/cli-create-admin.md`)
-- [ ] T075 [US11] Criar o entrypoint `src/cli.ts` (`CommandFactory` do nest-commander) e o script
+- [x] T075 [US11] Criar o entrypoint `src/cli.ts` (`CommandFactory` do nest-commander) e o script
       `"cli": "node dist/cli.js"` em `package.json`
-- [ ] T076 [US11] Conferir o comando dentro da imagem de produção, rodando `node dist/cli.js create-admin` no
+- [x] T076 [US11] Conferir o comando dentro da imagem de produção, rodando `node dist/cli.js create-admin` no
       container `api` do `docker-compose.yml`, e registrar o passo em `README.md`
 
 **Checkpoint**: o primeiro administrador pode ser criado em qualquer ambiente.

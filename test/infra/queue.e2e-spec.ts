@@ -25,7 +25,15 @@ describe('Fila de jobs (e2e)', () => {
       connection: connection(),
       defaultJobOptions: { ...DEFAULT_JOB_OPTIONS, ...overrides },
     });
-    closers.push(() => queue.obliterate({ force: true }).then(() => queue.close()));
+    closers.push(async () => {
+      await queue.obliterate({ force: true });
+      await queue.close();
+      // O obliterate deixa as chaves de id, eventos e metadados da fila: apaga o resto para não acumular no Redis.
+      const cleaner = createRedisClient(redisUrl);
+      const keys = await cleaner.keys(`bull:${queue.name}:*`);
+      if (keys.length > 0) await cleaner.del(...keys);
+      await cleaner.quit();
+    });
     return queue;
   }
 

@@ -434,16 +434,16 @@ ficam nos módulos definitivos e são reaproveitados pelas features users, auth 
 
 ### Tests for User Story 12 (mandatory for security and privacy rules) ⚠️
 
-- [ ] T077 [US12] Criar o teste de fumaça `docs/deploy/nginx/smoke-test.sh`: sobe o nginx com a configuração e um
+- [x] T077 [US12] Criar o teste de fumaça `docs/deploy/nginx/smoke-test.sh`: sobe o nginx com a configuração e um
       upstream de eco em containers; requisição pública não gera linha de access log e chega sem `X-Forwarded-For`;
       requisição administrativa gera linha com IP; `nginx -t` passa
 
 ### Implementation for User Story 12
 
-- [ ] T078 [US12] Escrever `docs/deploy/nginx/canal-denuncias.conf` (`access_log off` e
+- [x] T078 [US12] Escrever `docs/deploy/nginx/canal-denuncias.conf` (`access_log off` e
       `proxy_set_header X-Forwarded-For ""` em `/api/public/`, log com IP em `/api/admin/`,
       `ssl_protocols TLSv1.2 TLSv1.3`, HSTS e `client_max_body_size` igual a `MAX_ATTACHMENT_BYTES`)
-- [ ] T079 [US12] Escrever `docs/deploy/proxy.md` (por que cada diretiva existe, como validar com o smoke test e o que
+- [x] T079 [US12] Escrever `docs/deploy/proxy.md` (por que cada diretiva existe, como validar com o smoke test e o que
       não pode ser alterado)
 
 **Checkpoint**: TRV-12 pronta para o checklist de produção.

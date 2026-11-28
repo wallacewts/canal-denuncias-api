@@ -58,27 +58,27 @@ implementação e precisam falhar primeiro. Nos testes de "não vazou", usar tam
 
 ### Tests (escritos antes, falhando)
 
-- [ ] T006 [P] Testes de `src/modules/crypto/crypto.errors.spec.ts`: cada erro (`DecryptionFailedError`,
+- [x] T006 [P] Testes de `src/modules/crypto/crypto.errors.spec.ts`: cada erro (`DecryptionFailedError`,
       `UnsupportedFormatError`, `ContentSchemaError`, `ContentUnavailableError`) tem mensagem fixa, não tem `cause` e,
       serializado (`JSON.stringify` e `util.inspect`), não contém o texto, a chave nem o valor usados ao criá-lo
       (testar com `XQZ` e com texto longo)
-- [ ] T007 [P] Testes de `src/modules/crypto/encryption-context.spec.ts`: contexto `"<tabela>.<campo>:<id>"` em UTF-8 para
+- [x] T007 [P] Testes de `src/modules/crypto/encryption-context.spec.ts`: contexto `"<tabela>.<campo>:<id>"` em UTF-8 para
       cada coluna da lista de `contracts/crypto-module.md`; chave composta `":<id1>.<id2>"` para
       `report_access_blocks.reason_enc`; id que não é UUID, quantidade errada de ids e coluna fora da lista falham
-- [ ] T008 [P] Testes da extensão do `KeyService` em `src/infra/vault/vault.client.spec.ts`: `encrypt`/`decrypt` enviam
+- [x] T008 [P] Testes da extensão do `KeyService` em `src/infra/vault/vault.client.spec.ts`: `encrypt`/`decrypt` enviam
       `associated_data` em base64 quando informado e não enviam quando ausente; `latestVersion` faz `GET
 transit/keys/:kek` e devolve `latest_version`; a `identity-kek` continua recusada antes da rede; nenhum erro
       carrega o `associated_data`
 
 ### Implementation
 
-- [ ] T009 [P] Implementar `src/modules/crypto/crypto.errors.ts` (R9, `contracts/crypto-module.md`)
-- [ ] T010 [P] Implementar `src/modules/crypto/encryption-context.ts` com a lista tipada `EncryptedColumn` e
+- [x] T009 [P] Implementar `src/modules/crypto/crypto.errors.ts` (R9, `contracts/crypto-module.md`)
+- [x] T010 [P] Implementar `src/modules/crypto/encryption-context.ts` com a lista tipada `EncryptedColumn` e
       `encryptionContext()` (R1)
-- [ ] T011 Implementar a extensão em `src/infra/vault/key-service.ts`, `src/infra/vault/vault.client.ts` e, se preciso
+- [x] T011 Implementar a extensão em `src/infra/vault/key-service.ts`, `src/infra/vault/vault.client.ts` e, se preciso
       para o GET, `src/infra/vault/vault-http.ts` (`contracts/key-service-v2.md`); atualizar a fixture
       `test/support/fixtures/key-service-fixture.module.ts` se ela implementa a interface
-- [ ] T012 Fazer `src/modules/crypto/crypto.module.ts` importar o `VaultModule` e preparar os exports da interface de
+- [x] T012 Fazer `src/modules/crypto/crypto.module.ts` importar o `VaultModule` e preparar os exports da interface de
       `contracts/crypto-module.md` (os serviços entram em cada história)
 
 **Checkpoint**: base pronta; as histórias podem começar.

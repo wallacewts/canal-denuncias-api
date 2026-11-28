@@ -143,4 +143,50 @@ describe('VaultClient', () => {
     expect(await c.encrypt('app-kek', SEGREDO)).toBe(WRAPPED);
     expect(logins).toBe(2);
   });
+
+  it('envia associated_data em base64 quando informado, e não envia quando ausente', async () => {
+    const AAD = Buffer.from('users.mfa_secret_enc:XQZ');
+    const bodies: Array<Record<string, unknown>> = [];
+    const fetchImpl = vi.fn(async (url: string, init: RequestInit) => {
+      bodies.push(JSON.parse(init.body as string) as Record<string, unknown>);
+      return url.endsWith('/encrypt/app-kek')
+        ? json(200, { data: { ciphertext: WRAPPED } })
+        : json(200, { data: { plaintext: SEGREDO.toString('base64') } });
+    }) as unknown as typeof fetch;
+    const c = client(fetchImpl);
+    await c.encrypt('app-kek', SEGREDO, { associatedData: AAD });
+    await c.decrypt('app-kek', WRAPPED, { associatedData: AAD });
+    await c.encrypt('app-kek', SEGREDO);
+    expect(bodies[0]).toEqual({ plaintext: SEGREDO.toString('base64'), associated_data: AAD.toString('base64') });
+    expect(bodies[1]).toEqual({ ciphertext: WRAPPED, associated_data: AAD.toString('base64') });
+    expect(bodies[2]).not.toHaveProperty('associated_data');
+  });
+
+  it('erro com associated_data não carrega o contexto, o plaintext nem o ciphertext', async () => {
+    const AAD = Buffer.from('users.mfa_secret_enc:XQZ');
+    const fetchImpl = vi.fn(async () =>
+      json(400, { errors: ['cipher: message authentication failed'] }),
+    ) as unknown as typeof fetch;
+    const error = await caught(client(fetchImpl).decrypt('app-kek', WRAPPED, { associatedData: AAD }));
+    expect(error).toBeInstanceOf(KeyServiceRequestError);
+    const text = exposed(error);
+    for (const s of [AAD.toString('utf8'), AAD.toString('base64'), WRAPPED, 'XQZ']) expect(text).not.toContain(s);
+  });
+
+  it('latestVersion faz GET em transit/keys/:kek e devolve latest_version', async () => {
+    const fetchImpl = vi.fn(async () =>
+      json(200, { data: { latest_version: 3, min_decryption_version: 1 } }),
+    ) as unknown as typeof fetch;
+    expect(await client(fetchImpl).latestVersion('report-kek')).toBe(3);
+    const [url, init] = (fetchImpl as unknown as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('http://vault:8200/v1/transit/keys/report-kek');
+    expect(init.method).toBe('GET');
+    expect(init.body).toBeUndefined();
+  });
+
+  it('latestVersion recusa a identity-kek antes da rede', async () => {
+    const fetchImpl = vi.fn() as unknown as typeof fetch;
+    await expect(client(fetchImpl).latestVersion('identity-kek' as never)).rejects.toThrow();
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
 });

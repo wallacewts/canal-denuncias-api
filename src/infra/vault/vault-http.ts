@@ -13,19 +13,20 @@ export interface VaultHttpOptions {
 export async function vaultRequest<T>(
   options: VaultHttpOptions,
   path: string,
-  body: Record<string, unknown>,
+  /** `null` faz um GET (leitura de metadados, ex.: `transit/keys/:kek`). */
+  body: Record<string, unknown> | null,
   token?: string,
 ): Promise<T> {
   const fetchImpl = options.fetchImpl ?? fetch;
-  const headers: Record<string, string> = { 'content-type': 'application/json' };
+  const headers: Record<string, string> = body === null ? {} : { 'content-type': 'application/json' };
   if (token) headers['X-Vault-Token'] = token;
 
   let response: Response;
   try {
     response = await fetchImpl(`${options.addr.replace(/\/$/, '')}/v1/${path}`, {
-      method: 'POST',
+      method: body === null ? 'GET' : 'POST',
       headers,
-      body: JSON.stringify(body),
+      body: body === null ? undefined : JSON.stringify(body),
       signal: AbortSignal.timeout(options.timeoutMs),
     });
   } catch (error) {

@@ -214,9 +214,9 @@ das rotas públicas (TRV-07).
 
 ### Tests for User Story 5 (mandatory for security and privacy rules) ⚠️
 
-- [ ] T039 [P] [US5] Teste unitário em `src/common/http/route-decorators.spec.ts`: `@PublicApi('x')` gera
+- [x] T039 [P] [US5] Teste unitário em `src/common/http/route-decorators.spec.ts`: `@PublicApi('x')` gera
       `/api/public/v1/x` com tag `public`; `@AdminApi('x')` gera `/api/admin/v1/x` com tag `admin`; os dois aplicam o interceptor de `no-store`
-- [ ] T040 [P] [US5] Teste de integração em `test/conventions/public-routes.e2e-spec.ts`: via `DiscoveryService`,
+- [x] T040 [P] [US5] Teste de integração em `test/conventions/public-routes.e2e-spec.ts`: via `DiscoveryService`,
       falha se rota pública tiver parâmetro de caminho diferente de `:attachmentId`; rota pública de fixture que tenta
       definir cookie responde sem `Set-Cookie` e com `Cache-Control: no-store`; requisição pública com
       `X-Forwarded-For` não deixa o IP em nenhuma linha de log; rota administrativa de fixture responde com
@@ -224,11 +224,11 @@ das rotas públicas (TRV-07).
 
 ### Implementation for User Story 5
 
-- [ ] T041 [P] [US5] Implementar o interceptor que define `Cache-Control: no-store` e `Pragma: no-cache` (públicas e
+- [x] T041 [P] [US5] Implementar o interceptor que define `Cache-Control: no-store` e `Pragma: no-cache` (públicas e
       administrativas) e remove `Set-Cookie` (só públicas) em `src/common/http/no-store.interceptor.ts`
-- [ ] T042 [US5] Implementar `@PublicApi` e `@AdminApi` (prefixo, `@ApiTags`, metadado de área e interceptor) em
+- [x] T042 [US5] Implementar `@PublicApi` e `@AdminApi` (prefixo, `@ApiTags`, metadado de área e interceptor) em
       `src/common/http/route-decorators.ts`
-- [ ] T043 [US5] Criar os controllers de fixture, um público (com tentativa de cookie e rota com `:attachmentId`) e
+- [x] T043 [US5] Criar os controllers de fixture, um público (com tentativa de cookie e rota com `:attachmentId`) e
       um administrativo, em `test/support/fixtures/public-fixture.module.ts`
 
 **Checkpoint**: toda rota pública nova é verificada automaticamente.

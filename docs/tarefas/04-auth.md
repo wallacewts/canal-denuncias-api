@@ -67,14 +67,15 @@ Ler antes: `.claude/skills/nestjs-auth/` e https://docs.nestjs.com/security/auth
 - **Entidades:** `Session` (ou o store definido em AUTH-00).
 - **Endpoints:** `POST /api/admin/v1/auth/sign-out` (204), `GET /api/admin/v1/me/sessions`,
   `DELETE /api/admin/v1/me/sessions/:id`.
-- **Auditoria:** `AUTH_LOGOUT`, `AUTH_SESSION_REVOKED`, `AUTH_TOKEN_REUSED`.
+- **Auditoria:** `AUTH_SIGNED_OUT`, `AUTH_SESSION_REVOKED` (nomes fixados na feature 004, D53).
 
 **Critérios de aceite**
 
 - [ ] Cookie `HttpOnly`, `Secure`, `SameSite=Strict`. Nada em `localStorage`.
 - [ ] Expira com 15 min sem uso e com 8 h de duração total, o que vier primeiro.
 - [ ] A sessão é renovada (novo id) depois do MFA e depois da troca de senha.
-- [ ] Se houver refresh token, reuso de token já usado revoga a família inteira e gera `AUTH_TOKEN_REUSED`.
+- [ ] Não há refresh token (D53, Q-P2 da feature 004): a sessão por cookie é o único meio de autenticação; sair de
+      todos os lugares encerra todas as sessões do usuário e grava `AUTH_SESSION_REVOKED`.
 - [ ] A lista de sessões mostra criação, último uso, IP e user-agent, e marca a sessão atual.
 
 ### AUTH-03 · Cadastro do MFA (primeiro acesso)

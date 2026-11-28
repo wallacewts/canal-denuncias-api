@@ -36,6 +36,8 @@ Enum `AuditAction` e tipos de recurso usados por todos os módulos.
 
 ### AUDIT-02 · Gravação com cadeia de hash
 
+> Núcleo entregue na feature 001 (TRV-09), conforme a D33. O hash inclui também `ip` e `user_agent`.
+
 **Estimativa:** G · **Marco:** MVP · **Depende de:** AUDIT-01
 
 `AuditService.record()`, o único jeito de escrever na trilha.
@@ -46,18 +48,18 @@ Enum `AuditAction` e tipos de recurso usados por todos os módulos.
 
 **Critérios de aceite**
 
-- [ ] Dentro de uma transação: `pg_advisory_xact_lock(<constante>)`, lê o último `hash`, calcula
+- [x] Dentro de uma transação: `pg_advisory_xact_lock(<constante>)`, lê o último `hash`, calcula
       `sha256(prev_hash || occurred_at || actor_type || actor_user_id || action || resource_type || resource_id || result || metadata_canônico)`
       e insere.
-- [ ] `metadata` serializado de forma canônica (chaves ordenadas), para o hash ser reproduzível.
-- [ ] Primeiro registro usa `prev_hash` de 32 bytes zerados (gênese).
-- [ ] Aceita um `EntityManager` opcional, para gravar na mesma transação da operação auditada (a operação e o
+- [x] `metadata` serializado de forma canônica (chaves ordenadas), para o hash ser reproduzível.
+- [x] Primeiro registro usa `prev_hash` de 32 bytes zerados (gênese).
+- [x] Aceita um `EntityManager` opcional, para gravar na mesma transação da operação auditada (a operação e o
       registro confirmam ou desfazem juntos).
-- [ ] `occurred_at` é definido pela aplicação antes do hash (não pelo default do banco), para o hash bater com o valor
+- [x] `occurred_at` é definido pela aplicação antes do hash (não pelo default do banco), para o hash bater com o valor
       salvo.
-- [ ] `occurred_at` é gravado com o horário exato para todos os atores, inclusive `REPORTER` (decidido em
+- [x] `occurred_at` é gravado com o horário exato para todos os atores, inclusive `REPORTER` (decidido em
       27/11/2026). Por isso, a leitura da trilha fica restrita ao perfil `AUDITOR`.
-- [ ] Teste: 50 gravações concorrentes geram uma cadeia válida e sem bifurcação.
+- [x] Teste: 50 gravações concorrentes geram uma cadeia válida e sem bifurcação.
 
 ### AUDIT-03 · Contexto do ator
 

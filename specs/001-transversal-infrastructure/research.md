@@ -110,7 +110,7 @@ Versões conferidas no npm em 2026-11-27. As decisões R6 e R7 foram respondidas
     `logN` 17.
 - **Custo**: `logN = 17` em produção e desenvolvimento. No ambiente de teste, `PASSWORD_HASH_LOG_N=10` (só aceito
   com `NODE_ENV=test`), atendendo FR-035.
-- **Política de senha** (a mesma da API, de AUTH-04): mínimo de 12 caracteres e recusa de senhas comuns por lista
+- **Política de senha** (a mesma da API, de AUTH-05): mínimo de 12 caracteres e recusa de senhas comuns por lista
   local, sem consulta externa. A lista entra no repositório como arquivo de dados. A checagem é nossa e roda antes do
   `hash()`.
 - **Riscos registrados**:

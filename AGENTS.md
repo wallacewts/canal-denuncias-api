@@ -43,6 +43,16 @@ Regras que não podem ser quebradas:
 - `synchronize` do TypeORM fica sempre desligado. Mudança de schema = migration revisada. Toda entidade nova entra em `src/database/entities.ts`.
 - Migrations geradas tentam recriar enums compartilhados (`actor_type`, `report_status`, `report_outcome`): remova as duplicatas antes do commit.
 - Propriedades de relação nas entidades usam `Relation<T>` (evita referência circular de metadados em ESM).
+- Entrada só com schemas zod montados com `src/common/validation/schemas.ts`: `strictObject` (campos extras dão 400) e
+  todo texto livre com `text({ max })`, nunca `z.string()` puro. Mensagens de `refine` nunca interpolam valores.
+- Controllers só com `@PublicApi('recurso')` ou `@AdminApi('recurso')`. Rota pública não tem parâmetro de caminho além
+  de `:attachmentId` (o teste `test/conventions/public-routes.e2e-spec.ts` falha se tiver).
+- Auditoria só por `AuditService.record()`, de preferência com o `EntityManager` da transação da operação.
+- Chaves só pelo `KEY_SERVICE` (`src/infra/vault`). A API nunca usa a `identity-kek`.
+- Payload de job só com `jobPayloadSchema` (UUID, enum, número) e enfileirado com `addValidatedJob`.
+- Listagens com `paginate()` e `pageQueryShape` (cursor, sem OFFSET).
+- Mudou rota ou schema de entrada/saída: rode `npm run openapi:export` e commite `openapi/` (o CI confere).
+- Testes de "não vazou" usam também textos curtos (ex.: `XQZ`): bibliotecas truncam mensagens e escondem vazamento parcial.
 
 ## Princípios
 

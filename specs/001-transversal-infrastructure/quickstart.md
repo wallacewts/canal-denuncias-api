@@ -70,3 +70,15 @@ Conferir em `audit_logs` um `USER_CREATED` com `actor_type = SYSTEM` e sem dado 
 Seguir `docs/deploy/proxy.md`: subir o nginx de referência na frente da API, chamar uma rota pública e uma
 administrativa e conferir que só a administrativa gera access log, e que a API não recebe `X-Forwarded-For` na rota
 pública.
+
+## Resultado da validação (2026-11-27)
+
+| Cenário                    | Resultado                                                                                                                                                  |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Testes automatizados    | 110 unitários e 82 de integração passando. Cobertura combinada (`npm run test:cov:all`) de 95% das instruções, com `src/common` e `src/infra` acima de 80% |
+| 2. Configuração insegura   | Produção com `VAULT_TOKEN` e segredo curto recusam a inicialização, citando só o nome da variável                                                          |
+| 3. Erro seguro e validação | Coberto pelos testes de integração. No container de produção, JSON malformado curto e cursor inválido respondem com mensagem fixa                          |
+| 4. Vault indisponível      | 503 em menos de 3 s (`test/http/key-service-unavailable.e2e-spec.ts`, também com o Vault do compose parado)                                                |
+| 5. Contrato OpenAPI        | `openapi/public.json` e `openapi/admin.json` gerados sem banco e em dia com o código                                                                       |
+| 6. Primeiro administrador  | No container de produção: recusa sem TTY; com terminal, senha sem eco, hash `$scrypt$ln=17` e `USER_CREATED` com ator `SYSTEM`                             |
+| 7. Proxy de referência     | `smoke-test.sh` com as 12 verificações passando, e falhando quando a configuração é adulterada                                                             |

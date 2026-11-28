@@ -116,6 +116,13 @@ jobs:
           grep -q "No changes in database schema" /tmp/drift.log
       - run: npm run test:e2e
 
+  proxy:
+    name: Teste de fumaça do proxy de referência
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: bash docs/deploy/nginx/smoke-test.sh
+
   docker:
     name: Imagem Docker e varredura
     needs: quality

@@ -1,13 +1,19 @@
 import { Injectable } from '@nestjs/common';
 
+/** Terminal usado pelo prompt. Injetável só para os testes; em uso real é o processo atual. */
+export interface PromptTerminal {
+  stdin: Pick<NodeJS.ReadStream, 'isTTY' | 'setRawMode' | 'setEncoding' | 'resume' | 'pause' | 'on' | 'off'>;
+  stdout: Pick<NodeJS.WriteStream, 'write'>;
+}
+
 /**
  * Lê a senha no terminal, sem eco (D31). Recusa rodar sem TTY: senha vinda de pipe acaba em scripts e no histórico
  * do shell, e por argumento ou variável de ambiente fica visível na lista de processos.
  */
 @Injectable()
 export class PasswordPrompt {
-  ask(question: string): Promise<string> {
-    const stdin = process.stdin;
+  ask(question: string, terminal: PromptTerminal = { stdin: process.stdin, stdout: process.stdout }): Promise<string> {
+    const { stdin, stdout } = terminal;
     if (!stdin.isTTY) {
       return Promise.reject(
         new Error('Este comando precisa de um terminal interativo: a senha é digitada, nunca passada por pipe.'),
@@ -15,14 +21,14 @@ export class PasswordPrompt {
     }
 
     return new Promise((resolve, reject) => {
-      process.stdout.write(question);
+      stdout.write(question);
       let value = '';
 
       const finish = () => {
         stdin.off('data', onData);
         stdin.setRawMode(false);
         stdin.pause();
-        process.stdout.write('\n');
+        stdout.write('\n');
       };
 
       const onData = (chunk: string) => {

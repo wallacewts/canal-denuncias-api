@@ -113,4 +113,34 @@ describe('VaultClient', () => {
       expect(text).not.toContain('TOKEN-QUE-NAO-PODE-VAZAR');
     }
   });
+
+  it('Vault volta ao ar: depois de uma falha, a próxima chamada funciona sem recriar o cliente', async () => {
+    let calls = 0;
+    const fetchImpl = vi.fn(async () => {
+      calls += 1;
+      if (calls === 1) throw new TypeError('fetch failed');
+      return json(200, { data: { plaintext: SEGREDO.toString('base64') } });
+    }) as unknown as typeof fetch;
+    const c = client(fetchImpl);
+    expect(await caught(c.decrypt('report-kek', WRAPPED))).toBeInstanceOf(KeyServiceUnavailableError);
+    expect((await c.decrypt('report-kek', WRAPPED)).equals(SEGREDO)).toBe(true);
+  });
+
+  it('token AppRole revogado ou expirado no meio da operação: novo login e uma nova tentativa', async () => {
+    let logins = 0;
+    const fetchImpl = vi.fn(async (url: string, init: RequestInit) => {
+      if (url.endsWith('/auth/approle/login')) {
+        logins += 1;
+        return json(200, { auth: { client_token: `t${logins}`, lease_duration: 3600, renewable: true } });
+      }
+      const token = (init.headers as Record<string, string>)['X-Vault-Token'];
+      return token === 't1'
+        ? json(403, { errors: ['permission denied'] })
+        : json(200, { data: { ciphertext: WRAPPED } });
+    }) as unknown as typeof fetch;
+    const auth = new VaultAuth({ addr: 'http://vault:8200', roleId: 'r', secretId: 's', timeoutMs: 2000, fetchImpl });
+    const c = new VaultClient({ addr: 'http://vault:8200', timeoutMs: 2000, auth, fetchImpl });
+    expect(await c.encrypt('app-kek', SEGREDO)).toBe(WRAPPED);
+    expect(logins).toBe(2);
+  });
 });

@@ -9,6 +9,8 @@
 
 ### USERS-01 · Repositório de usuários
 
+> Entregue na feature 001 (TRV-09), conforme a D33.
+
 **Estimativa:** P · **Marco:** MVP
 
 - **Arquivos:** `src/modules/users/users.repository.ts`.
@@ -18,9 +20,9 @@
 
 **Critérios de aceite**
 
-- [ ] `findCredentialsByEmail` é o único método que lê `password_hash` (coluna com `select: false`).
-- [ ] Os demais métodos devolvem o usuário com os perfis e sem hash nem segredo de MFA.
-- [ ] E-mail único tratado pela constraint (409 na violação, sem consultar antes).
+- [x] `findCredentialsByEmail` é o único método que lê `password_hash` (coluna com `select: false`).
+- [x] Os demais métodos devolvem o usuário com os perfis e sem hash nem segredo de MFA.
+- [x] E-mail único tratado pela constraint (409 na violação, sem consultar antes).
 
 ### USERS-02 · Criar usuário
 

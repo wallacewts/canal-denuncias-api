@@ -98,6 +98,33 @@ docker compose --profile app run --rm api node dist/cli.js create-admin --name "
 | `AuditImmutability` | Triggers que bloqueiam `UPDATE`/`DELETE`/`TRUNCATE` em `audit_logs` + `REVOKE` para `app_runtime` |
 | `SeedCatalog`       | 3 categorias e valores padrão de SLA e retenção                                                   |
 
+## Variáveis de ambiente
+
+A lista completa, com regras e padrões, está em
+[`specs/001-transversal-infrastructure/contracts/environment.md`](specs/001-transversal-infrastructure/contracts/environment.md).
+A API não sobe com configuração inválida ou insegura: em produção, `VAULT_TOKEN` é recusado (use AppRole), segredos
+precisam de no mínimo 32 bytes e `PASSWORD_HASH_LOG_N` não pode ser menor que 17. A mensagem de erro cita só o nome
+da variável, nunca o valor.
+
+## Contrato da API para o front
+
+```bash
+npm run openapi:export   # gera openapi/public.json e openapi/admin.json, sem banco nem rede
+```
+
+O front gera um cliente para cada arquivo (`npm run api:sync`). Mudou rota ou schema: rode o export e commite
+`openapi/`. O CI falha se o contrato versionado estiver desatualizado.
+
+## Testes de integração
+
+Os testes `*.e2e-spec.ts` usam Postgres, Vault, Redis e S3 reais (`docker compose up -d`), com um banco clonado por
+suíte e captura de log para provar que nada sensível vaza. Veja [`test/support/README.md`](test/support/README.md).
+
+## Implantação
+
+O proxy reverso também protege o anonimato do denunciante. Use a configuração de referência e o teste de fumaça de
+[`docs/deploy/proxy.md`](docs/deploy/proxy.md).
+
 ## Regras de privacidade que o código precisa seguir
 
 - **Rotas públicas (`/api/public/v1/*`) nunca registram IP, user-agent nem cabeçalhos.** O logger já descarta IP,

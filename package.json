@@ -28,7 +28,8 @@
     "migration:show": "npm run build && node --env-file-if-exists=.env node_modules/typeorm/cli.js migration:show -d dist/database/data-source.js",
     "prepare": "husky",
     "openapi:export": "npm run build && node dist/scripts/export-openapi.js",
-    "cli": "node --env-file-if-exists=.env dist/cli.js"
+    "cli": "node --env-file-if-exists=.env dist/cli.js",
+    "test:cov:all": "vitest run --config ./vitest.config.coverage.ts --coverage"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1179.0",

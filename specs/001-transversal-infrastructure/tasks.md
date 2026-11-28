@@ -452,15 +452,15 @@ ficam nos módulos definitivos e são reaproveitados pelas features users, auth 
 
 ## Phase 15: Polish & Cross-Cutting Concerns
 
-- [ ] T080 [P] Atualizar `AGENTS.md` com as regras novas: validar só com schemas zod de `src/common/validation`,
+- [x] T080 [P] Atualizar `AGENTS.md` com as regras novas: validar só com schemas zod de `src/common/validation`,
       declarar rotas só com `@PublicApi`/`@AdminApi`, auditar só por `AuditService.record()`
-- [ ] T081 [P] Atualizar `README.md` (variáveis novas, `npm run openapi:export`, `npm run cli`, harness de testes)
-- [ ] T082 Marcar os critérios de aceite concluídos de TRV-01 a TRV-12 (e de USERS-01) em `docs/tarefas/` e anotar em
+- [x] T081 [P] Atualizar `README.md` (variáveis novas, `npm run openapi:export`, `npm run cli`, harness de testes)
+- [x] T082 Marcar os critérios de aceite concluídos de TRV-01 a TRV-12 (e de USERS-01) em `docs/tarefas/` e anotar em
       `docs/tarefas/02-audit.md` que o núcleo da AUDIT-02 foi entregue nesta feature
-- [ ] T083 Rodar `npm run lint`, `npm run typecheck`, `npm run format:check`, `npm run test:cov` (cobertura de pelo
+- [x] T083 Rodar `npm run lint`, `npm run typecheck`, `npm run format:check`, `npm run test:cov` (cobertura de pelo
       menos 80% em `src/common`, `src/infra` e nos arquivos novos dos módulos) e `npm run test:e2e`
-- [ ] T084 Executar os 7 cenários de `specs/001-transversal-infrastructure/quickstart.md` e registrar o resultado
-- [ ] T085 Rodar o build do `Dockerfile`, o Trivy e o gitleaks como em `.github/workflows/ci.yml` e conferir que não
+- [x] T084 Executar os 7 cenários de `specs/001-transversal-infrastructure/quickstart.md` e registrar o resultado
+- [x] T085 Rodar o build do `Dockerfile`, o Trivy e o gitleaks como em `.github/workflows/ci.yml` e conferir que não
       há vulnerabilidade HIGH/CRITICAL corrigível
 
 ---
@@ -561,17 +561,17 @@ ficar livre. Depois da US3: US7, US10 e US11 em paralelo.
 
 ## Pendências do analyze
 
-Achados do `/speckit-analyze` de 2026-11-27 que não bloqueiam o implement. Resolver durante a tarefa indicada.
+Achados do `/speckit-analyze` de 2026-11-27 que não bloquearam o implement. Situação ao fim da feature:
 
-| ID  | Onde resolver           | O que fazer                                                                                                                                                                                                                                        |
-| --- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| C3  | T031, T033              | Testar o Vault voltando ao ar sem reiniciar a API e a credencial expirando no meio da requisição (o 23514 já entrou na T014)                                                                                                                       |
-| I3  | T054                    | A factory de denúncia cifrada passa a usar o `CryptoService` quando a feature crypto existir. Até lá, seguir o formato da constituição (versão, nonce, ciphertext, tag e AAD `<tabela>.<campo>:<id>`)                                              |
-| U2  | T001 ou T080            | Acrescentar à árvore do `plan.md` os arquivos citados nas tarefas: `test/support/test-env.ts`, `test/support/fixtures/*`, `src/config/env.validate.ts`, `src/cli/password-prompt.ts`, `test/support/README.md` e `docs/deploy/nginx/smoke-test.sh` |
-| U3  | T069                    | Configurar `assets` em `nest-cli.json` para copiar `common-passwords.txt` para `dist/`                                                                                                                                                             |
-| U4  | T003                    | Acrescentar `TEST_ADMIN_DATABASE_URL` (só testes) a `contracts/environment.md`                                                                                                                                                                     |
-| I4  | T001                    | Corrigir no `research.md` (R6) o ID da política de senha: AUTH-05, não AUTH-04                                                                                                                                                                     |
-| A1  | T080                    | Registrar no `AGENTS.md` que todo texto livre usa o helper `text({ max })`                                                                                                                                                                         |
-| C4  | T076, T077              | Opcional: job de CI para o smoke test do proxy e para o `create-admin` dentro da imagem                                                                                                                                                            |
-| C5  | T056                    | Acrescentar a asserção de que `/docs` fica indisponível com `NODE_ENV=production`                                                                                                                                                                  |
-| C6  | Feature do primeiro job | Quando existir o primeiro job, tornar genérico o teste de "nenhum schema de job aceita texto livre"                                                                                                                                                |
+| ID  | Situação   | O que foi feito ou fica                                                                                                              |
+| --- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| C3  | Resolvido  | Testes do Vault voltando ao ar e do token AppRole revogado no meio da operação (`vault.client.spec.ts`)                              |
+| I3  | **Aberto** | A factory de denúncia cifrada usa o formato da constituição com `node:crypto`. Passa a usar o `CryptoService` na feature crypto (01) |
+| U2  | Resolvido  | Arquivos acrescentados durante a implementação listados no `plan.md`                                                                 |
+| U3  | Resolvido  | `assets` no `nest-cli.json` copia `common-passwords.txt` para `dist/`                                                                |
+| U4  | Resolvido  | `TEST_ADMIN_DATABASE_URL` em `contracts/environment.md`                                                                              |
+| I4  | Resolvido  | ID da política de senha corrigido para AUTH-05 no `research.md`                                                                      |
+| A1  | Resolvido  | Regra do helper `text({ max })` no `AGENTS.md`                                                                                       |
+| C4  | Parcial    | Job `proxy` no CI roda o smoke test. O `create-admin` na imagem foi verificado manualmente (precisa de TTY)                          |
+| C5  | Resolvido  | `test/http/docs.e2e-spec.ts`: `/docs` 404 em produção e 200 fora dela                                                                |
+| C6  | **Aberto** | Não existe nenhum job ainda. Tornar genérico o teste de payload quando surgir o primeiro (notifications ou retention)                |

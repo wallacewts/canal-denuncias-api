@@ -36,7 +36,8 @@ AUDIT-02 (`AuditService.record()` com cadeia de hash), conforme as decisões Q-P
 - Já instaladas: NestJS 12 (`@nestjs/common`, `core`, `config`, `typeorm`, `swagger`, `terminus`), TypeORM 1.1,
   `pg`, `nestjs-pino`, `helmet`, `zod@4.6.7`.
 - Novas: `@nestjs/bullmq@12.0.2`, `bullmq@6.7.10`, `@aws-sdk/client-s3@3.1179.0`, `@aws-sdk/lib-storage@3.1179.0`,
-  `nest-commander@3.21.0`, `@nestjs/authentication@0.1.8` (versão fixada; só o `PasswordHasher`).
+  `nest-commander@3.21.0`, `@nestjs/authentication@0.1.8` (versão fixada; só o `PasswordHasher`) e
+  `ioredis@5.11.1` (o BullMQ 6 em ESM exige um cliente Redis já construído; a versão 5 atende também o peer do TypeORM).
 - Sem biblioteca para o Vault: cliente próprio sobre `fetch` (R2).
 
 **Storage**: PostgreSQL 18 (sem tabelas novas), Redis 8 (fila), storage S3-compatível (SeaweedFS em dev), Vault
@@ -199,6 +200,18 @@ docs/
 .github/workflows/ci.yml             # AMPLIADO: roda openapi:export, falha se openapi/ divergir e publica artefato
 docker-compose.yml                   # AMPLIADO: bucket de dev e variáveis novas
 .env.example                         # AMPLIADO
+```
+
+**Arquivos acrescentados durante a implementação** (pendência U2 do analyze):
+
+```text
+src/config/env.validate.ts, src/config/log-destination.ts
+src/common/http/no-store.interceptor.ts
+src/infra/vault/key-service.ts, src/infra/vault/vault-http.ts
+src/infra/queue/redis.connection.ts
+src/cli/password-prompt.ts, src/cli/cli-output.ts, src/cli/cli-commands.module.ts, src/cli/cli.module.ts
+test/support/db-urls.ts, test/support/test-env.ts, test/support/README.md, test/support/fixtures/*
+docs/deploy/nginx/smoke-test.sh
 ```
 
 **Structure Decision**: projeto único (API NestJS). Os componentes técnicos sem regra de negócio (Vault, fila,

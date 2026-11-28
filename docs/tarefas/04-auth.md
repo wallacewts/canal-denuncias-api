@@ -9,6 +9,9 @@
 
 ### AUTH-00 · Decisão: bibliotecas próprias ou pacote oficial do Nest 12
 
+> Parcialmente decidido na feature 001 (D32): o hash de senha usa o `PasswordHasher` (scrypt) do
+> `@nestjs/authentication` 0.1.8. Falta decidir o restante (sessão, MFA, guard) e o store em Postgres.
+
 **Estimativa:** M · **Marco:** MVP
 
 O registro de decisões previa `passport`, `passport-jwt`, `argon2` e `otplib`. O Nest 12 tem o pacote oficial

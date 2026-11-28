@@ -3,5 +3,5 @@
 useDefault = true
 
 [allowlist]
-description = "Credenciais fictícias de desenvolvimento"
-paths = ['''docker-compose\.yml''', '''\.env\.example''', '''\.github/workflows/ci\.yml''', '''docker/seaweedfs/s3\.json''']
+description = "Credenciais fictícias de desenvolvimento e de testes"
+paths = ['''docker-compose\.yml''', '''\.env\.example''', '''\.github/workflows/ci\.yml''', '''docker/seaweedfs/s3\.json''', '''src/config/env\.schema\.spec\.ts''']

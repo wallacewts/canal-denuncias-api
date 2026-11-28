@@ -9,18 +9,18 @@ tarefas por módulo, em [`docs/tarefas/`](docs/tarefas/README.md).
 
 ## Stack
 
-|                   |                                                       |
-| ----------------- | ----------------------------------------------------- |
-| Runtime           | Node.js 26 (LTS), ESM                                 |
-| Framework         | NestJS 12                                             |
-| Banco             | PostgreSQL 18 + TypeORM 1.x                           |
-| Chaves            | HashiCorp Vault (Transit)                             |
-| Anexos            | Storage S3-compatível (SeaweedFS no ambiente local)   |
-| Filas             | Redis + BullMQ                                        |
-| Validação         | zod 4 (`StandardSchemaValidationPipe`)                |
-| Hash de senha     | scrypt (`PasswordHasher` do `@nestjs/authentication`) |
-| Testes            | Vitest + Supertest                                    |
-| Lint / formatação | oxlint + Prettier                                     |
+|                   |                                                                                |
+| ----------------- | ------------------------------------------------------------------------------ |
+| Runtime           | Node.js 26 (LTS), ESM                                                          |
+| Framework         | NestJS 12                                                                      |
+| Banco             | PostgreSQL 18 + TypeORM 1.x                                                    |
+| Chaves            | HashiCorp Vault (Transit), envelope encryption com `node:crypto` (AES-256-GCM) |
+| Anexos            | Storage S3-compatível (SeaweedFS no ambiente local)                            |
+| Filas             | Redis + BullMQ                                                                 |
+| Validação         | zod 4 (`StandardSchemaValidationPipe`)                                         |
+| Hash de senha     | scrypt (`PasswordHasher` do `@nestjs/authentication`)                          |
+| Testes            | Vitest + Supertest                                                             |
+| Lint / formatação | oxlint + Prettier                                                              |
 
 ## Rodando localmente
 
@@ -50,6 +50,21 @@ docker compose --profile app up -d --build
 ```
 
 O ClamAV é pesado (cerca de 1 GB de RAM) e fica num perfil próprio: `docker compose --profile av up -d`.
+
+## Criptografia
+
+Todo conteúdo sensível passa pelo `CryptoModule` (`src/modules/crypto`, feature 002): uma chave de dados por denúncia,
+protegida pela `report-kek` no Vault, formato de campo cifrado v1 com contexto do registro, arquivos em blocos
+autenticados (STREAM v1) e segredos da aplicação cifrados direto no Vault. Detalhes em
+`specs/002-envelope-encryption/` e operação do Vault em `docs/deploy/vault/README.md`.
+
+Depois de girar a `report-kek`, recifre as chaves das denúncias com o perfil de manutenção:
+
+```bash
+npm run build
+VAULT_TOKEN= VAULT_ROLE_ID=dev-maintenance-role-id VAULT_SECRET_ID=dev-maintenance-secret-id \
+  npm run cli -- rewrap-keys --kek report-kek
+```
 
 ## Primeiro administrador
 

@@ -313,19 +313,19 @@ wrapped_dek = antigo` (conferindo `affected`) e o `KEYS_REWRAPPED` do lote pelo 
 
 ## Phase 11: Polish & Cross-Cutting Concerns
 
-- [ ] T039 [P] Atualizar `AGENTS.md`: conteúdo sensível só pelo `CryptoModule`; ids de registros cifrados com
+- [x] T039 [P] Atualizar `AGENTS.md`: conteúdo sensível só pelo `CryptoModule`; ids de registros cifrados com
       `newRecordId()`; `createReportKey`/`withReportKey` sempre antes da transação; recifragem só com o perfil de
       manutenção
-- [ ] T040 [P] Atualizar `README.md` (biblioteca de criptografia, comando `rewrap-keys`) e acrescentar uma referência a
+- [x] T040 [P] Atualizar `README.md` (biblioteca de criptografia, comando `rewrap-keys`) e acrescentar uma referência a
       `specs/002-envelope-encryption/contracts/key-service-v2.md` em
       `specs/001-transversal-infrastructure/contracts/key-service.md`
-- [ ] T041 [P] Marcar os critérios de aceite atendidos em `docs/tarefas/01-crypto.md`, com nota sobre a `identity-kek` no
+- [x] T041 [P] Marcar os critérios de aceite atendidos em `docs/tarefas/01-crypto.md`, com nota sobre a `identity-kek` no
       CRYPTO-02 e no CRYPTO-06 (ficam com o IDV-06, D24)
-- [ ] T042 Incluir `src/modules/crypto` na cobertura de `vitest.config.coverage.ts` com limite de 80% e conferir com
+- [x] T042 Incluir `src/modules/crypto` na cobertura de `vitest.config.coverage.ts` com limite de 80% e conferir com
       `npm run test:cov:all` (SC-007)
-- [ ] T043 Rodar o `quickstart.md` inteiro, inclusive o passo 4 manual, e o compose `--profile app` (API saudável com a
+- [x] T043 Rodar o `quickstart.md` inteiro, inclusive o passo 4 manual, e o compose `--profile app` (API saudável com a
       política sem `rewrap`); depois Trivy e gitleaks
-- [ ] T044 Verificação final: lint, typecheck, formatação, testes unitários, e2e, build e `openapi:export` sem diferença
+- [x] T044 Verificação final: lint, typecheck, formatação, testes unitários, e2e, build e `openapi:export` sem diferença
 
 ---
 

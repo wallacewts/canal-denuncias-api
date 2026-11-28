@@ -48,7 +48,18 @@ Regras que não podem ser quebradas:
 - Controllers só com `@PublicApi('recurso')` ou `@AdminApi('recurso')`. Rota pública não tem parâmetro de caminho além
   de `:attachmentId` (o teste `test/conventions/public-routes.e2e-spec.ts` falha se tiver).
 - Auditoria só por `AuditService.record()`, de preferência com o `EntityManager` da transação da operação.
-- Chaves só pelo `KEY_SERVICE` (`src/infra/vault`). A API nunca usa a `identity-kek`.
+- Chaves só pelo `KEY_SERVICE` (`src/infra/vault`). A API nunca usa a `identity-kek` nem tem `rewrap` (D43).
+- Conteúdo sensível só pelo `CryptoModule`: `DataKeyService.createReportKey`/`withReportKey` (a DEK só existe dentro
+  da função e é zerada no fim), `RecordCipher` (JSON versionado com schema e texto), `AppSecretService` (segredos
+  pequenos, presos ao registro) e `createEncryptStream`/`createDecryptStream` (arquivos). Nada de `createCipheriv` fora
+  de `src/modules/crypto/`.
+- O contexto de cifragem sai só de `encryptionContext(campo, id)`; campo novo entra em `ENCRYPTED_FIELDS`.
+- Registro com conteúdo cifrado tem o id gerado por `newRecordId()` antes da cifragem (a AAD precisa do id).
+- Chave de dados e cifragem sempre **antes** de abrir a transação do banco: nada de chamada ao Vault dentro de
+  transação.
+- Recifragem só pelo comando `rewrap-keys`, com o perfil de manutenção (`docs/deploy/vault/README.md`).
+- Testes e2e que exercitam fluxos da API usam `createTestApp({ vault: 'api' })`: o token root esconderia falta de
+  permissão na política real.
 - Payload de job só com `jobPayloadSchema` (UUID, enum, número) e enfileirado com `addValidatedJob`.
 - Listagens com `paginate()` e `pageQueryShape` (cursor, sem OFFSET).
 - Mudou rota ou schema de entrada/saída: rode `npm run openapi:export` e commite `openapi/` (o CI confere).

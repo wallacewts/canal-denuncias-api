@@ -23,3 +23,6 @@ interface KeyService {
 
 Endpoints do Vault usados: `auth/approle/login`, `auth/token/renew-self`, `transit/datakey/plaintext/:kek`,
 `transit/decrypt/:kek`, `transit/encrypt/:kek`, `transit/rewrap/:kek`.
+
+> Estendido pela feature 002: `associatedData` em `encrypt`/`decrypt` e `latestVersion`, e a API perdeu o `rewrap`.
+> Ver `specs/002-envelope-encryption/contracts/key-service-v2.md`.

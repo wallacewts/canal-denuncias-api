@@ -57,8 +57,9 @@ Regras que não podem ser quebradas:
 - Leituras sensíveis em rotas: `@Audited(ação, tipo, resolveId)`. O `resolveId` só lê parâmetros e query.
 - Toda rota `@AdminApi` exige identidade (401 sem ela, D47). Nos testes, rota sem política (fixtures da auditoria,
   por exemplo) pode usar `createTestApp({ identity: true })` e o cabeçalho de `testIdentity()`; rota com política sobre
-  o usuário da sessão (como as de `users` e `me`) usa a sessão real pelo login de exemplo da feature 004
-  (`test/users/support.ts`, `test/contract/auth/example/`). Nunca importe `test/` de `src/` (teste de convenção).
+  o usuário da sessão (como as de `users` e `me`) usa a sessão real pelas rotas definitivas de login (feature 006;
+  `test/auth/support.ts`, `test/users/support.ts`; `createStaff` cria a pessoa com a senha já trocada). Nunca importe
+  `test/` de `src/` (teste de convenção).
 - Autenticação só pelo `@nestjs/authentication` e autorização só pelo `@nestjs/authorization`, em versões exatas
   (D53, D54, `docs/adr/0053-autenticacao-e-autorizacao.md`). A área administrativa autentica só pela sessão por
   cookie: nenhum token portador nem refresh token (canal de tokens só por decisão própria futura). Sessões e MFA só
@@ -69,6 +70,14 @@ Regras que não podem ser quebradas:
 - Eventos de autenticação e negações entram na trilha só pelo `AuthAuditSubscriber`; evento novo do pacote = entrada
   no mapeamento dele e no catálogo da auditoria. Tempo de sessão e MFA nos testes: `TestClock` no `AUTH_CLOCK`.
   Tempos da sessão só em `src/infra/auth/session-policy.ts`.
+- Login da equipe (D57): no fluxo de login, 401 só para sessão ausente ou expirada (na entrada, é a falha genérica de
+  credencial, igual para todo motivo e no mesmo tempo); rota de etapa (troca de senha, cadastro do MFA) só com
+  `StepRoute` (403 `STEP_NOT_ALLOWED` fora da etapa); com troca obrigatória pendente, o `LoginStepGuard` responde 403
+  `PASSWORD_CHANGE_REQUIRED` (liberar uma rota só com `AllowDuringPasswordChange`, hoje só o `GET /me`). Toda falha de
+  entrada faz as mesmas consultas numa transação (tempo constante, `npm run test:timing`).
+- Números do bloqueio progressivo e do limite de tentativas só pelo ambiente (`LOGIN_LOCKOUT_*`, `AUTH_RATE_LIMIT_*`);
+  chave de HMAC só pelas chaves por finalidade de `src/infra/auth/hmac-keys.ts` (nada de e-mail em claro no Redis).
+  Rota nova de entrada passa pelo `AuthThrottleGuard`.
 - Habilidade nova só no catálogo `src/modules/access-control/abilities.ts` (D55), no formato
   `^[a-z][a-z-]*\.[a-z][a-z-]*$`; políticas consultam `hasAbility`, nunca o perfil direto. O `GET /me` devolve o
   catálogo: renomear ou remover um código quebra o front. Mudou a matriz do ACL-01, mude o catálogo junto (teste).

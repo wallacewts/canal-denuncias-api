@@ -1,5 +1,6 @@
 import request from 'supertest';
 import { Role } from '../../src/common/enums/role.enum.js';
+import { ownSessionSchema } from '../../src/modules/auth/auth.schemas.js';
 import { rawSetCookie, sessionCookie } from '../contract/auth/example/auth-helpers.js';
 import type { TestClock } from '../support/auth-clock.js';
 import type { TestApp } from '../support/test-app.js';
@@ -41,6 +42,7 @@ describe('Sessões da própria pessoa (e2e)', () => {
     const { staff, a } = await twoSessions();
     const res = await request(server()).get(SESSIONS).set('Cookie', a).set('User-Agent', 'Navegador XQZ').expect(200);
     const list = res.body as OwnSession[];
+    for (const s of list) expect(ownSessionSchema.safeParse(s).success).toBe(true);
     expect(list).toHaveLength(2);
     for (const s of list) {
       expect(Object.keys(s).sort()).toEqual(['createdAt', 'current', 'id', 'ip', 'lastActiveAt', 'userAgent']);

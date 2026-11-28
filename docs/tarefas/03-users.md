@@ -41,9 +41,9 @@
 **Critérios de aceite**
 
 - [x] Recebe nome, e-mail e perfis. Gera uma senha provisória forte, exibida **uma única vez** na resposta.
-- [ ] `password_changed_at` fica nulo, o que obriga a troca de senha e o cadastro do MFA no primeiro login. (Feature
+- [x] `password_changed_at` fica nulo, o que obriga a troca de senha e o cadastro do MFA no primeiro login. (Feature
       005: o cadastro já deixa nulo e o `/me` informa `passwordChangeRequired`; a obrigação no primeiro login é aplicada
-      pelo AUTH-03 e pelo AUTH-05.)
+      pelo AUTH-03 e pelo AUTH-05, feitos na feature 006.)
 - [x] Respeita a regra de segregação de USERS-05.
 - [x] Teste: senha provisória não aparece em log nem na auditoria (feature 005).
 

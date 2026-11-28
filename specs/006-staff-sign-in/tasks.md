@@ -237,19 +237,19 @@ now)` (incremento e bloqueio numa instrução, `RETURNING`), `resetLoginFailures
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T039 [P] Teste de contrato `test/openapi/auth-contract.e2e-spec.ts` (R12): rotas, schemas de sucesso, status de
+- [x] T039 [P] Teste de contrato `test/openapi/auth-contract.e2e-spec.ts` (R12): rotas, schemas de sucesso, status de
       erro e códigos do `openapi/admin.json` conferidos contra o `auth-api.md` do front (só leitura; pulado sem o
       repositório): o que o front lista existe no OpenAPI; status a mais só os da lista explícita do teste (400, 403 de
       origem, 403 `PASSWORD_CHANGE_REQUIRED`, 403 `STEP_NOT_ALLOWED`, 429 no desafio; C1); `@ApiOkResponse` e respostas
       de erro documentadas nas rotas; e2e validam as respostas reais contra os schemas
-- [ ] T040 `npm run openapi:export` e commit de `openapi/`
-- [ ] T041 [P] Regras no `AGENTS.md`: rotas de etapa só com `StepRoute`; 401 só para sessão ausente ou expirada;
+- [x] T040 `npm run openapi:export` e commit de `openapi/`
+- [x] T041 [P] Regras no `AGENTS.md`: rotas de etapa só com `StepRoute`; 401 só para sessão ausente ou expirada;
       números de bloqueio e limite só pelo ambiente; testes entram pelas rotas definitivas; e premissa do front no ADR
       0053 ("O que já existe"): proxy repassa o `Host` e não reescreve a origem
-- [ ] T042 [P] Backlog: marcar os critérios atendidos do AUTH-01 a AUTH-08 em `docs/tarefas/04-auth.md` e o critério
+- [x] T042 [P] Backlog: marcar os critérios atendidos do AUTH-01 a AUTH-08 em `docs/tarefas/04-auth.md` e o critério
       aberto do USERS-02 em `docs/tarefas/03-users.md`; atualizar a seção "O que já existe" do ADR 0053
-- [ ] T043 Cobertura mínima de 80% em `src/modules/auth` e `src/infra/throttle` no `vitest.config.coverage.ts`
-- [ ] T044 Rodar os cenários do `quickstart.md`, a suíte completa (lint, typecheck, unitários, e2e, build, openapi em
+- [x] T043 Cobertura mínima de 80% em `src/modules/auth` e `src/infra/throttle` no `vitest.config.coverage.ts`
+- [x] T044 Rodar os cenários do `quickstart.md`, a suíte completa (lint, typecheck, unitários, e2e, build, openapi em
       dia, cada um separado), o compose `--profile app` (credencial errada → 401 genérico; `Origin` estranho → 403),
       Trivy e gitleaks
 

@@ -1,7 +1,10 @@
 import { Body, HttpCode, HttpStatus, Inject, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { CurrentSession, CurrentUser, SessionService, SignInService, type SessionRecord } from '@nestjs/authentication';
 import type { Request } from 'express';
+import { ApiNoContentResponse, ApiOkResponse } from '@nestjs/swagger';
+import { ApiErrors } from '../../common/http/api-errors.decorator.js';
 import { DomainError } from '../../common/http/domain-error.js';
+import { toOpenApiSchema } from '../../common/http/openapi-schema.js';
 import { AdminApi, OpenAdminRoute, StepRoute } from '../../common/http/route-decorators.js';
 import { AUTH_CLOCK, type AuthClock } from '../../infra/auth/auth-clock.js';
 import type { StaffUser } from '../../infra/auth/staff-user.js';
@@ -9,8 +12,11 @@ import { PgMfaStore } from '../../infra/auth/stores/pg-mfa.store.js';
 import { AuthThrottleGuard } from '../../infra/throttle/auth-throttle.guard.js';
 import {
   challengeSchema,
+  confirmationResponseSchema,
   enrollmentConfirmationSchema,
+  enrollmentResponseSchema,
   signInSchema,
+  stepResponseSchema,
   type ChallengeInput,
   type ConfirmationResponse,
   type EnrollmentResponse,
@@ -47,6 +53,16 @@ export class AuthController {
 
   @OpenAdminRoute()
   @UseGuards(AuthThrottleGuard)
+  @ApiOkResponse({
+    description: 'Próxima etapa e horários; cookie de sessão.',
+    schema: toOpenApiSchema(stepResponseSchema),
+  })
+  @ApiErrors({
+    400: 'corpo inválido',
+    401: 'falha genérica de credencial (qualquer motivo)',
+    403: 'escrita de outra origem (proteção por origem)',
+    429: ['TOO_MANY_ATTEMPTS'],
+  })
   @Post('sign-in')
   @HttpCode(200)
   async signIn(@Body({ schema: signInSchema }) body: SignInInput, @Req() req: Request): Promise<StepResponse> {
@@ -61,6 +77,15 @@ export class AuthController {
 
   @OpenAdminRoute()
   @UseGuards(AuthThrottleGuard)
+  @ApiOkResponse({ description: 'Próxima etapa e horários; cookie novo.', schema: toOpenApiSchema(stepResponseSchema) })
+  @ApiErrors({
+    400: 'corpo inválido',
+    401: 'sessão pendente ausente ou expirada',
+    403: 'escrita de outra origem (proteção por origem)',
+    422: ['MFA_CODE_INVALID'],
+    423: ['MFA_LOCKED'],
+    429: ['TOO_MANY_ATTEMPTS'],
+  })
   @Post('mfa/challenge')
   @HttpCode(200)
   async challenge(@Body({ schema: challengeSchema }) body: ChallengeInput, @Req() req: Request): Promise<StepResponse> {
@@ -88,6 +113,11 @@ export class AuthController {
   }
 
   @StepRoute('MFA_ENROLLMENT_REQUIRED')
+  @ApiOkResponse({
+    description: 'URI, QR code PNG e segredo (só nesta resposta).',
+    schema: toOpenApiSchema(enrollmentResponseSchema),
+  })
+  @ApiErrors({ 401: 'sessão ausente ou expirada', 403: ['STEP_NOT_ALLOWED'] })
   @Post('mfa/enrollment')
   @HttpCode(200)
   enroll(@CurrentUser() user: StaffUser): Promise<EnrollmentResponse> {
@@ -95,6 +125,16 @@ export class AuthController {
   }
 
   @StepRoute('MFA_ENROLLMENT_REQUIRED')
+  @ApiOkResponse({
+    description: '10 códigos de recuperação (uma única vez), próxima etapa e horários; cookie novo.',
+    schema: toOpenApiSchema(confirmationResponseSchema),
+  })
+  @ApiErrors({
+    400: 'corpo inválido',
+    401: 'sessão ausente ou expirada',
+    403: ['STEP_NOT_ALLOWED'],
+    422: ['MFA_CODE_INVALID'],
+  })
   @Post('mfa/enrollment/confirmation')
   @HttpCode(200)
   confirmEnrollment(
@@ -106,6 +146,8 @@ export class AuthController {
   }
 
   @OpenAdminRoute()
+  @ApiNoContentResponse({ description: 'Sessão encerrada; cookie apagado.' })
+  @ApiErrors({ 403: 'escrita de outra origem (proteção por origem)' })
   @Post('sign-out')
   @HttpCode(204)
   async signOut(): Promise<void> {

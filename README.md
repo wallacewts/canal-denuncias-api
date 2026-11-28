@@ -89,6 +89,7 @@ docker compose --profile app run --rm api node dist/cli.js create-admin --name "
 | `npm run build`                                                 | Compila para `dist/`                                                    |
 | `npm test` / `npm run test:cov`                                 | Testes unitários (com cobertura)                                        |
 | `npm run test:e2e`                                              | Testes e2e (precisa do Postgres com as migrations aplicadas)            |
+| `npm run test:timing`                                           | Tempo constante da entrada (SC-002 da feature 006), isolado e sozinho   |
 | `npm run lint` / `npm run typecheck` / `npm run format:check`   | Qualidade                                                               |
 | `npm run migration:create -- src/database/migrations/Nome`      | Migration vazia, escrita à mão                                          |
 | `npm run migration:generate -- src/database/migrations/Nome`    | Migration gerada a partir das entidades                                 |

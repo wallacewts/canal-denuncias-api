@@ -1,5 +1,6 @@
 import request from 'supertest';
 import { Role } from '../../src/common/enums/role.enum.js';
+import { stepResponseSchema } from '../../src/modules/auth/auth.schemas.js';
 import { rawSetCookie, sessionCookie, totp } from '../contract/auth/example/auth-helpers.js';
 import type { TestClock } from '../support/auth-clock.js';
 import type { TestApp } from '../support/test-app.js';
@@ -29,10 +30,13 @@ describe('Fluxo inteiro de login (e2e)', () => {
     const staff = await staffWithMfa(t, Role.COMPLIANCE_MANAGER);
     const first = await signIn(t.app, staff.email, staff.password).expect(200);
     COOKIE_ATTRS(rawSetCookie(first));
+    // As respostas reais obedecem aos schemas publicados no OpenAPI (os mesmos comparados com o contrato do front).
+    expect(stepResponseSchema.safeParse(first.body).success).toBe(true);
     const second = await challenge(t.app, sessionCookie(first)!, { code: totp(staff.secret!, t.clock.now()) }).expect(
       200,
     );
     COOKIE_ATTRS(rawSetCookie(second));
+    expect(stepResponseSchema.safeParse(second.body).success).toBe(true);
     const cookie = sessionCookie(second)!;
     await request(server()).get(ME).set('Cookie', cookie).expect(200);
     const out = await request(server()).post('/api/admin/v1/auth/sign-out').set('Cookie', cookie).expect(204);

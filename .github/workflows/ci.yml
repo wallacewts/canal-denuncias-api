@@ -118,6 +118,9 @@ jobs:
           node node_modules/typeorm/cli.js migration:generate -d dist/database/data-source.js /tmp/DriftCheck 2>&1 | tee /tmp/drift.log
           grep -q "No changes in database schema" /tmp/drift.log
       - run: npm run test:e2e
+      # Tempo constante da entrada (SC-002 da feature 006): isolado, porque a carga das outras suítes vira ruído.
+      - name: Tempo constante da entrada (e-mail inexistente × senha errada)
+        run: npm run test:timing
 
   proxy:
     name: Teste de fumaça do proxy de referência

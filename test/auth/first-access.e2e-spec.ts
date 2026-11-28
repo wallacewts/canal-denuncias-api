@@ -1,6 +1,7 @@
 import { inflateSync } from 'node:zlib';
 import request from 'supertest';
 import { Role } from '../../src/common/enums/role.enum.js';
+import { confirmationResponseSchema, enrollmentResponseSchema } from '../../src/modules/auth/auth.schemas.js';
 import { sessionCookie, totp } from '../contract/auth/example/auth-helpers.js';
 import type { TestClock } from '../support/auth-clock.js';
 import type { TestApp } from '../support/test-app.js';
@@ -62,6 +63,7 @@ describe('Primeiro acesso (e2e)', () => {
 
     const firstEnroll = await post(ENROLL, cookie).expect(200);
     const enroll = await post(ENROLL, cookie).expect(200);
+    expect(enrollmentResponseSchema.safeParse(enroll.body).success).toBe(true);
     const body = enroll.body as { otpauthUri: string; qrCodeDataUri: string; secret: string };
     expect(Object.keys(body).sort()).toEqual(['otpauthUri', 'qrCodeDataUri', 'secret']);
     expect(body.secret).not.toBe((firstEnroll.body as { secret: string }).secret); // o segundo substitui
@@ -75,6 +77,7 @@ describe('Primeiro acesso (e2e)', () => {
     const wrong = await post(CONFIRM, cookie, { code: '000000' }).expect(422);
     expect(wrong.body).toMatchObject({ code: 'MFA_CODE_INVALID' });
     const done = await post(CONFIRM, cookie, { code: totp(body.secret, t.clock.now()) }).expect(200);
+    expect(confirmationResponseSchema.safeParse(done.body).success).toBe(true);
     const result = done.body as { recoveryCodes: string[]; nextStep: string };
     expect(result.nextStep).toBe('DONE');
     expect(result.recoveryCodes).toHaveLength(10);

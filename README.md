@@ -24,7 +24,8 @@ tarefas por módulo, em [`docs/tarefas/`](docs/tarefas/README.md).
 
 ## Rodando localmente
 
-Pré-requisitos: Node.js 26 e Docker com Compose.
+Pré-requisitos: Node.js 26.13.1 (fixado no `.tool-versions`; com asdf, rode `asdf install` na raiz) e Docker com
+Compose.
 
 ```bash
 cp .env.example .env

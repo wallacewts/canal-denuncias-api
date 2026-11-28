@@ -47,6 +47,7 @@ services:
     volumes:
       - ./docker/vault/init-transit.sh:/init-transit.sh:ro
       - ./docker/vault/api-dev-policy.hcl:/api-dev-policy.hcl:ro
+      - ./docker/vault/maintenance-dev-policy.hcl:/maintenance-dev-policy.hcl:ro
     entrypoint: ['/bin/sh', '/init-transit.sh']
     restart: 'no'
 

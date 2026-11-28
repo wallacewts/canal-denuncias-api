@@ -95,12 +95,13 @@ jobs:
           POSTGRES_DB: canal_denuncias
           APP_MIGRATOR_PASSWORD: ci_migrator_pw
           APP_RUNTIME_PASSWORD: ci_runtime_pw
-      - name: Prepara o Vault de teste (Transit, KEKs e AppRole de dev, como no docker compose)
+      - name: Prepara o Vault de teste (Transit, KEKs e AppRoles api e maintenance de dev, como no docker compose)
         run: >-
           docker run --rm --network host
           -e VAULT_ADDR=http://127.0.0.1:8200 -e VAULT_TOKEN=dev-root-token
           -v "$PWD/docker/vault/init-transit.sh:/init-transit.sh:ro"
           -v "$PWD/docker/vault/api-dev-policy.hcl:/api-dev-policy.hcl:ro"
+          -v "$PWD/docker/vault/maintenance-dev-policy.hcl:/maintenance-dev-policy.hcl:ro"
           --entrypoint /bin/sh hashicorp/vault:2.2 /init-transit.sh
       - name: Sobe o storage S3 de teste (SeaweedFS, como no docker compose)
         run: |

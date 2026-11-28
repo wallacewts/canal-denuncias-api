@@ -38,6 +38,9 @@ Corpo: `reporterType`, `categoryCode` e os campos de `ReportContentV1` (`descrip
 **Critérios de aceite**
 
 - [ ] Limites: `description` de 100 a 10.000 caracteres; os demais textos até 2.000; até 20 envolvidos.
+- [ ] `dataTypes` aceita só `PERSONAL`, `FINANCIAL`, `CREDENTIALS` e `OTHER`, sem repetição. O contrato do REP-02
+      (schema de entrada e `ReportContentV1Schema`) valida esses valores e recusa qualquer outro com 400. Lista proposta
+      pelo front (feature 002 do repositório web), que já usa esses códigos no wizard.
 - [ ] Ordem: gera o id (UUID v7) na aplicação, pede a DEK ao Vault, cifra o JSON com AAD
       `reports.content_enc:<id>` e só então abre a transação. Na transação: insere a denúncia (`status = RECEIVED`,
       `due_at` pelo CAT-04), o histórico (`RECEIVED`, ator `REPORTER`) e a auditoria.

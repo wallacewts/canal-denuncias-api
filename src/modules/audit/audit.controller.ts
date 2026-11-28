@@ -1,18 +1,19 @@
-import { ForbiddenException, Get, HttpCode, Post, Query, Req } from '@nestjs/common';
+import { Get, HttpCode, Post, Query } from '@nestjs/common';
 import { Can } from '@nestjs/authorization';
-import { AuditResult } from '../../common/enums/audit-result.enum.js';
-import { Role } from '../../common/enums/role.enum.js';
 import { AdminApi } from '../../common/http/route-decorators.js';
-import { hasAbility } from '../access-control/abilities.js';
-import type { RequestWithIdentity } from '../../infra/auth/admin-identity.guard.js';
+import { AuditPolicy } from '../access-control/policies/audit.policy.js';
 import { AuditAction, AuditResourceType } from './audit-action.enum.js';
+import { AuditResult } from '../../common/enums/audit-result.enum.js';
 import { AuditQueryService, auditLogQuerySchema, usedFilters, type AuditLogQuery } from './audit-query.service.js';
 import { AuditVerifierService } from './audit-verifier.service.js';
 import { AuditService } from './audit.service.js';
 
-/** Rotas do Auditor (contracts/admin-audit-api.md). Só o perfil AUDITOR lê a trilha (D25). */
-// O perfil AUDITOR é checado em cada handler (com ACCESS_DENIED próprio); vira política no access-control (ACL-01).
-@Can.Anyone()
+/**
+ * Rotas do Auditor (contracts/admin-audit-api.md). Só quem tem `audit.read` (o AUDITOR, D25) lê e verifica a trilha;
+ * a recusa (403) vem da declaração da rota e o `ACCESS_DENIED` é gravado pelo assinante (feature 007, FR-005). A
+ * `AuditPolicy` é descoberta pelo registro do pacote: este módulo não importa o `AccessControlModule`.
+ */
+@Can(AuditPolicy, 'read')
 @AdminApi('audit-logs')
 export class AuditController {
   constructor(
@@ -22,8 +23,7 @@ export class AuditController {
   ) {}
 
   @Get()
-  async list(@Req() request: RequestWithIdentity, @Query({ schema: auditLogQuerySchema }) query: AuditLogQuery) {
-    await this.assertAuditor(request);
+  async list(@Query({ schema: auditLogQuerySchema }) query: AuditLogQuery) {
     const page = await this.queries.list(query);
     await this.audit.record({
       action: AuditAction.AUDIT_LOG_VIEWED,
@@ -37,20 +37,7 @@ export class AuditController {
   /** Verifica a integridade da cadeia (AUDIT-07). Síncrona: 100 mil registros em menos de 1 minuto (SC-006). */
   @Post('verification')
   @HttpCode(200)
-  async verify(@Req() request: RequestWithIdentity) {
-    await this.assertAuditor(request);
+  async verify() {
     return this.verifier.verifyAndRecord();
-  }
-
-  /** Até a ACL-02 assumir as permissões, a checagem do perfil fica aqui e a recusa é registrada (FR-019). */
-  private async assertAuditor(request: RequestWithIdentity): Promise<void> {
-    if (hasAbility(request.staffIdentity, 'audit.read')) return;
-    await this.audit.record({
-      action: AuditAction.ACCESS_DENIED,
-      resourceType: AuditResourceType.AUDIT_LOG,
-      result: AuditResult.DENIED,
-      metadata: { required: Role.AUDITOR },
-    });
-    throw new ForbiddenException();
   }
 }

@@ -1,5 +1,12 @@
 import { AuditResourceType } from '../audit/audit-action.enum.js';
 import type { Ability } from './abilities.js';
+import type { AuditPolicy } from './policies/audit.policy.js';
+import type { CatalogPolicy } from './policies/catalog.policy.js';
+import type { DashboardPolicy } from './policies/dashboard.policy.js';
+import type { IdentityRevealPolicy } from './policies/identity-reveal.policy.js';
+import type { ReportsPolicy } from './policies/reports.policy.js';
+import type { RetentionPolicy } from './policies/retention.policy.js';
+import type { SettingsPolicy } from './policies/settings.policy.js';
 import type { UsersPolicy } from './policies/users.policy.js';
 
 /**
@@ -20,6 +27,47 @@ export const POLICY_ABILITIES = {
   UsersPolicy: entry<UsersPolicy>({
     resourceType: AuditResourceType.USER,
     abilities: { manage: 'users.manage', actOnOther: 'users.manage' },
+  }),
+  ReportsPolicy: entry<ReportsPolicy>({
+    resourceType: AuditResourceType.REPORT,
+    abilities: {
+      list: 'reports.list',
+      readAny: 'reports.read',
+      triageAny: 'reports.triage',
+      treatAny: 'reports.treat',
+      read: 'reports.read',
+      triage: 'reports.triage',
+      treat: 'reports.treat',
+    },
+  }),
+  IdentityRevealPolicy: entry<IdentityRevealPolicy>({
+    resourceType: AuditResourceType.IDENTITY,
+    abilities: {
+      requestAny: 'identity.request',
+      decideAny: 'identity.approve',
+      request: 'identity.request',
+      decide: 'identity.approve',
+    },
+  }),
+  RetentionPolicy: entry<RetentionPolicy>({
+    resourceType: AuditResourceType.REPORT,
+    abilities: { manage: 'retention.manage', manageReport: 'retention.manage' },
+  }),
+  SettingsPolicy: entry<SettingsPolicy>({
+    resourceType: AuditResourceType.SETTING,
+    abilities: { sla: 'settings.sla', retention: 'retention.manage' },
+  }),
+  CatalogPolicy: entry<CatalogPolicy>({
+    resourceType: AuditResourceType.CATEGORY,
+    abilities: { manageCategories: 'categories.manage' },
+  }),
+  AuditPolicy: entry<AuditPolicy>({
+    resourceType: AuditResourceType.AUDIT_LOG,
+    abilities: { read: 'audit.read' },
+  }),
+  DashboardPolicy: entry<DashboardPolicy>({
+    resourceType: AuditResourceType.REPORTING,
+    abilities: { read: 'dashboard.read' },
   }),
 } as const;
 

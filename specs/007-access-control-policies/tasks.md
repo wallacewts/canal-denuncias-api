@@ -94,31 +94,31 @@ demais 403 com `ACCESS_DENIED` na rota da trilha.
 
 ### Tests for User Story 1 ⚠️ (escrever antes, devem falhar)
 
-- [ ] T014 [P] [US1] Teste em tabela `src/modules/access-control/policies/matrix.spec.ts` (R8): perfis isolados e
+- [x] T014 [P] [US1] Teste em tabela `src/modules/access-control/policies/matrix.spec.ts` (R8): perfis isolados e
       combinações `ADMIN+ANALYST`, `DPO+ANALYST`, `COMPLIANCE_MANAGER+DPO`, `ADMIN+AUDITOR` × cada método das
       políticas × situação (atribuída à pessoa, a outro, sem atribuição, com conflito; pedido de revelação feito pela
       própria pessoa), esperado derivado da matriz e do `recordScope` (≥ 180 casos nos perfis isolados, SC-001);
       inclui DPO lendo e nunca tratando (D20), ADMIN e AUDITOR sozinhos sem nada sobre denúncias, conflito negando
       para Gestora e DPO, `actOnOther` sobre si mesmo negado (D21)
-- [ ] T015 [P] [US1] Ajustar `test/audit/audit-query.e2e-spec.ts` e `test/audit/audit-verifier.e2e-spec.ts`: outro
+- [x] T015 [P] [US1] Ajustar `test/audit/audit-query.e2e-spec.ts` e `test/audit/audit-verifier.e2e-spec.ts`: outro
       perfil continua 403, e o `ACCESS_DENIED` passa a ter metadata com
       `policy: 'AuditPolicy'`, `ability: 'read'` e `code: 'audit.read'`, e `resource_type = 'audit_log'` (escrita assíncrona do assinante: esperar o registro como em
       `test/contract/auth/authorization.e2e-spec.ts`); Auditor continua 200; sem identidade, 401
 
 ### Implementation for User Story 1
 
-- [ ] T016 [P] [US1] `ReportsPolicy` em `src/modules/access-control/policies/reports.policy.ts`: `list`, `readAny`,
+- [x] T016 [P] [US1] `ReportsPolicy` em `src/modules/access-control/policies/reports.policy.ts`: `list`, `readAny`,
       `triageAny`, `treatAny` (só `hasAbility`) e `read`, `triage`, `treat` sobre `ReportAccessFacts` (com
       `reportScope`/`allowsReport` da habilidade correspondente)
-- [ ] T017 [P] [US1] `IdentityRevealPolicy` em `src/modules/access-control/policies/identity-reveal.policy.ts`:
+- [x] T017 [P] [US1] `IdentityRevealPolicy` em `src/modules/access-control/policies/identity-reveal.policy.ts`:
       `requestAny`, `decideAny`, `request(user, facts)`, `decide(user, facts, request)` com
       `requestedById` diferente de `user.id` (four-eyes)
-- [ ] T018 [P] [US1] `RetentionPolicy` (`manage`, `manageReport`), `SettingsPolicy` (`sla`, `retention`),
+- [x] T018 [P] [US1] `RetentionPolicy` (`manage`, `manageReport`), `SettingsPolicy` (`sla`, `retention`),
       `CatalogPolicy` (`manageCategories`), `AuditPolicy` (`read`) e `DashboardPolicy` (`read`) em
       `src/modules/access-control/policies/` (um arquivo por política)
-- [ ] T019 [US1] Entradas das novas políticas no `src/modules/access-control/policy-abilities.ts` e registro no
+- [x] T019 [US1] Entradas das novas políticas no `src/modules/access-control/policy-abilities.ts` e registro no
       `src/modules/access-control/access-control.module.ts` (providers e exports) (depois do T016–T018)
-- [ ] T020 [US1] `src/modules/audit/audit.controller.ts`: `@Can(AuditPolicy, 'read')` nas rotas, sem `@Can.Anyone()`
+- [x] T020 [US1] `src/modules/audit/audit.controller.ts`: `@Can(AuditPolicy, 'read')` nas rotas, sem `@Can.Anyone()`
       nem `assertAuditor` (FR-005); NÃO importar o `AccessControlModule` no `AuditModule` (fecharia um ciclo com o
       `ReportAccessService`, que depende do `AuditService`): a `AuditPolicy` é descoberta pelo registro do pacote;
       conferir que a inicialização não lança `MissingPolicyError` (depois do T019)

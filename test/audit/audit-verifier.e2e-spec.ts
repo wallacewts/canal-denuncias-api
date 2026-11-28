@@ -63,14 +63,20 @@ describe('Verificação de integridade da trilha (e2e)', () => {
   });
 
   it('outro perfil recebe 403 com ACCESS_DENIED; sem identidade, 401', async () => {
+    const dpoId = randomUUID();
     await request(t.app.getHttpServer())
       .post('/api/admin/v1/audit-logs/verification')
-      .set(testIdentity(randomUUID(), Role.DPO))
+      .set(testIdentity(dpoId, Role.DPO))
       .expect(403);
-    const [row] = (await ds.query(
-      `SELECT result FROM audit_logs WHERE action = 'ACCESS_DENIED' ORDER BY id DESC LIMIT 1`,
-    )) as Array<Record<string, unknown>>;
-    expect(row).toEqual({ result: 'DENIED' });
+    let row: Record<string, unknown> | undefined;
+    for (const end = Date.now() + 3_000; !row && Date.now() < end;) {
+      [row] = (await ds.query(
+        `SELECT result::text, metadata FROM audit_logs WHERE action = 'ACCESS_DENIED' AND actor_user_id = $1`,
+        [dpoId],
+      )) as Array<Record<string, unknown>>;
+      if (!row) await new Promise((r) => setTimeout(r, 50));
+    }
+    expect(row).toEqual({ result: 'DENIED', metadata: { policy: 'AuditPolicy', ability: 'read', code: 'audit.read' } });
     await request(t.app.getHttpServer()).post('/api/admin/v1/audit-logs/verification').expect(401);
   });
 

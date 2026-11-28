@@ -15,7 +15,8 @@ describe('GET /api/admin/v1/audit-logs (e2e)', () => {
   let ds: DataSource;
   const auditorId = randomUUID();
   const AUDITOR = testIdentity(auditorId, Role.AUDITOR);
-  const ANALYST = testIdentity(randomUUID(), Role.ANALYST);
+  const analystId = randomUUID();
+  const ANALYST = testIdentity(analystId, Role.ANALYST);
   const reportA = randomUUID();
   const reportB = randomUUID();
 
@@ -75,10 +76,13 @@ describe('GET /api/admin/v1/audit-logs (e2e)', () => {
 
   it('outro perfil recebe 403 e a tentativa fica registrada como ACCESS_DENIED', async () => {
     await get({}, ANALYST).expect(403);
-    const [row] = (await ds.query(
-      `SELECT result, metadata FROM audit_logs WHERE action = 'ACCESS_DENIED' ORDER BY id DESC LIMIT 1`,
-    )) as Array<Record<string, unknown>>;
-    expect(row).toEqual({ result: 'DENIED', metadata: { required: 'AUDITOR' } });
+    // A negação passa a vir da declaração da rota (`AuditPolicy`, feature 007), gravada pelo assinante (assíncrona).
+    const row = await lastDenial(ds, analystId);
+    expect(row).toEqual({
+      result: 'DENIED',
+      resource_type: 'audit_log',
+      metadata: { policy: 'AuditPolicy', ability: 'read', code: 'audit.read' },
+    });
   });
 
   it('sem identidade, 401', async () => {
@@ -97,3 +101,15 @@ describe('GET /api/admin/v1/audit-logs (e2e)', () => {
     expect(JSON.stringify(res.body)).not.toContain('XQZ');
   });
 });
+
+async function lastDenial(ds: DataSource, actorId: string): Promise<Record<string, unknown> | undefined> {
+  for (const end = Date.now() + 3_000; ;) {
+    const [row] = (await ds.query(
+      `SELECT result::text, resource_type::text, metadata FROM audit_logs
+        WHERE action = 'ACCESS_DENIED' AND actor_user_id = $1 ORDER BY id DESC LIMIT 1`,
+      [actorId],
+    )) as Array<Record<string, unknown>>;
+    if (row || Date.now() > end) return row;
+    await new Promise((r) => setTimeout(r, 50));
+  }
+}

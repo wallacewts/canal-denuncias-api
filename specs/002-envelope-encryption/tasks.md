@@ -204,19 +204,19 @@ chamada ao Vault acontece com transação aberta.
 
 ### Tests for User Story 5 (mandatory for security and privacy rules) ⚠️
 
-- [ ] T026 [P] [US5] Testes de integração em `test/crypto/no-leak.e2e-spec.ts`, por uma rota de fixture e com o AppRole
+- [x] T026 [P] [US5] Testes de integração em `test/crypto/no-leak.e2e-spec.ts`, por uma rota de fixture e com o AppRole
       `api`: contexto errado, valor adulterado, versão desconhecida, JSON fora do schema, `wrapped_dek` corrompida e
       Vault inacessível. Para cada caso, com relato
       `XQZ` e com relato longo, a resposta e as linhas de log da requisição não contêm o texto, a DEK (base64 e hex) nem
       o valor cifrado (base64 e hex)
-- [ ] T027 [P] [US5] Atualizar `test/support/factories.e2e-spec.ts`: a denúncia criada por `createEncryptedReport` abre
+- [x] T027 [P] [US5] Atualizar `test/support/factories.e2e-spec.ts`: a denúncia criada por `createEncryptedReport` abre
       pelo `DataKeyService` + `RecordCipher`, e `test/support/factories.ts` não usa mais `createCipheriv`
 
 ### Implementation for User Story 5
 
-- [ ] T028 [US5] Criar a rota de fixture em `test/support/fixtures/crypto-fixture.module.ts` (abre uma denúncia gravada
+- [x] T028 [US5] Criar a rota de fixture em `test/support/fixtures/crypto-fixture.module.ts` (abre uma denúncia gravada
       e provoca as falhas sob demanda)
-- [ ] T029 [US5] Trocar `encryptField`/`decryptField` de `test/support/factories.ts` pelo `DataKeyService`, pelo
+- [x] T029 [US5] Trocar `encryptField`/`decryptField` de `test/support/factories.ts` pelo `DataKeyService`, pelo
       `RecordCipher` e pelo `newRecordId()` (R11) e marcar a pendência I3 como resolvida em
       `specs/001-transversal-infrastructure/tasks.md`
 

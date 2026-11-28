@@ -13,15 +13,15 @@ O `.env` local (copiado de `.env.example`) precisa de `TEST_ADMIN_DATABASE_URL`,
 
 ## Peças
 
-| Arquivo            | O que faz                                                                                                                                          |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `global-setup.ts`  | Roda uma vez: recria `canal_test_template` com as migrations (carregadas pelo Vite, sem `dist/`)                                                   |
-| `test-database.ts` | Clona um banco por suíte a partir do modelo e o descarta no fim. `audit_logs` não aceita DELETE nem TRUNCATE, então não há limpeza de tabelas      |
-| `test-env.ts`      | Padrões dos serviços locais. Força `NODE_ENV=test` e `PASSWORD_HASH_LOG_N=10`                                                                      |
-| `test-app.ts`      | `createTestApp({ imports })`: AppModule + `setupApp` + banco da suíte + captura de log. Devolve `{ app, logs, database, close }`                   |
-| `log-capture.ts`   | `logs.text()`, `logs.lines()` e `logs.forRequest(requestId)`                                                                                       |
-| `factories.ts`     | `createUser({ roles })`, `createCategory()`, `createEncryptedReport(ds, keys, content)` e `encryptField`/`decryptField` no formato da constituição |
-| `fixtures/`        | Módulos com rotas só de teste (erros, validação, rotas públicas e administrativas, serviço de chaves, paginação)                                   |
+| Arquivo            | O que faz                                                                                                                                                    |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `global-setup.ts`  | Roda uma vez: recria `canal_test_template` com as migrations (carregadas pelo Vite, sem `dist/`)                                                             |
+| `test-database.ts` | Clona um banco por suíte a partir do modelo e o descarta no fim. `audit_logs` não aceita DELETE nem TRUNCATE, então não há limpeza de tabelas                |
+| `test-env.ts`      | Padrões dos serviços locais. Força `NODE_ENV=test` e `PASSWORD_HASH_LOG_N=10`                                                                                |
+| `test-app.ts`      | `createTestApp({ imports })`: AppModule + `setupApp` + banco da suíte + captura de log. Devolve `{ app, logs, database, close }`                             |
+| `log-capture.ts`   | `logs.text()`, `logs.lines()` e `logs.forRequest(requestId)`                                                                                                 |
+| `factories.ts`     | `createUser({ roles })`, `createCategory()`, `createEncryptedReport(ds, cryptoDeps(app), content)`, que cifra pelo `CryptoModule` (mesma camada dos módulos) |
+| `fixtures/`        | Módulos com rotas só de teste (erros, validação, rotas públicas e administrativas, serviço de chaves, paginação)                                             |
 
 ## Exemplo: provar que um relato não vai para o log
 

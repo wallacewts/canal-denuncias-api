@@ -1,40 +1,16 @@
-import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
+import type { INestApplication } from '@nestjs/common';
 import type { DataSource } from 'typeorm';
 import { ReporterType } from '../../src/common/enums/reporter-type.enum.js';
 import type { Role } from '../../src/common/enums/role.enum.js';
-import type { KeyService } from '../../src/infra/vault/key-service.js';
+import { DataKeyService } from '../../src/modules/crypto/data-key.service.js';
+import { encryptionContext } from '../../src/modules/crypto/encryption-context.js';
+import { RecordCipher } from '../../src/modules/crypto/record-cipher.service.js';
+import { newRecordId } from '../../src/modules/crypto/record-id.js';
 import { Category } from '../../src/modules/catalog/entities/category.entity.js';
 import type { ReportContentV1 } from '../../src/modules/reports/report-content.js';
 import { Report } from '../../src/modules/reports/entities/report.entity.js';
 import { User } from '../../src/modules/users/entities/user.entity.js';
-
-/**
- * Formato dos campos cifrados definido na constituição (princípio III):
- * `[1 byte versão][12 bytes nonce][ciphertext][16 bytes tag GCM]`, AES-256-GCM, AAD `"<tabela>.<campo>:<id>"`.
- * Pendência I3 do analyze: quando a feature crypto existir, estas funções passam a usar o `CryptoService`.
- */
-const FORMAT_VERSION = 1;
-const NONCE_BYTES = 12;
-const TAG_BYTES = 16;
-
-export function encryptField(plaintext: Buffer, dek: Buffer, aad: string): Buffer {
-  const nonce = randomBytes(NONCE_BYTES);
-  const cipher = createCipheriv('aes-256-gcm', dek, nonce);
-  cipher.setAAD(Buffer.from(aad, 'utf8'));
-  const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
-  return Buffer.concat([Buffer.from([FORMAT_VERSION]), nonce, ciphertext, cipher.getAuthTag()]);
-}
-
-export function decryptField(encrypted: Buffer, dek: Buffer, aad: string): Buffer {
-  if (encrypted[0] !== FORMAT_VERSION) throw new Error('Versão de formato desconhecida');
-  const nonce = encrypted.subarray(1, 1 + NONCE_BYTES);
-  const tag = encrypted.subarray(encrypted.length - TAG_BYTES);
-  const ciphertext = encrypted.subarray(1 + NONCE_BYTES, encrypted.length - TAG_BYTES);
-  const decipher = createDecipheriv('aes-256-gcm', dek, nonce);
-  decipher.setAAD(Buffer.from(aad, 'utf8'));
-  decipher.setAuthTag(tag);
-  return Buffer.concat([decipher.update(ciphertext), decipher.final()]);
-}
 
 let sequence = 0;
 const unique = () => `${Date.now().toString(36)}${(sequence++).toString(36)}${randomBytes(2).toString('hex')}`;
@@ -63,39 +39,43 @@ export async function createCategory(ds: DataSource, overrides: Partial<Category
   return repo.save(repo.create({ code, name: `Categoria ${code}`, ...overrides }));
 }
 
+/** Serviços do CryptoModule usados pelas factories (a mesma camada que os módulos usam). */
+export interface CryptoDeps {
+  dataKeys: DataKeyService;
+  records: RecordCipher;
+}
+
+export function cryptoDeps(app: INestApplication): CryptoDeps {
+  return { dataKeys: app.get(DataKeyService), records: app.get(RecordCipher) };
+}
+
 /**
- * Denúncia com o relato cifrado como a API vai gravar: DEK nova do serviço de chaves (report-kek), conteúdo em
- * AES-256-GCM com AAD `reports.content_enc:<id>` e a DEK protegida em `wrapped_dek`.
+ * Denúncia com o relato cifrado exatamente como a API vai gravar (pendência I3 da 001, resolvida na 002): id gerado
+ * na aplicação, DEK nova da report-kek, conteúdo selado pelo `RecordCipher` com o contexto `reports.content_enc:<id>`
+ * e só a DEK protegida em `wrapped_dek`. O Vault é chamado antes da gravação, nunca dentro de transação.
  */
 export async function createEncryptedReport(
   ds: DataSource,
-  keys: KeyService,
+  crypto: CryptoDeps,
   content: ReportContentV1,
   overrides: Partial<Pick<Report, 'reporterType' | 'categoryId' | 'status'>> = {},
 ): Promise<{ report: Report }> {
-  const [{ id }] = (await ds.query(`SELECT uuidv7() AS id`)) as Array<{ id: string }>;
+  const id = newRecordId();
   const categoryId = overrides.categoryId ?? (await createCategory(ds)).id;
-
-  const dek = await keys.generateDataKey('report-kek');
-  try {
-    const contentEnc = encryptField(
-      Buffer.from(JSON.stringify(content), 'utf8'),
-      dek.plaintext,
-      `reports.content_enc:${id}`,
-    );
-    const repo = ds.getRepository(Report);
-    await repo.insert({
-      id,
-      protocol: `DV-${unique().toUpperCase().slice(0, 12)}`,
-      accessKeyHash: '$test$sem-acesso',
-      reporterType: overrides.reporterType ?? ReporterType.EMPLOYEE,
-      categoryId,
-      ...(overrides.status ? { status: overrides.status } : {}),
-      wrappedDek: Buffer.from(dek.wrapped, 'utf8'),
-      contentEnc,
-    });
-    return { report: await repo.findOneByOrFail({ id }) };
-  } finally {
-    dek.plaintext.fill(0);
-  }
+  const ctx = encryptionContext('reports.content_enc', id);
+  const { result: contentEnc, wrapped } = await crypto.dataKeys.createReportKey((dek) =>
+    crypto.records.sealJson(dek, ctx, content),
+  );
+  const repo = ds.getRepository(Report);
+  await repo.insert({
+    id,
+    protocol: `DV-${unique().toUpperCase().slice(0, 12)}`,
+    accessKeyHash: '$test$sem-acesso',
+    reporterType: overrides.reporterType ?? ReporterType.EMPLOYEE,
+    categoryId,
+    ...(overrides.status ? { status: overrides.status } : {}),
+    wrappedDek: Buffer.from(wrapped, 'utf8'),
+    contentEnc,
+  });
+  return { report: await repo.findOneByOrFail({ id }) };
 }

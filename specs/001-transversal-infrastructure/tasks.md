@@ -563,15 +563,15 @@ ficar livre. Depois da US3: US7, US10 e US11 em paralelo.
 
 Achados do `/speckit-analyze` de 2026-11-27 que não bloquearam o implement. Situação ao fim da feature:
 
-| ID  | Situação   | O que foi feito ou fica                                                                                                              |
-| --- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| C3  | Resolvido  | Testes do Vault voltando ao ar e do token AppRole revogado no meio da operação (`vault.client.spec.ts`)                              |
-| I3  | **Aberto** | A factory de denúncia cifrada usa o formato da constituição com `node:crypto`. Passa a usar o `CryptoService` na feature crypto (01) |
-| U2  | Resolvido  | Arquivos acrescentados durante a implementação listados no `plan.md`                                                                 |
-| U3  | Resolvido  | `assets` no `nest-cli.json` copia `common-passwords.txt` para `dist/`                                                                |
-| U4  | Resolvido  | `TEST_ADMIN_DATABASE_URL` em `contracts/environment.md`                                                                              |
-| I4  | Resolvido  | ID da política de senha corrigido para AUTH-05 no `research.md`                                                                      |
-| A1  | Resolvido  | Regra do helper `text({ max })` no `AGENTS.md`                                                                                       |
-| C4  | Parcial    | Job `proxy` no CI roda o smoke test. O `create-admin` na imagem foi verificado manualmente (precisa de TTY)                          |
-| C5  | Resolvido  | `test/http/docs.e2e-spec.ts`: `/docs` 404 em produção e 200 fora dela                                                                |
-| C6  | **Aberto** | Não existe nenhum job ainda. Tornar genérico o teste de payload quando surgir o primeiro (notifications ou retention)                |
+| ID  | Situação   | O que foi feito ou fica                                                                                               |
+| --- | ---------- | --------------------------------------------------------------------------------------------------------------------- |
+| C3  | Resolvido  | Testes do Vault voltando ao ar e do token AppRole revogado no meio da operação (`vault.client.spec.ts`)               |
+| I3  | Resolvido  | Resolvido na feature 002 (T029): `createEncryptedReport` cifra pelo `DataKeyService` e pelo `RecordCipher`            |
+| U2  | Resolvido  | Arquivos acrescentados durante a implementação listados no `plan.md`                                                  |
+| U3  | Resolvido  | `assets` no `nest-cli.json` copia `common-passwords.txt` para `dist/`                                                 |
+| U4  | Resolvido  | `TEST_ADMIN_DATABASE_URL` em `contracts/environment.md`                                                               |
+| I4  | Resolvido  | ID da política de senha corrigido para AUTH-05 no `research.md`                                                       |
+| A1  | Resolvido  | Regra do helper `text({ max })` no `AGENTS.md`                                                                        |
+| C4  | Parcial    | Job `proxy` no CI roda o smoke test. O `create-admin` na imagem foi verificado manualmente (precisa de TTY)           |
+| C5  | Resolvido  | `test/http/docs.e2e-spec.ts`: `/docs` 404 em produção e 200 fora dela                                                 |
+| C6  | **Aberto** | Não existe nenhum job ainda. Tornar genérico o teste de payload quando surgir o primeiro (notifications ou retention) |

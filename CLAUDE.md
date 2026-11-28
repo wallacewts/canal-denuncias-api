@@ -4,5 +4,5 @@
 
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/004-auth-library-decision/plan.md`
+`specs/005-team-user-management/plan.md`
 <!-- SPECKIT END -->

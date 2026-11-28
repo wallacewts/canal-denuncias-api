@@ -119,15 +119,16 @@ O rate limit no login da equipe (AUTH-08) não é proteção contra spam: proteg
 
 ## Decisões tomadas
 
-| Data       | Ponto                                                       | Decisão                                                                                   | Tarefas                   |
-| ---------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------- |
-| 27/11/2026 | O DPO lê o conteúdo da denúncia?                            | Sim, em modo somente leitura, de todas as denúncias (respeitando conflito de interesse)   | ACL-01                    |
-| 27/11/2026 | O ADMIN pode acumular perfis que leem denúncias?            | Sim. Em compensação, ninguém altera os próprios perfis                                    | USERS-05                  |
-| 27/11/2026 | O denunciante vê o desfecho?                                | Sim: Procedente, Parcialmente procedente ou Improcedente                                  | PUB-03                    |
-| 27/11/2026 | O SLA fica suspenso enquanto se espera o denunciante?       | Sim                                                                                       | CAT-04                    |
-| 27/11/2026 | Como isolar a `identity-kek`?                               | Serviço separado (`identity-worker`), único com credencial na chave. A API não tem acesso | CRYPTO-07, IDV-05, IDV-06 |
-| 27/11/2026 | Arredondar o horário das ações do denunciante na auditoria? | Não. O horário é gravado exato                                                            | AUDIT-02                  |
-| 27/11/2026 | Prazo de retenção dos backups                               | Indeterminado. O expurgo não alcança os backups (registrar no RIPD)                       | RET-02                    |
+| Data       | Ponto                                                         | Decisão                                                                                                                                        | Tarefas                   |
+| ---------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| 27/11/2026 | O DPO lê o conteúdo da denúncia?                              | Sim, em modo somente leitura, de todas as denúncias (respeitando conflito de interesse)                                                        | ACL-01                    |
+| 27/11/2026 | O ADMIN pode acumular perfis que leem denúncias?              | Sim. Em compensação, ninguém altera os próprios perfis                                                                                         | USERS-05                  |
+| 27/11/2026 | O denunciante vê o desfecho?                                  | Sim: Procedente, Parcialmente procedente ou Improcedente                                                                                       | PUB-03                    |
+| 27/11/2026 | O SLA fica suspenso enquanto se espera o denunciante?         | Sim                                                                                                                                            | CAT-04                    |
+| 27/11/2026 | Como isolar a `identity-kek`?                                 | Serviço separado (`identity-worker`), único com credencial na chave. A API não tem acesso                                                      | CRYPTO-07, IDV-05, IDV-06 |
+| 27/11/2026 | Arredondar o horário das ações do denunciante na auditoria?   | Não. O horário é gravado exato                                                                                                                 | AUDIT-02                  |
+| 27/11/2026 | Prazo de retenção dos backups                                 | Indeterminado. O expurgo não alcança os backups (registrar no RIPD)                                                                            | RET-02                    |
+| 28/11/2026 | Denúncias atribuídas a um analista desativado ou sem o perfil | Desativar ou retirar o perfil é recusado (409, com a quantidade) até o Gestor reatribuir. Bloquear é sempre permitido e imediato (feature 005) | USERS-04, USERS-05        |
 
 ## Pontos em aberto
 
@@ -135,7 +136,6 @@ O rate limit no login da equipe (AUTH-08) não é proteção contra spam: proteg
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
 | 1   | Usar os pacotes oficiais `@nestjs/authentication` e `@nestjs/authorization` ou passport, argon2, otplib e CASL. Se for o pacote oficial, o hash muda de argon2id para scrypt e a decisão D03 precisa ser atualizada | AUTH-00, ACL-00 |
 | 2   | zod (Standard Schema, nativo no Nest 12) ou `class-validator` para validar entrada                                                                                                                                  | TRV-02          |
-| 3   | O que fazer com as denúncias atribuídas quando um analista é desativado ou perde o perfil                                                                                                                           | USERS-04        |
 | 4   | Mudança no prazo de retenção vale só para encerramentos futuros?                                                                                                                                                    | CAT-03          |
 | 5   | Prazo de guarda da própria trilha de auditoria                                                                                                                                                                      | AUDIT-09        |
 | 6   | Tipos de arquivo aceitos como anexo além de PDF, PNG, JPEG e TXT                                                                                                                                                    | ATT-01          |

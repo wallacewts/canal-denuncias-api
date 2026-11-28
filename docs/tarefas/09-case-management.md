@@ -56,6 +56,8 @@ histórico.
 **Critérios de aceite**
 
 - [ ] Só aceita usuário ativo com perfil `ANALYST` e sem bloqueio por conflito naquela denúncia.
+- [ ] A atribuição trava a linha do analista (`SELECT … FOR SHARE`) e confere status e perfil na mesma transação,
+      para não escapar da regra que impede desativar quem tem denúncias abertas atribuídas (feature 005, research R4).
 - [ ] Fecha a atribuição anterior (`released_at`) e abre a nova, na mesma transação.
 - [ ] Gera notificação para o analista quando NOT-02 estiver pronta.
 

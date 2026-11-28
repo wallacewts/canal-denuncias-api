@@ -68,8 +68,9 @@
 **Critérios de aceite**
 
 - [ ] Bloquear ou desativar revoga todas as sessões do usuário na hora.
-- [ ] Usuário desativado com denúncias atribuídas: a operação é recusada (409) até reatribuir, ou as atribuições são
-      liberadas automaticamente (escolher e registrar).
+- [ ] Usuário com denúncias atribuídas não pode ser desativado: a operação é recusada (409, informando a quantidade)
+      até o Gestor reatribuir. Bloquear continua sempre permitido e imediato (para conta comprometida, bloquear antes
+      e desativar depois). Decidido em 28/11/2026 (feature 005).
 - [ ] O ADMIN não pode desativar a si mesmo.
 
 ### USERS-05 · Gerenciar perfis

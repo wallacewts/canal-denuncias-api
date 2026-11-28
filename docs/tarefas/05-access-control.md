@@ -43,6 +43,10 @@ https://docs.nestjs.com/security/authorization.md.
 
 Documento e código com cada habilidade por perfil.
 
+> O catálogo de códigos `recurso.ação` já existe (D55, feature 005, `src/modules/access-control/abilities.ts`) e é o
+> que o `GET /me` devolve. As políticas desta tarefa usam os mesmos códigos via `hasAbility`; o mapeamento de cada
+> linha (rota, serviço ou consulta) está no ADR 0053.
+
 - **Arquivos:** `src/modules/access-control/policies/`, matriz em `docs/adr/` ou neste arquivo.
 - **Endpoints:** nenhum.
 - **Auditoria:** nenhuma.

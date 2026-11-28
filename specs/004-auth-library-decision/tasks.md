@@ -99,13 +99,13 @@ evidência, os riscos e o impacto.
 **Independent Test**: ler o registro e conferir que cada requisito FR-005 a FR-021 aparece com o resultado de cada
 opção e a evidência (teste do protótipo ou documentação).
 
-- [ ] T018 [US1] ADR detalhado em `docs/adr/0053-autenticacao-e-autorizacao.md` (modelo `docs/adr/template.md`):
+- [x] T018 [US1] ADR detalhado em `docs/adr/0053-autenticacao-e-autorizacao.md` (modelo `docs/adr/template.md`):
       escolha, alternativas (passport/express-session/otplib/CASL), tabela requisito × opção com a evidência de cada
       linha (arquivo de teste do protótipo ou trecho da documentação), decisão de não usar renovação por tokens com o
       histórico da Q-P2 e o ponto de partida para um canal futuro (R3), riscos do 0.1.x com mitigação e ponto de saída
       pela `AUTH_IDENTITY`, impacto em D03, D10, D32 e no modelo de dados; linkar a partir das linhas D53/D54 de
       `docs/adr/README.md`
-- [ ] T019 [US1] Marcar os critérios de aceite de AUTH-00 em `docs/tarefas/04-auth.md` e de ACL-00 em
+- [x] T019 [US1] Marcar os critérios de aceite de AUTH-00 em `docs/tarefas/04-auth.md` e de ACL-00 em
       `docs/tarefas/05-access-control.md`, com a referência à D53/D54 e ao ADR; conferir que o AUTH-02 já está ajustado
       (auditoria `AUTH_SIGNED_OUT`/`AUTH_SESSION_REVOKED`, sem `AUTH_TOKEN_REUSED` e sem refresh token, feito na correção I2
       do analyze)

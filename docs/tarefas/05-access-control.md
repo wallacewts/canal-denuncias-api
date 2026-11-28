@@ -29,7 +29,7 @@ https://docs.nestjs.com/security/authorization.md.
 
 **Critérios de aceite**
 
-- [ ] ADR com a escolha.
+- [x] ADR com a escolha (D54, `docs/adr/0053-autenticacao-e-autorizacao.md`).
 
 ### ACL-01 · Matriz de permissões
 

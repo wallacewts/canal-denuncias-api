@@ -38,8 +38,10 @@ Ler antes: `.claude/skills/nestjs-auth/` e https://docs.nestjs.com/security/auth
 
 **Critérios de aceite**
 
-- [ ] ADR com a escolha, os motivos e o impacto em D03 (hash) e no modelo de dados.
-- [ ] Protótipo mínimo (login, MFA e rota protegida) com a opção escolhida, rodando contra o Postgres.
+- [x] ADR com a escolha, os motivos e o impacto em D03 (hash) e no modelo de dados (D53,
+      `docs/adr/0053-autenticacao-e-autorizacao.md`).
+- [x] Protótipo mínimo (login, MFA e rota protegida) com a opção escolhida, rodando contra o Postgres
+      (`test/contract/auth/`, feature 004).
 
 ### AUTH-01 · Login com senha
 

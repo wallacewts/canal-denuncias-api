@@ -113,6 +113,11 @@
 - [ ] As permissões efetivas (lista de habilidades) vêm junto, calculadas pelas mesmas políticas do servidor (D54). O
       front decide menu e rotas só por elas e não copia a matriz de perfis; o servidor continua checando cada rota.
       (Proposta do front, feature 004 do backoffice.)
+- [ ] Formato das permissões: códigos estáveis `recurso.ação` (ex.: `reports.list`, `reports.read`, `users.manage`,
+      `audit.read`), um por habilidade da matriz do ACL-01 (mapeamento em
+      `docs/adr/0053-autenticacao-e-autorizacao.md`). Habilidade que depende do registro (ex.: ler uma denúncia só se
+      atribuída) indica só que o usuário pode exercê-la em algum registro; a decisão final continua no servidor.
+      (Proposta do front.)
 - [ ] Devolve os horários de expiração da sessão em ISO 8601 UTC: inatividade (último uso + 15 min) e absoluta
       (login + 8 h), para o front avisar antes de cada um. Como toda requisição autenticada conta como uso, o front não
       deve chamar `/me` só para manter a sessão viva. (Proposta do front, feature 004 do backoffice.)

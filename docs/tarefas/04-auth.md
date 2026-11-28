@@ -78,10 +78,12 @@ Ler antes: `.claude/skills/nestjs-auth/` e https://docs.nestjs.com/security/auth
       etapa.
 - [ ] As respostas do login e do desafio trazem os horários de expiração da sessão (inatividade e absoluta, ISO 8601
       UTC), como o `GET /me` (USERS-07).
-- [ ] Bloqueio do desafio MFA (5 falhas em 15 min, depois que a senha já foi provada) tem código de resposta próprio,
-      distinto do código inválido. Excesso de tentativas pelo rate limit é 429 com `Retry-After` (AUTH-08). O
-      bloqueio progressivo da etapa de senha segue a resposta genérica (ver o critério de `BLOCKED`/`DISABLED` e o
-      FR-006 da feature 004) até decisão própria.
+- [ ] Bloqueio do desafio MFA (5 falhas em 15 min, depois que a senha já foi provada) responde **423**, distinto do
+      código inválido (401). Excesso de tentativas pelo rate limit é 429 com `Retry-After` (AUTH-08). (Propostas do
+      front.)
+- [ ] O bloqueio progressivo da etapa de senha recebe a **mesma resposta genérica** da credencial inválida, sem código
+      próprio: uma resposta distinta revelaria que o e-mail existe (FR-006 da feature 004). Decidido pelo usuário em
+      28/11/2026.
 
 ### AUTH-02 · Sessão, expiração e logout
 
@@ -116,9 +118,10 @@ Ler antes: `.claude/skills/nestjs-auth/` e https://docs.nestjs.com/security/auth
 
 **Critérios de aceite**
 
-- [ ] A geração devolve a URI `otpauth://`, o QR code como imagem embutida (data URI, gerado na API, sem serviço
-      externo) e o segredo em texto para digitação manual, com o nome do sistema como emissor. O segredo vai cifrado
-      com a `app-kek` (o `PgMfaStore` já faz) e nunca vai para log ou auditoria. (Proposta do front.)
+- [ ] A geração devolve a URI `otpauth://`, o QR code como PNG embutido (`data:image/png;base64,...`, nunca SVG, gerado
+      na API, sem serviço externo) e o segredo em texto para digitação manual, com o nome do sistema como emissor. O
+      segredo vai cifrado com a `app-kek` (o `PgMfaStore` já faz) e nunca vai para log ou auditoria. (Proposta do
+      front.)
 - [ ] Só ativa depois de confirmar um código válido.
 - [ ] Na confirmação, gera 10 códigos de recuperação, devolvidos na resposta da confirmação uma única vez e guardados
       como hash. (Proposta do front.)
@@ -153,6 +156,8 @@ Ler antes: `.claude/skills/nestjs-auth/` e https://docs.nestjs.com/security/auth
 - [ ] Política: mínimo de 12 caracteres e recusa de senhas comuns (lista local, sem consulta externa).
 - [ ] Troca obrigatória quando `password_changed_at` é nulo.
 - [ ] Trocar a senha revoga as outras sessões do usuário.
+- [ ] Nova senha que viola a política responde 422 com o código da regra violada (ex.: `PASSWORD_TOO_SHORT`,
+      `PASSWORD_COMMON`), sem ecoar a senha na resposta, no log ou na auditoria. (Proposta do front.)
 
 ### AUTH-06 · Guard global e usuário atual
 

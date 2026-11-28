@@ -59,12 +59,13 @@ Nenhuma extensão implementa criptografia, protocolo TOTP, comparação de senha
 
 **Alternatives considered**:
 
-- **Passport + express-session + connect-pg-simple + otplib** (previsto no registro original): `passport-local` não
-  é atualizado desde 2023; `express-session` faz expiração deslizante (`rolling`), mas a expiração absoluta de 8 h, a
-  troca do id no MFA, a proteção contra replay de TOTP, o bloqueio por falhas de MFA, os códigos de recuperação com
-  hash e a resposta em tempo constante para e-mail inexistente seriam **código próprio de segurança** (estimativa: G,
-  ~600 linhas, com mais superfície de erro). Mais dependências de terceiros e nenhuma suíte de contrato pronta.
-  Maduro, mas exige escrever exatamente as partes mais delicadas.
+- **Passport + express-session + connect-pg-simple + otplib** (previsto no registro original): `passport-local` não é
+  atualizado desde 2023; `express-session` faz expiração deslizante (`rolling`), mas a expiração absoluta de 8 h, a
+  troca do id no MFA, a proteção contra replay de TOTP, o bloqueio por falhas de MFA, os códigos de recuperação com hash
+  e a resposta em tempo constante para e-mail inexistente seriam **código próprio de segurança** (estimativa: G, com
+  mais superfície de erro; a conta inicial de ~600 linhas incluía a renovação por tokens, que saiu na Q-P2). Mais
+  dependências de terceiros e nenhuma suíte de contrato pronta. Maduro, mas exige escrever exatamente as partes mais
+  delicadas.
 - **Usar a cifragem local do pacote para o segredo TOTP** (`encryption: { keys }`): exigiria uma chave estática em
   variável de ambiente, contra a regra de chaves só no Vault (princípio III e D08). Rejeitado.
 

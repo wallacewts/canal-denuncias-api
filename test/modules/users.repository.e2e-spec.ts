@@ -1,4 +1,4 @@
-import { ConflictException } from '@nestjs/common';
+import { DomainConflictError } from '../../src/common/http/domain-error.js';
 import { DataSource } from 'typeorm';
 import { Role } from '../../src/common/enums/role.enum.js';
 import { UsersRepository } from '../../src/modules/users/users.repository.js';
@@ -47,7 +47,9 @@ describe('UsersRepository (e2e)', () => {
     await create('d@teste.local');
     const ds = t.app.get(DataSource);
     const error = await create('D@teste.local').catch((e: unknown) => e);
-    expect(error).toBeInstanceOf(ConflictException);
+    expect(error).toBeInstanceOf(DomainConflictError);
+    expect((error as DomainConflictError).getStatus()).toBe(409);
+    expect((error as DomainConflictError).code).toBe('EMAIL_ALREADY_REGISTERED');
     expect((error as Error).message).not.toContain('d@teste.local');
     const [{ count }] = await ds.query(`SELECT count(*)::int AS count FROM users WHERE email = 'd@teste.local'`);
     expect(count).toBe(1);

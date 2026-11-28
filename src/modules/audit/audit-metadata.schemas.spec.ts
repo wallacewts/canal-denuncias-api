@@ -92,4 +92,26 @@ describe('Metadata por ação (AUDIT-05, D45)', () => {
       }
     });
   });
+
+  describe('ações da equipe (feature 005, T009)', () => {
+    it('USER_CREATED aceita forced ausente (cadastro pela API) e presente (create-admin)', () => {
+      expect(() => validateAuditMetadata(AuditAction.USER_CREATED, { roles: [Role.ANALYST] })).not.toThrow();
+      expect(() =>
+        validateAuditMetadata(AuditAction.USER_CREATED, { roles: [Role.ADMIN], forced: true }),
+      ).not.toThrow();
+    });
+
+    it('USER_UPDATED aceita só o nome do campo alterado, nunca o valor', () => {
+      expect(() => validateAuditMetadata(AuditAction.USER_UPDATED, { fields: ['name'] })).not.toThrow();
+      rejection(AuditAction.USER_UPDATED, { fields: ['name'], name: SHORT });
+      rejection(AuditAction.USER_UPDATED, { fields: ['email'] });
+      rejection(AuditAction.USER_UPDATED, { fields: [] });
+      rejection(AuditAction.USER_UPDATED, undefined);
+    });
+
+    it('USER_MFA_RESET não aceita nenhum campo', () => {
+      expect(() => validateAuditMetadata(AuditAction.USER_MFA_RESET, undefined)).not.toThrow();
+      rejection(AuditAction.USER_MFA_RESET, { secret: SHORT });
+    });
+  });
 });

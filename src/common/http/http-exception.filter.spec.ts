@@ -9,6 +9,7 @@ import {
   type ArgumentsHost,
 } from '@nestjs/common';
 import { QueryFailedError } from 'typeorm';
+import { DomainConflictError, DomainError } from './domain-error.js';
 import { HttpExceptionFilter } from './http-exception.filter.js';
 
 const SEGREDO = 'TEXTO-DO-RELATO-SECRETO';
@@ -152,5 +153,53 @@ describe('HttpExceptionFilter', () => {
   it('gera um requestId quando a requisição ainda não tem um', () => {
     const { body } = run(new BadRequestException(), { id: undefined });
     expect(body.requestId).toMatch(/^[0-9a-f-]{36}$/);
+  });
+});
+
+describe('HttpExceptionFilter: erros de domínio com código (D56)', () => {
+  it('repassa code e details; mensagem fixa', () => {
+    const { statusCode, body } = run(
+      new DomainConflictError('USER_HAS_ASSIGNED_REPORTS', 'A pessoa tem denúncias atribuídas.', {
+        assignedReports: 3,
+      }),
+    );
+    expect(statusCode).toBe(409);
+    expect(body).toEqual({
+      statusCode: 409,
+      error: 'Conflict',
+      message: 'A pessoa tem denúncias atribuídas.',
+      code: 'USER_HAS_ASSIGNED_REPORTS',
+      details: { assignedReports: 3 },
+      requestId: REQUEST_ID,
+    });
+  });
+
+  it('sem details, o corpo não traz a chave', () => {
+    const { body } = run(new DomainConflictError('LAST_ACTIVE_ADMIN', 'Precisa sobrar um Administrador ativo.'));
+    expect(body).toMatchObject({ code: 'LAST_ACTIVE_ADMIN' });
+    expect('details' in body).toBe(false);
+  });
+
+  it('erros comuns continuam sem code', () => {
+    const { body } = run(new ConflictException('Conflito'));
+    expect('code' in body).toBe(false);
+  });
+
+  it.each([
+    ['texto livre', { motivo: 'senha XQZ' }],
+    ['número quebrado', { n: 1.5 }],
+    ['objeto', { n: { a: 1 } }],
+    ['negativo', { n: -1 }],
+  ])('details com %s é recusado na construção', (_caso, details) => {
+    expect(() => new DomainConflictError('X_Y', 'Mensagem fixa.', details as never)).toThrow();
+  });
+
+  it.each(['minusculo', 'COM ESPACO', '', 'X'.repeat(65)])('code fora do formato (%s) é recusado', (code) => {
+    expect(() => new DomainConflictError(code, 'Mensagem fixa.')).toThrow();
+  });
+
+  it('details aceita enum em maiúsculas e inteiros', () => {
+    const { body } = run(new DomainError(422, 'PASSWORD_COMMON', 'Senha fraca.', { rule: 'PASSWORD_COMMON', min: 12 }));
+    expect(body).toMatchObject({ statusCode: 422, details: { rule: 'PASSWORD_COMMON', min: 12 } });
   });
 });

@@ -9,6 +9,7 @@ import { AuditAction, AuditResourceType } from '../modules/audit/audit-action.en
 import { runAsSystem } from '../modules/audit/audit-context.js';
 import { AuditService } from '../modules/audit/audit.service.js';
 import { checkPasswordPolicy } from '../modules/auth/password/password-policy.js';
+import { ADMIN_LOCK } from '../modules/users/admin-lock.js';
 import { EmailAlreadyRegisteredError, UsersRepository } from '../modules/users/users.repository.js';
 import { CliOutput } from './cli-output.js';
 import { PasswordPrompt } from './password-prompt.js';
@@ -20,8 +21,6 @@ export interface CreateAdminOptions {
 }
 
 const MAX_ATTEMPTS = 3;
-/** Serializa execuções simultâneas: sem ele, duas poderiam criar dois "primeiros" administradores. */
-const CREATE_ADMIN_LOCK = 0x41_44_4d_4e; // "ADMN"
 
 const optionsSchema = z.object({ name: z.string().trim().min(1).max(120), email: z.email().max(254) });
 
@@ -83,7 +82,7 @@ export class CreateAdminCommand extends CommandRunner {
 
     try {
       return await this.dataSource.transaction(async (manager) => {
-        await manager.query('SELECT pg_advisory_xact_lock($1)', [CREATE_ADMIN_LOCK]);
+        await manager.query('SELECT pg_advisory_xact_lock($1)', [ADMIN_LOCK]);
         if (!options.force && (await this.users.countActiveAdmins(manager)) > 0) {
           this.output.error('Já existe um administrador ativo. Use --force para criar outro (a criação é auditada).');
           return 1;

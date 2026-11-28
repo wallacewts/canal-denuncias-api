@@ -3,6 +3,7 @@ import { STATUS_CODES } from 'node:http';
 import { Catch, HttpException, Logger, type ArgumentsHost, type ExceptionFilter } from '@nestjs/common';
 import { QueryFailedError } from 'typeorm';
 import { ERROR_MESSAGES, type ApiError, type ApiValidationIssue } from './api-error.js';
+import { DomainError } from './domain-error.js';
 
 interface RequestLike {
   id?: unknown;
@@ -85,7 +86,17 @@ export class HttpExceptionFilter implements ExceptionFilter {
     req.id ??= requestId;
 
     const { status, message } = this.resolve(exception, req, requestId);
-    const body: ApiError = { statusCode: status, error: STATUS_CODES[status] ?? 'Error', message, requestId };
+    const domain =
+      exception instanceof DomainError && status < 500
+        ? { code: exception.code, ...(exception.details && { details: exception.details }) }
+        : {};
+    const body: ApiError = {
+      statusCode: status,
+      error: STATUS_CODES[status] ?? 'Error',
+      message,
+      ...domain,
+      requestId,
+    };
     res.status(status).json(body);
   }
 

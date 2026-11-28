@@ -4,6 +4,10 @@ export interface ApiError {
   error: string;
   /** Texto seguro ou, em erros de validação, a lista de `{ path, code, message }` sem valores recebidos. */
   message: string | ApiValidationIssue[];
+  /** Código estável de regra de negócio (D56), só em erros de domínio. */
+  code?: string;
+  /** Detalhes seguros do erro de domínio: só inteiros e códigos (D56). */
+  details?: Readonly<Record<string, number | string>>;
   requestId: string;
 }
 

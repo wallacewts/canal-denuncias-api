@@ -41,37 +41,37 @@ só de teste); horários com `TestClock` no `AUTH_CLOCK`; "não vazou" também c
 **Purpose**: catálogo de habilidades, política da área de usuários, corpo de erro com código, schemas e apoio de
 teste. Nenhuma user story começa antes.
 
-- [ ] T003 [P] Teste unitário `src/modules/access-control/abilities.spec.ts`: tabela perfil × código com o esperado da
+- [x] T003 [P] Teste unitário `src/modules/access-control/abilities.spec.ts`: tabela perfil × código com o esperado da
       matriz do ACL-01 (12 códigos, research R1); combinação de perfis = união; lista ordenada e sem repetição; perfil
       vazio = lista vazia; todo código casa com `^[a-z][a-z-]*\.[a-z][a-z-]*$`; e teste de documento que lê a tabela da
       matriz em `docs/tarefas/05-access-control.md` (mapa rótulo da linha → códigos no próprio teste) e falha se uma
       linha ou marcação mudar sem o catálogo mudar
-- [ ] T004 Catálogo em `src/modules/access-control/abilities.ts`: tipo `Ability` (união dos 12 códigos),
+- [x] T004 Catálogo em `src/modules/access-control/abilities.ts`: tipo `Ability` (união dos 12 códigos),
       `ABILITY_CATALOG` (perfis e escopo global/por registro), `abilitiesFor(roles)` e `hasAbility(user, code)`
       (depois do T003)
-- [ ] T005 [P] Teste `src/common/http/http-exception.filter.spec.ts`: exceção de domínio com `code` e `details` sai
+- [x] T005 [P] Teste `src/common/http/http-exception.filter.spec.ts`: exceção de domínio com `code` e `details` sai
       no corpo; `details` com valor que não seja inteiro ou enum é recusado na construção; erros existentes continuam
       sem `code`; mensagem nunca repete valor recebido
-- [ ] T006 `code?` e `details?` em `src/common/http/api-error.ts`, classe `DomainConflictError` (409 com código) em
+- [x] T006 `code?` e `details?` em `src/common/http/api-error.ts`, classe `DomainConflictError` (409 com código) em
       `src/common/http/domain-error.ts` e repasse no `src/common/http/http-exception.filter.ts`;
       `EmailAlreadyRegisteredError` de `src/modules/users/users.repository.ts` passa a levar `EMAIL_ALREADY_REGISTERED`
       (depois do T005)
-- [ ] T007 [P] Teste unitário `src/modules/access-control/policies/users.policy.spec.ts`: `manage` só com
+- [x] T007 [P] Teste unitário `src/modules/access-control/policies/users.policy.spec.ts`: `manage` só com
       `users.manage`; `actOnOther` nega quando o alvo é a própria pessoa (mesmo sendo ADMIN) e quando falta
       `users.manage`; id malformado não passa
-- [ ] T008 `UsersPolicy` em `src/modules/access-control/policies/users.policy.ts` (habilidades `manage` e
+- [x] T008 `UsersPolicy` em `src/modules/access-control/policies/users.policy.ts` (habilidades `manage` e
       `actOnOther`, consultando `hasAbility`), registrada e exportada pelo
       `src/modules/access-control/access-control.module.ts` (depois do T004 e T007)
-- [ ] T009 [P] Schemas da trilha (teste antes em `src/modules/audit/audit-metadata.schemas.spec.ts`): `USER_UPDATED` =
+- [x] T009 [P] Schemas da trilha (teste antes em `src/modules/audit/audit-metadata.schemas.spec.ts`): `USER_UPDATED` =
       `{ fields: ['name'] }` (enum, nunca valor); `USER_CREATED.forced` opcional; `USER_MFA_RESET` sem metadata, em
       `src/modules/audit/audit-metadata.schemas.ts`
-- [ ] T010 [P] Chave do advisory lock em `src/modules/users/admin-lock.ts` (mesmo valor de hoje) e
+- [x] T010 [P] Chave do advisory lock em `src/modules/users/admin-lock.ts` (mesmo valor de hoje) e
       `src/cli/create-admin.command.ts` passando a importá-la; `test/cli/create-admin.e2e-spec.ts` continua verde
-- [ ] T011 [P] Schemas de entrada e saída em `src/modules/users/users.schemas.ts` (`strictObject`, `text({ max: 120 })`
+- [x] T011 [P] Schemas de entrada e saída em `src/modules/users/users.schemas.ts` (`strictObject`, `text({ max: 120 })`
       para nome, e-mail normalizado com até 254 caracteres, perfis 1 a 5 sem repetição, status, filtro da listagem com
       `pageQueryShape`) e teste `src/modules/users/users.schemas.spec.ts` (campos extras, perfil repetido, vazio,
       inexistente, nome só com espaços, e-mail inválido: 400 sem ecoar valor)
-- [ ] T012 [P] Apoio de teste `test/users/support.ts`: cria pessoas da equipe com perfis e devolve o cookie de sessão
+- [x] T012 [P] Apoio de teste `test/users/support.ts`: cria pessoas da equipe com perfis e devolve o cookie de sessão
       verificada pelo login de exemplo da 004 (reusa `test/contract/auth/example/auth-helpers.ts`); app com
       `ExampleAuthModule` e `TestClock`
 

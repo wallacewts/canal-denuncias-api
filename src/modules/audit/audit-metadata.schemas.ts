@@ -28,7 +28,14 @@ const auditLogFilters = z.strictObject({
 });
 
 const SPECIFIC: Partial<Record<AuditAction, z.ZodType>> = {
-  [AuditAction.USER_CREATED]: z.strictObject({ roles: z.array(z.enum(Role)).max(5), forced: z.boolean() }),
+  [AuditAction.USER_CREATED]: z.strictObject({ roles: z.array(z.enum(Role)).max(5), forced: z.boolean().optional() }),
+  // Só o nome do campo alterado, nunca o valor (feature 005).
+  [AuditAction.USER_UPDATED]: z.strictObject({
+    fields: z
+      .array(z.enum(['name']))
+      .min(1)
+      .max(1),
+  }),
   [AuditAction.USER_ROLES_CHANGED]: z.strictObject({
     before: z.array(z.enum(Role)).max(5),
     after: z.array(z.enum(Role)).max(5),

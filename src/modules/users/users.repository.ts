@@ -1,14 +1,15 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, QueryFailedError, type EntityManager } from 'typeorm';
+import { DomainConflictError } from '../../common/http/domain-error.js';
 import type { Role } from '../../common/enums/role.enum.js';
 import { UserStatus } from '../../common/enums/user-status.enum.js';
 import { UserRole } from './entities/user-role.entity.js';
 import { User } from './entities/user.entity.js';
 
-export class EmailAlreadyRegisteredError extends ConflictException {
+export class EmailAlreadyRegisteredError extends DomainConflictError {
   constructor() {
-    super('E-mail já cadastrado.');
+    super('EMAIL_ALREADY_REGISTERED', 'E-mail já cadastrado.');
     this.name = 'EmailAlreadyRegisteredError';
   }
 }

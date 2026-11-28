@@ -118,4 +118,61 @@ export class UsersRepository {
     for (const row of rows) map.set(row.userId, [...(map.get(row.userId) ?? []), row]);
     return map;
   }
+
+  /**
+   * Trava as linhas de quem age e do alvo numa só consulta, em ordem de id (`FOR UPDATE`): duas pessoas agindo uma
+   * sobre a outra não entram em impasse. Devolve status e perfis já confirmados (feature 005, research R3).
+   */
+  async lockPair(actorId: string, targetId: string, manager: EntityManager): Promise<Map<string, LockedUser>> {
+    const rows = (await manager.query(
+      `SELECT id::text AS id, name, status::text AS status FROM users WHERE id = ANY($1::uuid[]) ORDER BY id FOR UPDATE`,
+      [[actorId, targetId]],
+    )) as Array<{ id: string; name: string; status: UserStatus }>;
+    const roles = (await manager.query(
+      `SELECT user_id::text AS "userId", role::text AS role FROM user_roles WHERE user_id = ANY($1::uuid[])`,
+      [[actorId, targetId]],
+    )) as Array<{ userId: string; role: Role }>;
+    const result = new Map<string, LockedUser>();
+    for (const row of rows) {
+      result.set(row.id, { ...row, roles: roles.filter((r) => r.userId === row.id).map((r) => r.role) });
+    }
+    return result;
+  }
+
+  /** Denúncias abertas atribuídas (as encerradas guardam o analista só como histórico). */
+  async countOpenAssignedReports(userId: string, manager: EntityManager): Promise<number> {
+    const [row] = (await manager.query(
+      `SELECT count(*)::int AS n FROM reports
+        WHERE assigned_to_id = $1 AND status NOT IN ('CONCLUDED', 'INVALID', 'ARCHIVED')`,
+      [userId],
+    )) as Array<{ n: number }>;
+    return row.n;
+  }
+
+  async updateName(id: string, name: string, manager: EntityManager): Promise<void> {
+    await manager.update(User, { id }, { name });
+  }
+
+  async updateStatus(id: string, status: UserStatus, manager: EntityManager): Promise<void> {
+    await manager.update(User, { id }, { status });
+  }
+
+  /** Troca o conjunto de perfis mantendo os que continuam (com quem concedeu e quando). */
+  async replaceRoles(id: string, before: Role[], after: Role[], grantedById: string, manager: EntityManager) {
+    const removed = before.filter((r) => !after.includes(r));
+    const added = after.filter((r) => !before.includes(r));
+    if (removed.length > 0) await manager.delete(UserRole, { userId: id, role: In(removed) });
+    if (added.length > 0)
+      await manager.insert(
+        UserRole,
+        added.map((role) => ({ userId: id, role, grantedById })),
+      );
+  }
+}
+
+export interface LockedUser {
+  id: string;
+  name: string;
+  status: UserStatus;
+  roles: Role[];
 }

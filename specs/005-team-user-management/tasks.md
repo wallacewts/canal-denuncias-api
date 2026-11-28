@@ -152,7 +152,7 @@ com operações simultâneas.
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T025 [P] [US3] e2e `test/users/users-status.e2e-spec.ts`: bloquear e desativar → a pessoa recebe 401 na
+- [x] T025 [P] [US3] e2e `test/users/users-status.e2e-spec.ts`: bloquear e desativar → a pessoa recebe 401 na
       requisição seguinte e não sobra sessão dela no banco; reativar → entra de novo e o cookie antigo continua 401;
       mesmo status → 200 sem registro; mudar o próprio status → 403 com `ACCESS_DENIED`; os dois únicos
       Administradores bloqueando um ao outro ao mesmo tempo → só um passa, o outro 403 ou 409, e sobra um ativo
@@ -160,7 +160,7 @@ com operações simultâneas.
       (403, nada muda); Analista com denúncia aberta atribuída → `DISABLED` dá 409 `USER_HAS_ASSIGNED_REPORTS` com
       `details.assignedReports` exato, `BLOCKED` funciona; denúncia encerrada atribuída não impede;
       `USER_STATUS_CHANGED` com `{ from, to }` e ator Administrador
-- [ ] T026 [P] [US3] e2e `test/users/users-roles-name.e2e-spec.ts`: trocar os próprios perfis → 403; ADMIN acumula
+- [x] T026 [P] [US3] e2e `test/users/users-roles-name.e2e-spec.ts`: trocar os próprios perfis → 403; ADMIN acumula
       perfil que lê denúncias concedido por outro → 200 (D21); duas retiradas simultâneas de ADMIN entre os dois
       últimos → só uma passa e sobra um ativo; Administrador que perdeu o perfil no meio da requisição → 403; retirar
       ANALYST com denúncia aberta → 409 com a quantidade; mesmo conjunto → 200 sem registro; mudança vale na requisição
@@ -171,16 +171,16 @@ com operações simultâneas.
 
 ### Implementation for User Story 3
 
-- [ ] T027 [US3] Repositório `src/modules/users/users.repository.ts`: `lockPair(actorId, targetId, manager)` (as duas
+- [x] T027 [US3] Repositório `src/modules/users/users.repository.ts`: `lockPair(actorId, targetId, manager)` (as duas
       linhas numa só consulta, em ordem de id, `FOR UPDATE`), `countOpenAssignedReports(id, manager)` (status fora de
       `CONCLUDED`, `INVALID`, `ARCHIVED`), `updateName`, `updateStatus`, `replaceRoles` (todos com o `EntityManager` da
       transação)
-- [ ] T028 [US3] `UsersService.updateName/changeStatus/changeRoles` em `src/modules/users/users.service.ts`: transação
+- [x] T028 [US3] `UsersService.updateName/changeStatus/changeRoles` em `src/modules/users/users.service.ts`: transação
       com `pg_advisory_xact_lock` (chave do T010) quando pode reduzir Administradores, `lockPair`, nova conferência de
       quem age (ativo e Administrador, senão 403, FR-011a), contagem de atribuídas (Q1), contagem de Administradores
       depois da mudança (R3), auditoria na mesma transação; `SessionService.revokeAll` depois do commit ao sair de
       `ACTIVE` e antes da transação ao voltar (R2)
-- [ ] T029 [US3] Rotas em `src/modules/users/users.controller.ts`: `PATCH /users/:id` (`manage`),
+- [x] T029 [US3] Rotas em `src/modules/users/users.controller.ts`: `PATCH /users/:id` (`manage`),
       `PUT /users/:id/status` e `PUT /users/:id/roles` (`actOnOther` com o id do caminho)
 
 **Checkpoint**: P1 completa.

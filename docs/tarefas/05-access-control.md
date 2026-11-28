@@ -5,6 +5,12 @@ que está atribuído a ele, ninguém com conflito de interesse vê a denúncia e
 
 **Depende de:** AUTH-06, USERS-01.
 
+> **Já existe (feature 004, D54):** `@nestjs/authorization` com negação por padrão (rota sem regra = 403, listada na
+> inicialização), negações gravadas como `ACCESS_DENIED` pelo assinante e o padrão "função de escopo única" para
+> política e consulta, provado em `test/contract/auth/example/`. O mapeamento de cada linha da matriz (rota, serviço
+> ou consulta) está em `docs/adr/0053-autenticacao-e-autorizacao.md`. Falta escrever as políticas reais em
+> `src/modules/access-control/`.
+
 ---
 
 ### ACL-00 · Decisão: CASL ou `@nestjs/authorization`

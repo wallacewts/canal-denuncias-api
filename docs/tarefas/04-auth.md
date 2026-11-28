@@ -5,6 +5,13 @@
 
 **Depende de:** USERS-01, CRYPTO-05 (segredo TOTP), AUDIT-02.
 
+> **Já existe (feature 004, D53):** `@nestjs/authentication` configurado, stores Postgres de sessão e MFA, guard
+> global, `OpenAdminRoute()` para as rotas de login, ponte com a `AUTH_IDENTITY` e eventos de autenticação gravados
+> na trilha. As tarefas abaixo constroem as rotas reais e as regras do produto em cima disso. O que existe, o fluxo
+> que o backoffice vai usar e o que cada tarefa constrói estão em
+> `docs/adr/0053-autenticacao-e-autorizacao.md` ("O que já existe e o que cada tarefa seguinte constrói"). As rotas
+> de `test/contract/auth/example/` são só referência de implementação.
+
 ---
 
 ### AUTH-00 · Decisão: bibliotecas próprias ou pacote oficial do Nest 12
@@ -49,8 +56,9 @@ Ler antes: `.claude/skills/nestjs-auth/` e https://docs.nestjs.com/security/auth
 
 - **Arquivos:** `src/modules/auth/auth.controller.ts`, `credentials.service.ts`.
 - **Endpoints:** `POST /api/admin/v1/auth/sign-in` (público, responde 200).
-- **Auditoria:** `AUTH_LOGIN_SUCCEEDED`, `AUTH_LOGIN_FAILED` (metadata: motivo codificado, ex. `bad_credentials`,
-  `locked`, `disabled`).
+- **Auditoria:** `AUTH_SIGNED_IN` (já gravado pelo assinante a partir do evento do pacote, D53) e
+  `AUTH_LOGIN_FAILED`, gravado pelo serviço de credenciais (o pacote não emite evento de senha errada; metadata:
+  motivo codificado, ex. `bad_credentials`, `locked`, `disabled`).
 
 **Critérios de aceite**
 
@@ -58,7 +66,8 @@ Ler antes: `.claude/skills/nestjs-auth/` e https://docs.nestjs.com/security/auth
 - [ ] Usuário `BLOCKED` ou `DISABLED` recebe a mesma resposta genérica. O motivo real fica só na auditoria.
 - [ ] Bloqueio progressivo: depois de 5 falhas seguidas, `locked_until` de 15 min, dobrando a cada nova série. Login
       com sucesso zera `failed_login_count`.
-- [ ] O login cria uma sessão em estado "MFA pendente", que só acessa as rotas de MFA e de troca de senha.
+- [ ] O login cria uma sessão em estado "MFA pendente", que só acessa as rotas de MFA e de troca de senha (o
+      pacote já cria a sessão pendente com `SignInService.signIn`; `@AdminApi` já exige MFA verificado).
 - [ ] Hash antigo é refeito com o custo atual quando necessário.
 - [ ] Testes: sucesso, senha errada, e-mail inexistente, bloqueio e desbloqueio.
 
@@ -107,10 +116,12 @@ Ler antes: `.claude/skills/nestjs-auth/` e https://docs.nestjs.com/security/auth
 **Critérios de aceite**
 
 - [ ] Aceita o passo atual e um passo de tolerância de relógio (±30 s).
-- [ ] O mesmo código não é aceito duas vezes. Isso precisa de uma coluna nova com o último passo usado
-      (ex.: `users.mfa_last_used_step`): criar a migration, se o pacote escolhido em AUTH-00 não cuidar disso.
-- [ ] Código de recuperação é de uso único (`used_at`).
-- [ ] Falhas de MFA contam para o bloqueio progressivo.
+- [ ] O mesmo código não é aceito duas vezes (já garantido pelo pacote com `users.mfa_last_used_step`, feature 004;
+      falta o teste na rota real).
+- [ ] Código de recuperação é de uso único (o store apaga o código ao consumir, feature 004; falta o teste na rota
+      real).
+- [ ] Falhas de MFA contam para o bloqueio progressivo do login (o pacote já bloqueia o MFA com 5 falhas em 15 min,
+      tabela `mfa_failures`).
 
 ### AUTH-05 · Senha: política e troca
 
@@ -131,11 +142,12 @@ Ler antes: `.claude/skills/nestjs-auth/` e https://docs.nestjs.com/security/auth
 
 **Critérios de aceite**
 
-- [ ] Toda rota exige autenticação por padrão. Rotas públicas (denunciante, login, health) são abertas
-      explicitamente.
-- [ ] O usuário e os perfis são lidos do banco a cada requisição. Usuário bloqueado ou desativado perde o acesso na
-      hora.
-- [ ] O usuário atual fica disponível nos serviços (contexto assíncrono) para a auditoria (AUDIT-03) e a autorização.
+- [x] Toda rota exige autenticação por padrão. Rotas públicas (denunciante, login, health) são abertas
+      explicitamente (feature 004: guard global do pacote, `@PublicApi`, `OpenAdminRoute()`, `@Public()` no health).
+- [x] O usuário e os perfis são lidos do banco a cada requisição. Usuário bloqueado ou desativado perde o acesso na
+      hora (feature 004: `PgSessionStore.getSession` + `StaffSessionProvider`).
+- [x] O usuário atual fica disponível nos serviços (contexto assíncrono) para a auditoria (AUDIT-03) e a autorização
+      (feature 004: `SessionAuthIdentity` → `AuditContext`; `@CurrentUser()` e `request.user` para as políticas).
 - [ ] Teste e2e com o fluxo inteiro: login, MFA, rota protegida, logout e rota protegida de novo (401).
 
 ### AUTH-07 · CSRF e CORS
@@ -144,7 +156,8 @@ Ler antes: `.claude/skills/nestjs-auth/` e https://docs.nestjs.com/security/auth
 
 **Critérios de aceite**
 
-- [ ] Proteção CSRF nas rotas administrativas que alteram dados (nativa do Nest 12 ou double-submit).
+- [ ] Proteção CSRF nas rotas administrativas que alteram dados (`app.enableCsrfProtection` do Nest 12, com as
+      origens confiáveis do backoffice). O cookie já é `SameSite=Strict` (feature 004).
 - [ ] CORS com credenciais só para a origem do backoffice. O portal público não recebe credenciais.
 - [ ] Teste: `POST` administrativo vindo de outra origem é recusado.
 

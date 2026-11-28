@@ -185,13 +185,13 @@ e encerramento de todas as sessões do usuário.
 
 **Independent Test**: criar o administrador pelo comando existente, entrar e conferir a auditoria.
 
-- [ ] T029 [P] [US4] Encaixe em `test/contract/auth/integration.e2e-spec.ts`: administrador criado por `create-admin`
+- [x] T029 [P] [US4] Encaixe em `test/contract/auth/integration.e2e-spec.ts`: administrador criado por `create-admin`
       entra sem migração de hash; rota `@AdminApi` auditada grava ator equipe com o id do usuário da sessão; sem
       sessão continua 401 (D47); a área pública não recebe nem lê cookie
 - [x] T030 [US4] (antecipada para a US2: sem a ponte, nenhuma rota administrativa autentica pela sessão) `SessionAuthIdentity` em `src/infra/auth/session-auth-identity.ts` (lê o `AuthenticationContext`;
       `null` sem sessão verificada) substituindo o `NoAuthIdentity` no `AUTH_IDENTITY` de
       `src/infra/auth/auth-infra.module.ts`; manter a identidade simulada dos testes existentes funcionando
-- [ ] T031 [US4] Mapear cada linha da matriz do ACL-01 (regra por rota, checagem no serviço ou filtro na consulta) no
+- [x] T031 [US4] Mapear cada linha da matriz do ACL-01 (regra por rota, checagem no serviço ou filtro na consulta) no
       ADR `docs/adr/0053-autenticacao-e-autorizacao.md`
 
 **Checkpoint**: decisão provada sem refazer as features 001 e 003.

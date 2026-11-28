@@ -79,7 +79,80 @@ próprio de segurança.
 
 ## Mapeamento da matriz do ACL-01
 
-Feito na US4 (T031), depois do encaixe com o que já existe.
+Onde cada linha da matriz (`docs/tarefas/05-access-control.md`) é aplicada. **Rota** = `@Can(Política, 'habilidade')`
+no handler (o guard nega antes de chegar ao serviço). **Serviço** = `authorize()` (ou `can()`) depois de carregar o
+registro, porque a regra depende dele. **Consulta** = função de escopo no `WHERE`, da qual a política deriva a mesma
+regra (padrão provado em `test/contract/auth/example/report-scope.ts`). Bloqueio por conflito
+(`report_access_blocks`) nega sempre, para qualquer perfil, nas três camadas.
+
+| Habilidade                                        | Rota                                | Serviço                                              | Consulta                                              |
+| ------------------------------------------------- | ----------------------------------- | ---------------------------------------------------- | ----------------------------------------------------- |
+| Gerenciar usuários e categorias                   | ADMIN                               | perfis: ninguém altera os próprios (D21), com o id   | —                                                     |
+| Alterar SLA                                       | ADMIN                               | —                                                    | —                                                     |
+| Alterar retenção e legal hold                     | DPO                                 | bloqueio por conflito, quando for de uma denúncia    | —                                                     |
+| Listar todas as denúncias                         | Gestor, DPO, Analista (mesma rota)  | —                                                    | Gestor e DPO: todas menos as bloqueadas               |
+| Listar denúncias atribuídas a si                  | idem                                | —                                                    | Analista: `assigned_to_id` = ele, menos as bloqueadas |
+| Ver conteúdo da denúncia (somente leitura)        | equipe com sessão (`@Can.Anyone()`) | `read`: Gestor, DPO, Analista se atribuída; 404 (\*) | —                                                     |
+| Triar, atribuir, priorizar, bloquear por conflito | Gestor                              | bloqueio por conflito                                | —                                                     |
+| Mudar status, mensagens e notas                   | equipe com sessão                   | `treat`: Gestor, Analista se atribuída; DPO nunca    | —                                                     |
+| Pedir revelação de identidade                     | equipe com sessão                   | igual a `treat`                                      | —                                                     |
+| Aprovar ou rejeitar revelação                     | DPO                                 | bloqueio por conflito                                | —                                                     |
+| Ver trilha de auditoria                           | AUDITOR (hoje checado no handler)   | —                                                    | —                                                     |
+| Ver indicadores                                   | Gestor, DPO, AUDITOR                | —                                                    | só agregados, sem conteúdo                            |
+
+(\*) Registro de outro analista responde 404, não 403 (ACL-02): o serviço usa `can()`, responde 404 e grava o
+`ACCESS_DENIED` com `AuditService.record()` (ACL-04). ADMIN e AUDITOR nunca passam no `read`. Denúncia expurgada
+responde 410 antes da política.
+
+## O que já existe e o que cada tarefa seguinte constrói
+
+Para quem especifica as próximas features (inclusive o login do backoffice no front).
+
+**Já existe (definitivo, em `src/`):**
+
+- **Pacotes configurados** em `src/infra/auth/auth-infra.module.ts`: sessão 15 min sem uso / 8 h no máximo, cookie
+  `__Host-sid` (`HttpOnly`, `Secure`, `SameSite=Strict`, caminho `/`), MFA TOTP (janela ±1 passo, 5 falhas em 15 min
+  bloqueiam o MFA, 10 códigos de recuperação, cadastro pendente expira em 10 min), relógio injetável (`AUTH_CLOCK`).
+- **Stores Postgres**: `PgSessionStore` (sessões, lista e encerramento das sessões de um usuário) e `PgMfaStore`
+  (segredo TOTP selado pelo Vault, último passo usado, códigos de recuperação consumidos por DELETE, falhas de MFA).
+- **Identidade**: `StaffSessionProvider` (usuário e perfis relidos do banco a cada requisição; só `ACTIVE` passa) e a
+  ponte `SessionAuthIdentity` na porta `AUTH_IDENTITY` (D47), que a auditoria e o `AdminIdentityGuard` usam.
+- **Guards globais**, nesta ordem: autenticação do pacote, autorização do pacote, `AdminIdentityGuard`. `@PublicApi`
+  abre a rota (sem cookie, sem identidade); `@AdminApi` exige sessão com MFA verificado; rota administrativa sem
+  `@Can()`/`@Can.Anyone()` responde 403 e aparece no log da inicialização.
+- **`OpenAdminRoute()`** (`src/common/http/route-decorators.ts`): abre uma rota administrativa antes da sessão
+  completa (login e desafio MFA). A auditoria dela sai como equipe sem usuário, com IP.
+- **Eventos de auditoria** (`AuthAuditSubscriber`): `sign-in` com senha e sem MFA pendente e `mfa-verified` →
+  `AUTH_SIGNED_IN`; `mfa-failed` → `AUTH_MFA_FAILED` (`locked`); `sign-out` → `AUTH_SIGNED_OUT`, ou
+  `AUTH_SESSION_REVOKED` (`scope: all`) quando é "sair de todos os lugares"; negação da autorização →
+  `ACCESS_DENIED` (`policy`, `ability`).
+
+**Só de teste (`test/contract/auth/example/`, nunca importado por `src/`):** as rotas `example-auth` (sign-in, mfa,
+me, sign-out, sign-out-everywhere), a `ExamplePolicy` e a função de escopo de exemplo. Servem de referência de
+implementação, não de contrato público.
+
+**Fluxo que o backoffice vai usar** (rotas reais criadas no AUTH-01 a AUTH-04; comportamento provado nas rotas de
+exemplo): `POST sign-in` com e-mail e senha → 200 com `mfaRequired` e cookie de sessão pendente (401 genérico para
+qualquer falha) → `POST` do desafio MFA com o código → 200 e cookie **novo** (o id muda) → rotas administrativas com
+o cookie. Sem sessão, sessão expirada ou usuário desativado: 401. Logado sem permissão: 403. `sign-out`: 204 e cookie
+apagado. O front envia credenciais (`credentials: 'include'`), não guarda nada em `localStorage` e não recebe token
+nenhum. O cookie é `Secure`: em desenvolvimento, só funciona em `localhost` ou HTTPS.
+
+**Falta construir:**
+
+| Tarefa      | O que constrói sobre o que existe                                                                                                                                                                                                                                                                                                 |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AUTH-01     | Rota real de login (`OpenAdminRoute`), serviço de credenciais (mesmo caminho de hash para e-mail inexistente), status `BLOCKED`/`DISABLED` com a resposta genérica, bloqueio progressivo de login (`failed_login_count`, `locked_until`) e `AUTH_LOGIN_FAILED` gravado pelo serviço (o pacote não emite evento de falha de senha) |
+| AUTH-02     | Rotas `sign-out` e de sessões (`listUserSessions`/`deleteUserSessions` já existem no store)                                                                                                                                                                                                                                       |
+| AUTH-03     | Rotas de cadastro do MFA sobre `MfaService.enroll`/`confirm`; mapear `mfa-enabled` → `AUTH_MFA_ENROLLED` no assinante; restringir a sessão sem MFA às rotas de cadastro e troca de senha                                                                                                                                          |
+| AUTH-04     | Rota do desafio sobre `SignInService.completeMfa`; mapear `mfa-verified` com `recovery-code` → `AUTH_RECOVERY_CODE_USED`; somar as falhas de MFA ao bloqueio progressivo do login                                                                                                                                                 |
+| AUTH-05     | Troca de senha com `PasswordHasher`, nova sessão e encerramento das outras (`deleteUserSessions`)                                                                                                                                                                                                                                 |
+| AUTH-06     | Só o teste do fluxo inteiro com as rotas reais; o resto já existe                                                                                                                                                                                                                                                                 |
+| AUTH-07     | CSRF (`app.enableCsrfProtection`, origens confiáveis) e CORS com credenciais só para o backoffice                                                                                                                                                                                                                                 |
+| AUTH-08     | Rate limit em `sign-in` e no desafio                                                                                                                                                                                                                                                                                              |
+| USERS-04/05 | Status e perfis já valem na requisição seguinte; ao bloquear/desativar, encerrar as sessões                                                                                                                                                                                                                                       |
+| USERS-06    | Reset do MFA com `MfaService.disable` e encerramento das sessões do usuário                                                                                                                                                                                                                                                       |
+| ACL-01 a 05 | Políticas reais em `src/modules/access-control/` conforme o mapeamento acima                                                                                                                                                                                                                                                      |
 
 ## Alternativas consideradas
 

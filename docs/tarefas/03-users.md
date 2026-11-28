@@ -5,6 +5,12 @@
 
 **Depende de:** AUDIT-02. As rotas administrativas dependem de AUTH-06 e ACL-01.
 
+> **Já existe (feature 004, D53 e D54):** status e perfis são relidos do banco a cada requisição (mudança vale na
+> requisição seguinte; só `ACTIVE` entra), `PgSessionStore.deleteUserSessions` encerra as sessões de um usuário,
+> `MfaService.disable` remove o MFA e as rotas declaram permissão com `@Can()`. A regra "ninguém altera os próprios
+> perfis" tem exemplo provado em `test/contract/auth/example/example.policy.ts`. Detalhes em
+> `docs/adr/0053-autenticacao-e-autorizacao.md`.
+
 ---
 
 ### USERS-01 · Repositório de usuários

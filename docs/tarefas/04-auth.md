@@ -64,8 +64,14 @@ Ler antes: `.claude/skills/nestjs-auth/` e https://docs.nestjs.com/security/auth
 
 - [ ] E-mail inexistente e senha errada levam o mesmo tempo e recebem a mesma resposta (401 genérico).
 - [ ] Usuário `BLOCKED` ou `DISABLED` recebe a mesma resposta genérica. O motivo real fica só na auditoria.
-- [ ] Bloqueio progressivo: depois de 5 falhas seguidas, `locked_until` de 15 min, dobrando a cada nova série. Login
-      com sucesso zera `failed_login_count`.
+- [ ] Bloqueio progressivo: depois de 5 falhas seguidas, `locked_until` de 15 min, dobrando a cada nova série até 24 h.
+      Login com sucesso zera `failed_login_count`. Números configuráveis por ambiente com esses padrões, validados no
+      schema (feature 006).
+- [ ] Com sessão verificada e troca obrigatória pendente (quem tem autenticador passa primeiro pelo desafio), as demais
+      rotas administrativas respondem 403 `PASSWORD_CHANGE_REQUIRED`; liberadas só `PUT /me/password`, `sign-out` e
+      `GET /me` (com `passwordChangeRequired: true`). Decidido pelo usuário em 28/11/2026 (feature 006, R11).
+- [ ] Rota de etapa (troca de senha, cadastro do MFA) chamada fora da etapa responde 403 `STEP_NOT_ALLOWED`; 401
+      continua só para sessão ausente ou expirada. Decidido pelo usuário em 28/11/2026 (feature 006, I1).
 - [ ] O login cria uma sessão em estado "MFA pendente", que só acessa as rotas de MFA e de troca de senha (o
       pacote já cria a sessão pendente com `SignInService.signIn`; `@AdminApi` já exige MFA verificado).
 - [ ] Hash antigo é refeito com o custo atual quando necessário.
@@ -79,8 +85,14 @@ Ler antes: `.claude/skills/nestjs-auth/` e https://docs.nestjs.com/security/auth
 - [ ] As respostas do login e do desafio trazem os horários de expiração da sessão (inatividade e absoluta, ISO 8601
       UTC), como o `GET /me` (USERS-07).
 - [ ] Bloqueio do desafio MFA (5 falhas em 15 min, depois que a senha já foi provada) responde **423**, distinto do
-      código inválido (401). Excesso de tentativas pelo rate limit é 429 com `Retry-After` (AUTH-08). (Propostas do
+      código inválido. Excesso de tentativas pelo rate limit é 429 com `Retry-After` (AUTH-08). (Propostas do
       front.)
+- [ ] Código do autenticador errado ou já usado responde **422 `MFA_CODE_INVALID`**, no desafio e na confirmação do
+      cadastro, mantendo a sessão pendente. Em todo o fluxo de login, 401 significa só sessão ausente ou expirada.
+      Decidido pelo usuário em 28/11/2026 (feature 006, Q1).
+- [ ] Ordem das etapas: sem autenticador, troca de senha (se obrigatória) e depois cadastro do MFA; com autenticador,
+      desafio MFA e depois troca de senha (se obrigatória). Ninguém troca a senha tendo provado só a senha antiga
+      quando já tem autenticador. Decidido pelo usuário em 28/11/2026 (feature 006, Q2).
 - [ ] O bloqueio progressivo da etapa de senha recebe a **mesma resposta genérica** da credencial inválida, sem código
       próprio: uma resposta distinta revelaria que o e-mail existe (FR-006 da feature 004). Decidido pelo usuário em
       28/11/2026.
@@ -122,10 +134,12 @@ Ler antes: `.claude/skills/nestjs-auth/` e https://docs.nestjs.com/security/auth
       na API, sem serviço externo) e o segredo em texto para digitação manual, com o nome do sistema como emissor. O
       segredo vai cifrado com a `app-kek` (o `PgMfaStore` já faz) e nunca vai para log ou auditoria. (Proposta do
       front.)
-- [ ] Só ativa depois de confirmar um código válido.
+- [ ] Só ativa depois de confirmar um código válido; código errado responde 422 `MFA_CODE_INVALID` e o cadastro
+      continua pendente (feature 006, Q1).
 - [ ] Na confirmação, gera 10 códigos de recuperação, devolvidos na resposta da confirmação uma única vez e guardados
       como hash. (Proposta do front.)
-- [ ] Usuário sem MFA não acessa nenhuma rota além das de cadastro do MFA e troca de senha (403).
+- [ ] Usuário sem MFA não acessa nenhuma rota além das de cadastro do MFA, troca de senha e saída (401: a sessão não
+      está verificada, como o `GET /me` no contrato do front).
 
 ### AUTH-04 · Desafio MFA no login
 
@@ -136,7 +150,8 @@ Ler antes: `.claude/skills/nestjs-auth/` e https://docs.nestjs.com/security/auth
 
 **Critérios de aceite**
 
-- [ ] Aceita o passo atual e um passo de tolerância de relógio (±30 s).
+- [ ] Aceita o passo atual e um passo de tolerância de relógio (±30 s); código errado ou já usado responde 422
+      `MFA_CODE_INVALID` (feature 006, Q1).
 - [ ] O mesmo código não é aceito duas vezes (já garantido pelo pacote com `users.mfa_last_used_step`, feature 004;
       falta o teste na rota real).
 - [ ] Código de recuperação é de uso único (o store apaga o código ao consumir, feature 004; falta o teste na rota
@@ -156,8 +171,9 @@ Ler antes: `.claude/skills/nestjs-auth/` e https://docs.nestjs.com/security/auth
 - [ ] Política: mínimo de 12 caracteres e recusa de senhas comuns (lista local, sem consulta externa).
 - [ ] Troca obrigatória quando `password_changed_at` é nulo.
 - [ ] Trocar a senha revoga as outras sessões do usuário.
-- [ ] Nova senha que viola a política responde 422 com o código da regra violada (ex.: `PASSWORD_TOO_SHORT`,
-      `PASSWORD_COMMON`), sem ecoar a senha na resposta, no log ou na auditoria. (Proposta do front.)
+- [ ] Nova senha que viola a política responde 422 com o código da regra violada (`PASSWORD_TOO_SHORT`,
+      `PASSWORD_COMMON` ou `PASSWORD_SAME_AS_CURRENT`, este decidido na feature 006), sem ecoar a senha na resposta, no
+      log ou na auditoria. (Proposta do front.)
 - [ ] Senha atual errada responde 422 com o código `CURRENT_PASSWORD_INVALID`, no mesmo formato dos outros erros da
       troca de senha, sem ecoar a senha na resposta, no log ou na auditoria. 401 continua significando só sessão
       ausente ou expirada. (Proposta do front, decidida pelo usuário em 28/11/2026.)
@@ -208,5 +224,6 @@ Proteção contra tentativa de adivinhar senha da equipe (não confundir com spa
 
 **Critérios de aceite**
 
-- [ ] `@nestjs/throttler` com storage no Redis em `sign-in` e `mfa/challenge`, por IP e por conta.
+- [ ] `@nestjs/throttler` com storage no Redis em `sign-in` e `mfa/challenge`, por IP (20/min) e por conta (10 a cada
+      15 min; chave sem o e-mail em claro), números configuráveis por ambiente com esses padrões (feature 006).
 - [ ] Resposta 429 com `Retry-After`.

@@ -32,6 +32,7 @@ function prodEnv(overrides: Record<string, string | undefined> = {}) {
     VAULT_TOKEN: undefined,
     VAULT_ROLE_ID: 'role-id',
     VAULT_SECRET_ID: 'secret-id',
+    AUTH_HMAC_SECRET: 'segredo-do-hmac-da-autenticacao-32-bytes',
     ...overrides,
   });
 }
@@ -119,5 +120,55 @@ describe('validateEnv', () => {
     for (const name of ['REDIS_URL', 'S3_BUCKET', 'SMTP_HOST']) expect(message).toContain(name);
     expect(message).not.toContain('dev-secret-key');
     expect(message).not.toContain('postgres://');
+  });
+
+  describe('login da equipe (feature 006)', () => {
+    it('usa os padrões aprovados para bloqueio e limite', () => {
+      const env = validateEnv(baseEnv());
+      expect(env).toMatchObject({
+        LOGIN_LOCKOUT_THRESHOLD: 5,
+        LOGIN_LOCKOUT_BASE_MINUTES: 15,
+        LOGIN_LOCKOUT_MAX_MINUTES: 1440,
+        AUTH_RATE_LIMIT_IP_LIMIT: 20,
+        AUTH_RATE_LIMIT_IP_WINDOW_SECONDS: 60,
+        AUTH_RATE_LIMIT_ACCOUNT_LIMIT: 10,
+        AUTH_RATE_LIMIT_ACCOUNT_WINDOW_SECONDS: 900,
+      });
+    });
+
+    it('aceita números trocados por ambiente', () => {
+      const env = validateEnv(baseEnv({ LOGIN_LOCKOUT_THRESHOLD: '3', AUTH_RATE_LIMIT_IP_LIMIT: '50' }));
+      expect(env.LOGIN_LOCKOUT_THRESHOLD).toBe(3);
+      expect(env.AUTH_RATE_LIMIT_IP_LIMIT).toBe(50);
+    });
+
+    it.each([
+      ['LOGIN_LOCKOUT_THRESHOLD', '0'],
+      ['LOGIN_LOCKOUT_BASE_MINUTES', '-1'],
+      ['AUTH_RATE_LIMIT_IP_LIMIT', 'XQZ'],
+      ['AUTH_RATE_LIMIT_ACCOUNT_WINDOW_SECONDS', '1.5'],
+    ])('%s inválido impede a subida', (name, value) => {
+      expect(errorOf(baseEnv({ [name]: value }))).toContain(name);
+    });
+
+    it('teto do bloqueio menor que a base é recusado', () => {
+      expect(errorOf(baseEnv({ LOGIN_LOCKOUT_BASE_MINUTES: '60', LOGIN_LOCKOUT_MAX_MINUTES: '30' }))).toContain(
+        'LOGIN_LOCKOUT_MAX_MINUTES',
+      );
+    });
+
+    it('AUTH_HMAC_SECRET: obrigatório em produção, com 32 bytes, sem eco do valor', () => {
+      expect(errorOf(prodEnv({ AUTH_HMAC_SECRET: undefined }))).toContain('AUTH_HMAC_SECRET');
+      const message = errorOf(prodEnv({ AUTH_HMAC_SECRET: 'XQZ-curto' }));
+      expect(message).toContain('AUTH_HMAC_SECRET');
+      expect(message).not.toContain('XQZ');
+      expect(errorOf(prodEnv({ AUTH_HMAC_SECRET: 'segredo-de-sessao-com-mais-de-32-bytes' }))).toContain(
+        'AUTH_HMAC_SECRET',
+      );
+    });
+
+    it('AUTH_HMAC_SECRET é opcional em desenvolvimento e teste', () => {
+      expect(validateEnv(baseEnv()).AUTH_HMAC_SECRET).toBeUndefined();
+    });
   });
 });

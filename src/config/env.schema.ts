@@ -17,6 +17,8 @@ const secret = z
 
 const port = z.coerce.number().int().min(1).max(65_535);
 
+const positiveInt = (defaultValue: number) => z.coerce.number().int().positive().default(defaultValue);
+
 const boolFlag = (defaultValue: 'true' | 'false') =>
   z
     .enum(['true', 'false'])
@@ -81,6 +83,18 @@ export const envSchema = z
     PASSWORD_HASH_LOG_N: z.coerce.number().int().min(10).max(22).default(PRODUCTION_MIN_HASH_LOG_N),
     /** Tamanho máximo de anexo. Também é a referência do limite de corpo do proxy. */
     MAX_ATTACHMENT_BYTES: z.coerce.number().int().positive().default(10_485_760),
+
+    /** Login da equipe (feature 006, D57): bloqueio progressivo depois de N falhas, dobrando até o teto. */
+    LOGIN_LOCKOUT_THRESHOLD: positiveInt(5),
+    LOGIN_LOCKOUT_BASE_MINUTES: positiveInt(15),
+    LOGIN_LOCKOUT_MAX_MINUTES: positiveInt(1440),
+    /** Limite de tentativas em `sign-in` e `mfa/challenge`, por IP e por conta. */
+    AUTH_RATE_LIMIT_IP_LIMIT: positiveInt(20),
+    AUTH_RATE_LIMIT_IP_WINDOW_SECONDS: positiveInt(60),
+    AUTH_RATE_LIMIT_ACCOUNT_LIMIT: positiveInt(10),
+    AUTH_RATE_LIMIT_ACCOUNT_WINDOW_SECONDS: positiveInt(900),
+    /** Segredo das chaves de HMAC por finalidade (R4a). Obrigatório em produção; fora dela, derivado do SESSION_SECRET. */
+    AUTH_HMAC_SECRET: z.preprocess((v) => (v === '' ? undefined : v), secret.optional()),
   })
   .superRefine((env, ctx) => {
     const isProduction = env.NODE_ENV === 'production';
@@ -105,6 +119,24 @@ export const envSchema = z
         code: 'custom',
         path: ['REPORTER_TOKEN_SECRET'],
         message: 'precisa ser diferente de SESSION_SECRET',
+      });
+    }
+
+    if (isProduction && !env.AUTH_HMAC_SECRET) {
+      ctx.addIssue({ code: 'custom', path: ['AUTH_HMAC_SECRET'], message: 'obrigatório em produção' });
+    }
+    if (env.AUTH_HMAC_SECRET && [env.SESSION_SECRET, env.REPORTER_TOKEN_SECRET].includes(env.AUTH_HMAC_SECRET)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['AUTH_HMAC_SECRET'],
+        message: 'precisa ser diferente de SESSION_SECRET e de REPORTER_TOKEN_SECRET',
+      });
+    }
+    if (env.LOGIN_LOCKOUT_MAX_MINUTES < env.LOGIN_LOCKOUT_BASE_MINUTES) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['LOGIN_LOCKOUT_MAX_MINUTES'],
+        message: 'precisa ser maior ou igual a LOGIN_LOCKOUT_BASE_MINUTES',
       });
     }
 

@@ -121,6 +121,7 @@ services:
       CLAMAV_PORT: 3310
       SESSION_SECRET: dev-session-secret-com-pelo-menos-32-bytes
       REPORTER_TOKEN_SECRET: dev-reporter-token-secret-com-32-bytes-ou-mais
+      AUTH_HMAC_SECRET: dev-auth-hmac-secret-com-pelo-menos-32-bytes
     ports: ['3000:3000']
 
   # Exemplo da manutenção diária da trilha (D50): cria as partições à frente e expurga as que passaram de 5 anos.

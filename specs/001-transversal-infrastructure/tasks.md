@@ -270,18 +270,18 @@ payload.
 
 ### Tests for User Story 7 (mandatory for security and privacy rules) ⚠️
 
-- [ ] T048 [P] [US7] Teste unitário em `src/infra/queue/job-payload.schema.spec.ts`: o schema base aceita UUID, enum
+- [x] T048 [P] [US7] Teste unitário em `src/infra/queue/job-payload.schema.spec.ts`: o schema base aceita UUID, enum
       e número e recusa qualquer texto livre
-- [ ] T049 [P] [US7] Teste de integração em `test/infra/queue.e2e-spec.ts` contra o Redis do compose: mesmo `jobId`
+- [x] T049 [P] [US7] Teste de integração em `test/infra/queue.e2e-spec.ts` contra o Redis do compose: mesmo `jobId`
       roda uma vez; job com falha é tentado de novo com backoff; job scheduler com dois workers gera uma execução por
       disparo; histórico respeita os limites
 
 ### Implementation for User Story 7
 
-- [ ] T050 [P] [US7] Criar os padrões de job (`attempts`, `backoff`, `removeOnComplete`, `removeOnFail`) e o helper
+- [x] T050 [P] [US7] Criar os padrões de job (`attempts`, `backoff`, `removeOnComplete`, `removeOnFail`) e o helper
       de `jobId` determinístico em `src/infra/queue/job-defaults.ts`
-- [ ] T051 [P] [US7] Criar o schema base de payload em `src/infra/queue/job-payload.schema.ts`
-- [ ] T052 [US7] Criar `src/infra/queue/queue.module.ts` com `BullModule.forRootAsync` (`REDIS_URL`) e as filas
+- [x] T051 [P] [US7] Criar o schema base de payload em `src/infra/queue/job-payload.schema.ts`
+- [x] T052 [US7] Criar `src/infra/queue/queue.module.ts` com `BullModule.forRootAsync` (`REDIS_URL`) e as filas
       `notifications` e `maintenance`, e importá-lo em `src/app.module.ts`
 
 **Checkpoint**: notifications, retention e crypto podem enfileirar jobs.

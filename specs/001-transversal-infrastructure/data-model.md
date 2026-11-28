@@ -47,7 +47,7 @@ Entrada: `limit` de 1 a 100 (padrão 20) e `after` opcional. Um cursor inválido
 | ------------ | ------------------------------------------------------------------------------------------------------------------------ |
 | `name`       | Nome da tarefa                                                                                                           |
 | `data`       | Objeto validado por schema zod, aceitando só UUIDs e códigos de enum. Nada de texto livre                                |
-| `opts.jobId` | Derivado da tarefa (ex.: `notify-new-report:<reportId>`)                                                                 |
+| `opts.jobId` | Derivado da tarefa (ex.: `notify-new-report.<reportId>`; o BullMQ recusa `:` em ids personalizados)                      |
 | Padrões      | `attempts: 5`, backoff exponencial a partir de 5 s, `removeOnComplete: { count: 1000 }`, `removeOnFail: { count: 5000 }` |
 
 ### Chave de dados (TRV-04)

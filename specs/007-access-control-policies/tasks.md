@@ -209,18 +209,18 @@ permitida" no Postgres real.
 
 ### Tests for User Story 4 ⚠️ (escrever antes, devem falhar)
 
-- [ ] T030 [P] [US4] E2e `test/access-control/denials.e2e-spec.ts`: 403 do guard em rota de usuários (`UsersPolicy`,
+- [x] T030 [P] [US4] E2e `test/access-control/denials.e2e-spec.ts`: 403 do guard em rota de usuários (`UsersPolicy`,
       `code: users.manage`, `resource_type = 'user'`), na trilha (`AuditPolicy`), na rota de teste (`ReportsPolicy`),
       403 do `authorize()` (DPO tratando) e os dois 404 de denúncia: exatamente um `ACCESS_DENIED` por negação,
       `result = 'DENIED'`, metadata só com nomes de código e enums (SC-005); rota sem declaração continua `SYSTEM`
-- [ ] T031 [P] [US4] (parte da `policy`/`ability`/`code` do guard já feita na fase 2, junto com o T012, para a suíte
+- [x] T031 [P] [US4] (parte da `policy`/`ability`/`code` do guard já feita na fase 2, junto com o T012, para a suíte
       continuar verde; falta a reconferência do T032) Ajustar `test/users/users-status.e2e-spec.ts` e `test/users/users-create-list.e2e-spec.ts` para a
       metadata nova (`code` além de `policy`/`ability`; `required: ADMIN` mais `code: 'users.manage'` na reconferência
       dentro da transação)
 
 ### Implementation for User Story 4
 
-- [ ] T032 [US4] `src/modules/users/users.service.ts`: a reconferência de quem age passa a gravar também
+- [x] T032 [US4] `src/modules/users/users.service.ts`: a reconferência de quem age passa a gravar também
       `code: 'users.manage'` no `ACCESS_DENIED` (depois do T031)
 
 **Checkpoint**: T030 e T031 verdes.

@@ -162,7 +162,8 @@ export class UsersService {
           resourceType: AuditResourceType.USER,
           resourceId: targetId,
           result: AuditResult.DENIED,
-          metadata: { required: Role.ADMIN },
+          // Perfil exigido e código do catálogo (D61), como nas negações da autorização.
+          metadata: { required: Role.ADMIN, code: 'users.manage' },
         });
       }
     }

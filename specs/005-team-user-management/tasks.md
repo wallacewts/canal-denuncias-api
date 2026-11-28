@@ -87,29 +87,29 @@ teste. Nenhuma user story começa antes.
 
 ### Tests for User Story 1 ⚠️ (escrever antes, devem falhar)
 
-- [ ] T013 [P] [US1] Teste unitário `src/modules/users/temporary-password.spec.ts`: 20 caracteres do alfabeto sem
+- [x] T013 [P] [US1] Teste unitário `src/modules/users/temporary-password.spec.ts`: 20 caracteres do alfabeto sem
       ambíguos, passa no `checkPasswordPolicy`, 1.000 gerações sem repetição
-- [ ] T014 [P] [US1] e2e `test/users/users-create-list.e2e-spec.ts`: 201 com `temporaryPassword` e pessoa ativa, sem
+- [x] T014 [P] [US1] e2e `test/users/users-create-list.e2e-spec.ts`: 201 com `temporaryPassword` e pessoa ativa, sem
       MFA, `passwordChangeRequired: true`; o hash guardado verifica a senha provisória; detalhe e listagem nunca trazem
       a senha, hash, segredo ou códigos; e-mail repetido com outra caixa e espaços → 409 `EMAIL_ALREADY_REGISTERED`;
       `USER_CREATED` com ator Administrador e metadata só `{ roles }`; senha provisória e e-mail ausentes de logs e
       trilha (texto inteiro e trecho curto), inclusive no 409; 30 pessoas → filtro por status e perfil e páginas de 10
       por cursor; cursor adulterado → 400; Analista, DPO e Auditor → 403 com `ACCESS_DENIED`; sem sessão → 401; id
       inexistente → 404, malformado → 400
-- [ ] T015 [P] [US1] e2e `test/users/last-login.e2e-spec.ts`: `lastLoginAt` nulo antes; preenchido depois de senha e
+- [x] T015 [P] [US1] e2e `test/users/last-login.e2e-spec.ts`: `lastLoginAt` nulo antes; preenchido depois de senha e
       MFA (com `TestClock`); não muda só com a senha (MFA pendente)
 
 ### Implementation for User Story 1
 
-- [ ] T016 [P] [US1] Gerador em `src/modules/users/temporary-password.ts` (`crypto.randomInt`, research R5)
-- [ ] T017 [US1] Repositório `src/modules/users/users.repository.ts`: `listPage(filtros, page)` com `paginate()` e
+- [x] T016 [P] [US1] Gerador em `src/modules/users/temporary-password.ts` (`crypto.randomInt`, research R5)
+- [x] T017 [US1] Repositório `src/modules/users/users.repository.ts`: `listPage(filtros, page)` com `paginate()` e
       `findStaffById` (perfis, `mfaEnabledAt`, `passwordChangedAt`, `lastLoginAt`, sem colunas sensíveis)
-- [ ] T018 [US1] `UsersService.create/list/get` em `src/modules/users/users.service.ts`: hash antes da transação;
+- [x] T018 [US1] `UsersService.create/list/get` em `src/modules/users/users.service.ts`: hash antes da transação;
       `createWithRoles` + `USER_CREATED` na mesma transação; mapeamento para `StaffUser` (contracts/users-api.md)
-- [ ] T019 [US1] `UsersController` em `src/modules/users/users.controller.ts` (`@AdminApi('users')`, `POST /users`,
+- [x] T019 [US1] `UsersController` em `src/modules/users/users.controller.ts` (`@AdminApi('users')`, `POST /users`,
       `GET /users`, `GET /users/:id` com `@Can(UsersPolicy, 'manage')`), registrado no
       `src/modules/users/users.module.ts`
-- [ ] T020 [P] [US1] Assinante `src/modules/users/last-login.subscriber.ts` (eventos `mfa-verified` e `sign-in` com
+- [x] T020 [P] [US1] Assinante `src/modules/users/last-login.subscriber.ts` (eventos `mfa-verified` e `sign-in` com
       senha sem MFA pendente → `users.last_login_at`; erro logado só pelo nome), registrado no `users.module.ts`
 
 **Checkpoint**: US1 funcional e testada sozinha.

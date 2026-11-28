@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource, QueryFailedError, type EntityManager } from 'typeorm';
+import { DataSource, In, QueryFailedError, type EntityManager } from 'typeorm';
+import { paginate } from '../../common/pagination/cursor.js';
+import type { Page, PageQuery } from '../../common/pagination/page.schema.js';
 import { DomainConflictError } from '../../common/http/domain-error.js';
 import type { Role } from '../../common/enums/role.enum.js';
 import { UserStatus } from '../../common/enums/user-status.enum.js';
@@ -19,6 +21,13 @@ export interface NewUser {
   email: string;
   passwordHash: string;
   roles: Role[];
+  /** Quem concedeu os perfis (nulo no `create-admin`). */
+  grantedById?: string | null;
+}
+
+export interface UserListFilters {
+  status?: UserStatus;
+  role?: Role;
 }
 
 /**
@@ -62,7 +71,7 @@ export class UsersRepository {
       if (data.roles.length > 0) {
         await m.insert(
           UserRole,
-          data.roles.map((role) => ({ userId: id, role })),
+          data.roles.map((role) => ({ userId: id, role, grantedById: data.grantedById ?? null })),
         );
       }
       return (await this.findById(id, m))!;
@@ -85,5 +94,28 @@ export class UsersRepository {
       .where('role.role = :role', { role: 'ADMIN' })
       .andWhere('user.status = :status', { status: UserStatus.ACTIVE })
       .getCount();
+  }
+
+  /** Página da equipe por cursor (TRV-08). O filtro de perfil é subconsulta: junção com `LIMIT` cortaria perfis. */
+  async listPage(filters: UserListFilters, page: PageQuery): Promise<Page<User>> {
+    const qb = this.dataSource.manager.createQueryBuilder(User, 'user');
+    if (filters.status) qb.andWhere('user.status = :status', { status: filters.status });
+    if (filters.role) {
+      qb.andWhere('EXISTS (SELECT 1 FROM user_roles r WHERE r.user_id = user.id AND r.role = :role)', {
+        role: filters.role,
+      });
+    }
+    const result = await paginate(qb, page);
+    const roles = await this.rolesOf(result.items.map((u) => u.id));
+    for (const user of result.items) user.roles = roles.get(user.id) ?? [];
+    return result;
+  }
+
+  private async rolesOf(ids: string[]): Promise<Map<string, UserRole[]>> {
+    const map = new Map<string, UserRole[]>();
+    if (ids.length === 0) return map;
+    const rows = await this.dataSource.manager.find(UserRole, { where: { userId: In(ids) } });
+    for (const row of rows) map.set(row.userId, [...(map.get(row.userId) ?? []), row]);
+    return map;
   }
 }

@@ -117,11 +117,11 @@ chamada ao Vault acontece com transação aberta.
 
 ### Tests for User Story 2 (mandatory for security and privacy rules) ⚠️
 
-- [ ] T015 [P] [US2] Testes unitários de `src/modules/crypto/data-key.service.spec.ts` com `KeyService` falso: a DEK
+- [x] T015 [P] [US2] Testes unitários de `src/modules/crypto/data-key.service.spec.ts` com `KeyService` falso: a DEK
       entregue a `fn` é zerada depois de `fn` terminar e depois de `fn` lançar erro; o buffer intermediário também é
       zerado; o buffer entregue não é do pool compartilhado (`byteOffset === 0` e `buffer.byteLength === 32`);
       `withReportKey(null, fn)` gera `ContentUnavailableError` sem chamar o Vault; só a `report-kek` é usada
-- [ ] T016 [P] [US2] Testes de integração em `test/crypto/data-key.e2e-spec.ts` contra o Vault local, **autenticados com o
+- [x] T016 [P] [US2] Testes de integração em `test/crypto/data-key.e2e-spec.ts` contra o Vault local, **autenticados com o
       AppRole `api` de desenvolvimento** (o token root só para tarefas administrativas do teste): criar, guardar o
       `wrapped` e abrir de novo; uma operação que cifra e grava no banco não chama o Vault com transação aberta (espiar
       as chamadas ao Vault e o estado da transação); Vault inacessível gera `KeyServiceUnavailableError` com mensagem
@@ -130,7 +130,7 @@ chamada ao Vault acontece com transação aberta.
 
 ### Implementation for User Story 2
 
-- [ ] T017 [US2] Implementar `createReportKey`/`withReportKey` em `src/modules/crypto/data-key.service.ts` (R2), com
+- [x] T017 [US2] Implementar `createReportKey`/`withReportKey` em `src/modules/crypto/data-key.service.ts` (R2), com
       comentário sobre os limites da zeragem em Node, e registrar/exportar no `CryptoModule`
 
 **Checkpoint**: US2 verde.

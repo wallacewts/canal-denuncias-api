@@ -21,7 +21,17 @@ export interface CreateTestAppOptions {
   imports?: Array<Type<unknown> | DynamicModule>;
   /** Substitui providers (ex.: um prompt de senha falso nos testes da CLI). */
   overrides?: Array<{ provide: unknown; useValue: unknown }>;
+  /**
+   * Credencial do Vault da API nesta suíte. `root` (padrão) usa o token de desenvolvimento; `api` e `maintenance` usam
+   * os AppRoles de dev, para provar que as políticas reais bastam (G1 da feature 002).
+   */
+  vault?: 'root' | 'api' | 'maintenance';
 }
+
+const APPROLES = {
+  api: { roleId: 'dev-api-role-id', secretId: 'dev-api-secret-id' },
+  maintenance: { roleId: 'dev-maintenance-role-id', secretId: 'dev-maintenance-secret-id' },
+} as const;
 
 /**
  * Sobe a API como em produção (`setupApp`), contra um banco só da suíte e com os logs capturados em memória.
@@ -35,6 +45,11 @@ export async function createTestApp(options: CreateTestAppOptions = {}): Promise
   // O ConfigModule lê o ambiente ao importar o AppModule. O Vitest isola cada arquivo de teste,
   // então o import dinâmico abaixo enxerga a URL do banco desta suíte.
   process.env.DATABASE_URL = database.runtimeUrl;
+  if (options.vault && options.vault !== 'root') {
+    delete process.env.VAULT_TOKEN;
+    process.env.VAULT_ROLE_ID = APPROLES[options.vault].roleId;
+    process.env.VAULT_SECRET_ID = APPROLES[options.vault].secretId;
+  }
   const { AppModule } = await import('../../src/app.module.js');
 
   const logs = new LogCapture();

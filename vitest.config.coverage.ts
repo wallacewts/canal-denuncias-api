@@ -22,6 +22,7 @@ export default defineConfig({
       thresholds: {
         'src/common/**': { lines: 80, functions: 80, statements: 80, branches: 70 },
         'src/infra/**': { lines: 80, functions: 80, statements: 80, branches: 70 },
+        'src/infra/auth/**': { lines: 80, functions: 80, statements: 80, branches: 70 },
         'src/modules/crypto/**': { lines: 80, functions: 80, statements: 80, branches: 70 },
         'src/modules/audit/**': { lines: 80, functions: 80, statements: 80, branches: 70 },
       },

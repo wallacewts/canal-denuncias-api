@@ -136,7 +136,9 @@ exemplo): `POST sign-in` com e-mail e senha → 200 com `mfaRequired` e cookie d
 qualquer falha) → `POST` do desafio MFA com o código → 200 e cookie **novo** (o id muda) → rotas administrativas com
 o cookie. Sem sessão, sessão expirada ou usuário desativado: 401. Logado sem permissão: 403. `sign-out`: 204 e cookie
 apagado. O front envia credenciais (`credentials: 'include'`), não guarda nada em `localStorage` e não recebe token
-nenhum. O cookie é `Secure`: em desenvolvimento, só funciona em `localhost` ou HTTPS.
+nenhum. O cookie é `Secure`: em desenvolvimento, só funciona em `localhost` ou HTTPS. O formato das respostas reais
+(código da próxima etapa, horários de expiração, permissões efetivas no `GET /me`) está nas premissas de contrato do
+`docs/tarefas/04-auth.md` e no USERS-07, propostas pelo front e compatíveis com esta decisão.
 
 **Falta construir:**
 

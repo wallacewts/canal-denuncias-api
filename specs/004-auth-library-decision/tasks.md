@@ -200,13 +200,13 @@ e encerramento de todas as sessões do usuário.
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T032 [P] Regras novas no `AGENTS.md`: área administrativa só com sessão por cookie; nenhum token portador (canal
+- [x] T032 [P] Regras novas no `AGENTS.md`: área administrativa só com sessão por cookie; nenhum token portador (canal
       de tokens só por decisão própria futura, R3); stores só Postgres; `@PublicApi` já abre a rota no guard global;
       nada de `@Public()` em rota administrativa
-- [ ] T033 [P] `README.md`: suítes de contrato de `test/contract/auth/` e como rodá-las
-- [ ] T034 Cobertura mínima de 80% em `src/infra/auth` no `vitest.config.coverage.ts`
-- [ ] T035 `npm run openapi:export` e conferir que `openapi/` não mudou (as rotas de exemplo são só de teste)
-- [ ] T036 Rodar os cenários de `quickstart.md`, a suíte completa (lint, typecheck, unitários, e2e, build), o compose
+- [x] T033 [P] `README.md`: suítes de contrato de `test/contract/auth/` e como rodá-las
+- [x] T034 Cobertura mínima de 80% em `src/infra/auth` no `vitest.config.coverage.ts`
+- [x] T035 `npm run openapi:export` e conferir que `openapi/` não mudou (as rotas de exemplo são só de teste)
+- [x] T036 Rodar os cenários de `quickstart.md`, a suíte completa (lint, typecheck, unitários, e2e, build), o compose
       `--profile app` (área pública sem cookie, admin 401 sem sessão), Trivy e gitleaks
 
 ---
@@ -250,9 +250,9 @@ T020 · T021 · T024 · T025
 
 ## Pendências do analyze
 
-| ID  | Severidade | Pendência                                                                                                                                                       | Onde resolver   |
-| --- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| U2  | LOW        | Árvore do plano sem `src/infra/auth/auth-storage.provider.ts`, `test/support/auth-clock.ts`; teste de migration em `test/contract/auth/` (não `test/database/`) | Polish (T036)   |
-| C3  | LOW        | Caso de borda "relógio ajustado": recuar o relógio não renova a sessão                                                                                          | T021 (opcional) |
-| C4  | LOW        | SC-007 é validação humana: passo manual no quickstart                                                                                                           | T036            |
-| D1  | LOW        | Complexity Tracking ainda estima "~600 linhas" incluindo tokens                                                                                                 | Polish (T036)   |
+| ID  | Severidade | Pendência                                                              | Resolução (Polish)                                                     |
+| --- | ---------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| U2  | LOW        | Árvore do plano sem arquivos criados na implementação                  | ✅ Árvore do `plan.md` atualizada                                      |
+| C3  | LOW        | Caso de borda "relógio ajustado": recuar o relógio não renova a sessão | ✅ Caso em `session-expiry.e2e-spec.ts` e cenário 9 do `quickstart.md` |
+| C4  | LOW        | SC-007 é validação humana: passo manual no quickstart                  | ✅ Cenário 10 do `quickstart.md` (a executar por alguém de fora)       |
+| D1  | LOW        | Complexity Tracking ainda estima "~600 linhas" incluindo tokens        | ✅ Estimativa reescrita sem a renovação por tokens                     |

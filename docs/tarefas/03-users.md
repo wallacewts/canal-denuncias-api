@@ -110,4 +110,9 @@
 **Critérios de aceite**
 
 - [ ] Retorna id, nome, e-mail, perfis, situação do MFA e se a troca de senha é obrigatória.
-- [ ] As permissões efetivas (lista de habilidades) vêm junto, para o front esconder o que o usuário não pode fazer.
+- [ ] As permissões efetivas (lista de habilidades) vêm junto, calculadas pelas mesmas políticas do servidor (D54). O
+      front decide menu e rotas só por elas e não copia a matriz de perfis; o servidor continua checando cada rota.
+      (Proposta do front, feature 004 do backoffice.)
+- [ ] Devolve os horários de expiração da sessão em ISO 8601 UTC: inatividade (último uso + 15 min) e absoluta
+      (login + 8 h), para o front avisar antes de cada um. Como toda requisição autenticada conta como uso, o front não
+      deve chamar `/me` só para manter a sessão viva. (Proposta do front, feature 004 do backoffice.)

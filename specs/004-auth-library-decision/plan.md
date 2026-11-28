@@ -105,13 +105,17 @@ specs/004-auth-library-decision/
 
 ```text
 src/
-├── common/http/route-decorators.ts       # @PublicApi passa a compor @Public()
+├── common/http/route-decorators.ts       # @PublicApi compõe @Public(); @AdminApi exige MFA; OpenAdminRoute()
 ├── infra/auth/
-│   ├── auth-infra.module.ts              # AuthenticationModule + AuthorizationModule configurados
+│   ├── auth-infra.module.ts              # AuthenticationModule + AuthorizationModule; AdminAreaGuardModule por último
 │   ├── auth-identity.port.ts             # (existente) porta D47
-│   ├── session-auth-identity.ts          # novo: AUTH_IDENTITY a partir da sessão
+│   ├── admin-identity.guard.ts           # (existente) pula rotas OpenAdminRoute
+│   ├── auth-clock.ts                     # novo: AUTH_CLOCK (relógio injetável da sessão e do MFA)
+│   ├── auth-storage.provider.ts          # novo: registra os stores no AuthenticationStorage
+│   ├── staff-user.ts                     # novo: tipo do usuário da sessão (augmentation do pacote)
+│   ├── session-auth-identity.ts          # novo: AUTH_IDENTITY a partir da sessão (lê request.user)
 │   ├── staff-session.provider.ts         # novo: SessionCookieProvider (carrega usuário e perfis)
-│   ├── auth-audit.subscriber.ts          # novo: eventos → AuditService (AUTH_SIGNED_IN, ACCESS_DENIED)
+│   ├── auth-audit.subscriber.ts          # novo: eventos → AuditService (AUTH_*, ACCESS_DENIED)
 │   └── stores/
 │       ├── pg-session.store.ts           # novo, definitivo
 │       └── pg-mfa.store.ts               # novo, definitivo (sela o segredo com AppSecretService)
@@ -120,9 +124,13 @@ src/
 └── database/migrations/<ts>-AuthStores.ts
 
 test/
+├── support/auth-clock.ts                 # TestClock para o AUTH_CLOCK
 └── contract/auth/
+    ├── auth-stores.migration.e2e-spec.ts # migration AuthStores (up/down)
     ├── store-contract.e2e-spec.ts        # authenticationStoreContract() contra os stores Postgres
-    ├── example/                          # módulo só de teste: login, MFA, rota protegida, políticas
+    ├── pg-mfa-store.e2e-spec.ts          # selagem pelo Vault, fora de transação
+    ├── public-area.e2e-spec.ts           # área pública com os guards globais
+    ├── example/                          # módulo só de teste: login, MFA, rota protegida, políticas, escopo
     ├── sign-in-mfa.e2e-spec.ts           # US2
     ├── session-expiry.e2e-spec.ts        # US2 (relógio)
     ├── authorization.e2e-spec.ts         # US3
@@ -134,7 +142,7 @@ migration; teste de contrato em `test/contract/auth` (nunca importado por `src/`
 
 ## Complexity Tracking
 
-| Violação                                                                  | Por que é necessária                                                                                                                                                     | Alternativa mais simples rejeitada porque                                                                                                              |
-| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Pacotes de segurança em 0.1.x (princípio VIII pede estabilidade da stack) | São os únicos que entregam, sem código próprio de segurança, expiração absoluta, replay e bloqueio de TOTP, códigos de recuperação, tempo constante e negação por padrão | Passport + CASL exigiriam escrever essas partes (~600 linhas de código de segurança) sobre bibliotecas sem atualização recente (`passport-local` 2023) |
-| `mfa.encryption: false` no pacote                                         | A selagem é feita pelo store com o Vault (`app-kek`), para não haver chave estática fora do Vault                                                                        | A cifragem local do pacote exige chave em variável de ambiente, contra D08 e o princípio III                                                           |
+| Violação                                                                  | Por que é necessária                                                                                                                                                     | Alternativa mais simples rejeitada porque                                                                                                                                                                                                 |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pacotes de segurança em 0.1.x (princípio VIII pede estabilidade da stack) | São os únicos que entregam, sem código próprio de segurança, expiração absoluta, replay e bloqueio de TOTP, códigos de recuperação, tempo constante e negação por padrão | Passport + CASL exigiriam escrever essas partes como código próprio de segurança (a estimativa inicial de ~600 linhas incluía a renovação por tokens, que saiu na Q-P2) sobre bibliotecas sem atualização recente (`passport-local` 2023) |
+| `mfa.encryption: false` no pacote                                         | A selagem é feita pelo store com o Vault (`app-kek`), para não haver chave estática fora do Vault                                                                        | A cifragem local do pacote exige chave em variável de ambiente, contra D08 e o princípio III                                                                                                                                              |

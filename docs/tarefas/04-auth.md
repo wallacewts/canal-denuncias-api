@@ -71,6 +71,18 @@ Ler antes: `.claude/skills/nestjs-auth/` e https://docs.nestjs.com/security/auth
 - [ ] Hash antigo é refeito com o custo atual quando necessário.
 - [ ] Testes: sucesso, senha errada, e-mail inexistente, bloqueio e desbloqueio.
 
+**Premissas de contrato do login (propostas do front, feature 004 do backoffice; valem para AUTH-01 a AUTH-04)**
+
+- [ ] A resposta de sucesso do login e do desafio MFA informa a próxima etapa em código: `MFA_REQUIRED`,
+      `MFA_ENROLLMENT_REQUIRED`, `PASSWORD_CHANGE_REQUIRED` ou `DONE`. Falha de credencial continua 401 genérico, sem
+      etapa.
+- [ ] As respostas do login e do desafio trazem os horários de expiração da sessão (inatividade e absoluta, ISO 8601
+      UTC), como o `GET /me` (USERS-07).
+- [ ] Bloqueio do desafio MFA (5 falhas em 15 min, depois que a senha já foi provada) tem código de resposta próprio,
+      distinto do código inválido. Excesso de tentativas pelo rate limit é 429 com `Retry-After` (AUTH-08). O
+      bloqueio progressivo da etapa de senha segue a resposta genérica (ver o critério de `BLOCKED`/`DISABLED` e o
+      FR-006 da feature 004) até decisão própria.
+
 ### AUTH-02 · Sessão, expiração e logout
 
 **Estimativa:** M · **Marco:** MVP · **Depende de:** AUTH-00
@@ -88,6 +100,10 @@ Ler antes: `.claude/skills/nestjs-auth/` e https://docs.nestjs.com/security/auth
 - [ ] Não há refresh token (D53, Q-P2 da feature 004): a sessão por cookie é o único meio de autenticação; sair de
       todos os lugares encerra todas as sessões do usuário e grava `AUTH_SESSION_REVOKED`.
 - [ ] A lista de sessões mostra criação, último uso, IP e user-agent, e marca a sessão atual.
+- [ ] Os horários de expiração (inatividade e absoluta) saem do registro da sessão (`last_active_at` + 15 min,
+      `expires_at`) e vão no `GET /me` e nas respostas do login e do desafio (proposta do front). O último uso é
+      gravado no máximo uma vez por minuto (`touchInterval`), então o horário de inatividade informado pode vir até
+      1 min antes do real (nunca depois).
 
 ### AUTH-03 · Cadastro do MFA (primeiro acesso)
 
@@ -100,10 +116,12 @@ Ler antes: `.claude/skills/nestjs-auth/` e https://docs.nestjs.com/security/auth
 
 **Critérios de aceite**
 
-- [ ] A geração devolve a URI `otpauth://` e o QR code (data URL) com o nome do sistema como emissor. O segredo vai
-      cifrado com a `app-kek`.
+- [ ] A geração devolve a URI `otpauth://`, o QR code como imagem embutida (data URI, gerado na API, sem serviço
+      externo) e o segredo em texto para digitação manual, com o nome do sistema como emissor. O segredo vai cifrado
+      com a `app-kek` (o `PgMfaStore` já faz) e nunca vai para log ou auditoria. (Proposta do front.)
 - [ ] Só ativa depois de confirmar um código válido.
-- [ ] Na confirmação, gera 10 códigos de recuperação, exibidos uma única vez e guardados como hash.
+- [ ] Na confirmação, gera 10 códigos de recuperação, devolvidos na resposta da confirmação uma única vez e guardados
+      como hash. (Proposta do front.)
 - [ ] Usuário sem MFA não acessa nenhuma rota além das de cadastro do MFA e troca de senha (403).
 
 ### AUTH-04 · Desafio MFA no login

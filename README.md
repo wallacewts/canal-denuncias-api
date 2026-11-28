@@ -150,6 +150,19 @@ O front gera um cliente para cada arquivo (`npm run api:sync`). Mudou rota ou sc
 Os testes `*.e2e-spec.ts` usam Postgres, Vault, Redis e S3 reais (`docker compose up -d`), com um banco clonado por
 suíte e captura de log para provar que nada sensível vaza. Veja [`test/support/README.md`](test/support/README.md).
 
+### Autenticação e autorização (testes de contrato)
+
+`test/contract/auth/` prova a escolha da D53 e da D54 (`docs/adr/0053-autenticacao-e-autorizacao.md`): a suíte de
+contrato oficial do `@nestjs/authentication` contra os stores Postgres, login com MFA, expirações de sessão (com
+relógio controlado), área pública sem cookie, negação por padrão, escopo na consulta e o encaixe com o `create-admin`
+e a auditoria. As rotas e a política de `test/contract/auth/example/` são só de teste, nunca importadas por `src/`.
+
+```bash
+npx vitest run --config vitest.config.e2e.ts test/contract/auth/   # só estas suítes
+```
+
+O teste de login imprime a diferença de tempo entre e-mail inexistente e senha errada (SC-006).
+
 ## Implantação
 
 O proxy reverso também protege o anonimato do denunciante. Use a configuração de referência e o teste de fumaça de

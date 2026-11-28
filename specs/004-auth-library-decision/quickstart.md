@@ -9,7 +9,8 @@
 ## Cenários
 
 1. **Decisão registrada**: abrir `docs/adr/README.md` e conferir as linhas D53 (autenticação, sem renovação por tokens) e D54
-   (autorização), com a tabela requisito × opção de `research.md`.
+   (autorização), com a tabela requisito × opção do ADR
+   `docs/adr/0053-autenticacao-e-autorizacao.md`.
 2. **Contrato dos stores**: `npx vitest run --config vitest.config.e2e.ts test/contract/auth/store-contract` → todos
    os casos de `authenticationStoreContract()` passam contra o Postgres, inclusive os concorrentes.
 3. **Login com MFA (US2)**: `…/sign-in-mfa` → só senha dá 401 na rota protegida; senha + TOTP dá 200; o mesmo código
@@ -23,7 +24,13 @@
 6. **Autorização (US3)**: `…/authorization` → rota sem regra dá 403 e aparece no log da inicialização; regra por
    perfil; listagem do Analista só com os atribuídos e sem o bloqueado (e a consulta já filtrada); DPO lê e não trata;
    autoalteração de perfis dá 403; `ACCESS_DENIED` na trilha; sem sessão dá 401.
-7. **Encaixe (US4)**: `…/integration` → administrador criado por `npm run cli -- create-admin` entra sem migração de
+7. **Encaixe (US4)**: `…/integration` → administrador criado pelo comando `create-admin` entra sem migração de
    hash; rota auditada grava ator equipe com o id da sessão; a área pública não recebe nem lê cookie.
 8. **Segredo TOTP selado**: consultar `users.mfa_secret_enc` do usuário de teste e conferir que não contém o segredo
    base32 (é o formato selado do `AppSecretService`).
+9. **Relógio recuado (caso de borda)**: `…/session-expiry` → recuar o relógio não muda `expires_at` nem
+   `last_active_at`, e a sessão expira no limite de 8 h contado do login.
+10. **Leitura por quem não decidiu (SC-007, passo manual)**: uma pessoa da equipe que não participou da feature lê só
+    `docs/adr/README.md` (D53, D54) e `docs/adr/0053-autenticacao-e-autorizacao.md` e responde, sem ajuda: qual
+    biblioteca usar para login e para permissões, e onde cada linha da matriz do ACL-01 é aplicada (rota, serviço ou
+    consulta). Registrar a data e o resultado no `tasks.md`.

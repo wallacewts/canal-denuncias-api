@@ -57,6 +57,15 @@ Regras que não podem ser quebradas:
 - Leituras sensíveis em rotas: `@Audited(ação, tipo, resolveId)`. O `resolveId` só lê parâmetros e query.
 - Toda rota `@AdminApi` exige identidade (401 sem ela, D47). Nos testes: `createTestApp({ identity: true })` e o
   cabeçalho de `testIdentity()`; nunca importe `test/` de `src/` (teste de convenção).
+- Autenticação só pelo `@nestjs/authentication` e autorização só pelo `@nestjs/authorization`, em versões exatas
+  (D53, D54, `docs/adr/0053-autenticacao-e-autorizacao.md`). A área administrativa autentica só pela sessão por
+  cookie: nenhum token portador nem refresh token (canal de tokens só por decisão própria futura). Sessões e MFA só
+  nos stores Postgres de `src/infra/auth/stores/` (`allowInMemoryStorage: false`).
+- `@PublicApi` já abre a rota no guard global. Nada de `@Public()` em rota administrativa: rota de login ou do
+  desafio MFA usa `OpenAdminRoute()`. Toda rota administrativa declara `@Can(Política, 'habilidade')` ou
+  `@Can.Anyone()` com `authorize()` no serviço; sem declaração, responde 403 e aparece no log da inicialização.
+- Eventos de autenticação e negações entram na trilha só pelo `AuthAuditSubscriber`; evento novo do pacote = entrada
+  no mapeamento dele e no catálogo da auditoria. Tempo de sessão e MFA nos testes: `TestClock` no `AUTH_CLOCK`.
 - A trilha é particionada por mês (D48). Ninguém altera nem apaga registro; a única remoção é a do comando
   `audit-maintenance`, com o perfil `app_audit_maintenance`, de partições com mais de 5 anos (D49 a D51). Partição nova
   só pela função `audit_ensure_partitions`.

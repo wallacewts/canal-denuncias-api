@@ -64,6 +64,28 @@ describe('Sessão: expirações, persistência e encerramento (e2e, teste de con
     expect(elapsed).toBeLessThanOrEqual(8 * HOUR);
   });
 
+  it('relógio recuado não renova a sessão: o limite de 8 h conta do login (caso de borda C3)', async () => {
+    const staff = await newStaff();
+    const start = clock.now();
+    const cookie = await signInFully(t.app, staff, start);
+    for (let i = 0; i < 47; i++) {
+      clock.advance(10 * MINUTE);
+      await request(server()).get(ME).set('Cookie', cookie).expect(200);
+    }
+    const [before] = (await ds.query(`SELECT expires_at, last_active_at FROM sessions WHERE user_id = $1`, [
+      staff.id,
+    ])) as Array<{ expires_at: Date; last_active_at: Date }>;
+    clock.advance(-2 * HOUR);
+    await request(server()).get(ME).set('Cookie', cookie).expect(200);
+    const [after] = (await ds.query(`SELECT expires_at, last_active_at FROM sessions WHERE user_id = $1`, [
+      staff.id,
+    ])) as Array<{ expires_at: Date; last_active_at: Date }>;
+    expect(after.expires_at).toEqual(before.expires_at);
+    expect(after.last_active_at).toEqual(before.last_active_at);
+    clock.advance(start + 8 * HOUR + MINUTE - clock.now());
+    await request(server()).get(ME).set('Cookie', cookie).expect(401);
+  });
+
   it('a sessão continua válida depois de reiniciar a API (está no Postgres)', async () => {
     const cookie = await signInFully(t.app, await newStaff(), clock.now());
     const restarted = await createTestApp({ ...options(), database: t.database });

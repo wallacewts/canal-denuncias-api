@@ -124,19 +124,19 @@ teste. Nenhuma user story começa antes.
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T021 [P] [US2] e2e `test/users/me.e2e-spec.ts`: campos e tipos exatamente os de `contracts/me-api.md`
+- [x] T021 [P] [US2] e2e `test/users/me.e2e-spec.ts`: campos e tipos exatamente os de `contracts/me-api.md`
       (nenhum campo a mais, nenhum sensível); `abilities` de cada um dos 5 perfis e de ADMIN+ANALYST igual ao catálogo;
       perfil retirado reflete na requisição seguinte; com `TestClock` (sessão às 12:00, uso às 12:10):
       `idleExpiresAt` ≤ 12:25 e ≥ 12:24, `absoluteExpiresAt` = 20:00, ambos ISO 8601 UTC; nenhuma linha nova na
       trilha depois de consultar o perfil; sem sessão → 401; pessoa desativada → 401
-- [ ] T022 [P] [US2] e2e de concordância `test/users/abilities-concordance.e2e-spec.ts`: para cada perfil,
+- [x] T022 [P] [US2] e2e de concordância `test/users/abilities-concordance.e2e-spec.ts`: para cada perfil,
       `users.manage` no `/me` ⇔ 200 em `GET /users`; `audit.read` ⇔ 200 em `GET /audit-logs`
 
 ### Implementation for User Story 2
 
-- [ ] T023 [US2] `MeController` em `src/modules/users/me.controller.ts` (`@AdminApi('me')`, `@Can.Anyone()`,
+- [x] T023 [US2] `MeController` em `src/modules/users/me.controller.ts` (`@AdminApi('me')`, `@Can.Anyone()`,
       `@CurrentSession()` para `lastActiveAt` + 15 min e `expiresAt`), registrado no `users.module.ts`
-- [ ] T024 [US2] `src/modules/audit/audit.controller.ts`: checagem do Auditor via `hasAbility(user, 'audit.read')`, com
+- [x] T024 [US2] `src/modules/audit/audit.controller.ts`: checagem do Auditor via `hasAbility(user, 'audit.read')`, com
       o mesmo `ACCESS_DENIED` de hoje (`test/audit/` continua verde)
 
 **Checkpoint**: US1 e US2 independentes; o front pode integrar o `/me`.

@@ -3,6 +3,7 @@ import { Can } from '@nestjs/authorization';
 import { AuditResult } from '../../common/enums/audit-result.enum.js';
 import { Role } from '../../common/enums/role.enum.js';
 import { AdminApi } from '../../common/http/route-decorators.js';
+import { hasAbility } from '../access-control/abilities.js';
 import type { RequestWithIdentity } from '../../infra/auth/admin-identity.guard.js';
 import { AuditAction, AuditResourceType } from './audit-action.enum.js';
 import { AuditQueryService, auditLogQuerySchema, usedFilters, type AuditLogQuery } from './audit-query.service.js';
@@ -43,7 +44,7 @@ export class AuditController {
 
   /** Até a ACL-02 assumir as permissões, a checagem do perfil fica aqui e a recusa é registrada (FR-019). */
   private async assertAuditor(request: RequestWithIdentity): Promise<void> {
-    if (request.staffIdentity?.roles.includes(Role.AUDITOR)) return;
+    if (hasAbility(request.staffIdentity, 'audit.read')) return;
     await this.audit.record({
       action: AuditAction.ACCESS_DENIED,
       resourceType: AuditResourceType.AUDIT_LOG,

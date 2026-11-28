@@ -12,6 +12,7 @@ import { AUTH_IDENTITY } from './auth-identity.port.js';
 import { AuthAuditSubscriber } from './auth-audit.subscriber.js';
 import { AuthStorageRegistration } from './auth-storage.provider.js';
 import { SessionAuthIdentity } from './session-auth-identity.js';
+import { SESSION_ABSOLUTE_TTL_MS, SESSION_IDLE_TTL_MS, SESSION_TOUCH_INTERVAL_MS } from './session-policy.js';
 import { StaffSessionProvider } from './staff-session.provider.js';
 import { PgMfaStore } from './stores/pg-mfa.store.js';
 import { PgSessionStore } from './stores/pg-session.store.js';
@@ -54,9 +55,9 @@ export class AdminAreaGuardModule {}
       inject: [ConfigService, AUTH_CLOCK],
       useFactory: (config: ConfigService<Env, true>, clock: AuthClock) => ({
         session: {
-          idleTtl: '15m',
-          absoluteTtl: '8h',
-          touchInterval: '1m',
+          idleTtl: SESSION_IDLE_TTL_MS,
+          absoluteTtl: SESSION_ABSOLUTE_TTL_MS,
+          touchInterval: SESSION_TOUCH_INTERVAL_MS,
           cookie: { sameSite: 'strict' },
           now: () => clock.now(),
         },

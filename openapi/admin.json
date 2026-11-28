@@ -260,6 +260,20 @@
         ]
       }
     },
+    "/api/admin/v1/me": {
+      "get": {
+        "operationId": "MeController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/admin/v1/users": {
       "get": {
         "operationId": "UsersController_list",

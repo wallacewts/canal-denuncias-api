@@ -259,7 +259,7 @@ chamada ao Vault acontece com transação aberta.
 
 ### Tests for User Story 7 (mandatory for security and privacy rules) ⚠️
 
-- [ ] T032 [P] [US7] Testes de integração em `test/crypto/rewrap.e2e-spec.ts`: criar denúncias, girar a chave com o token
+- [x] T032 [P] [US7] Testes de integração em `test/crypto/rewrap.e2e-spec.ts`: criar denúncias, girar a chave com o token
       root de desenvolvimento e recifrar com a credencial `maintenance`; todas passam para `vault:v<latest>:` e continuam
       abrindo; `content_enc` fica byte a byte igual; uma segunda execução não recifra nada; uma execução interrompida
       depois do primeiro lote termina na seguinte; uma linha alterada no meio da execução é contada como ignorada; cada
@@ -267,17 +267,17 @@ chamada ao Vault acontece com transação aberta.
       desfaz os `UPDATE`s e o registro juntos); cada execução grava um `KEYS_REWRAP_RUN`; todos com ator `SYSTEM`, sem
       IP, KEK em `resource_id` e metadata só com números; com a credencial da API, a operação falha e o resumo grava
       `FAILURE`
-- [ ] T033 [P] [US7] Testes do comando em `test/cli/rewrap-keys.e2e-spec.ts`: saídas e códigos de
+- [x] T033 [P] [US7] Testes do comando em `test/cli/rewrap-keys.e2e-spec.ts`: saídas e códigos de
       `contracts/cli-rewrap-keys.md`; `--kek identity-kek` e `--batch-size` fora do intervalo são recusados; o stdout
       nunca contém valor de `wrapped_dek`, chave ou id de denúncia
 
 ### Implementation for User Story 7
 
-- [ ] T034 [US7] Implementar a recifragem em lotes em `src/modules/crypto/rewrap.service.ts` (R7): versão atual,
+- [x] T034 [US7] Implementar a recifragem em lotes em `src/modules/crypto/rewrap.service.ts` (R7): versão atual,
       filtro por prefixo, rewrap do lote fora de transação, depois uma transação por lote com os `UPDATE ... WHERE id AND
 wrapped_dek = antigo` (conferindo `affected`) e o `KEYS_REWRAPPED` do lote pelo `EntityManager` dela, e o
       `KEYS_REWRAP_RUN` no `finally`
-- [ ] T035 [US7] Implementar `src/cli/rewrap-keys.command.ts` (zod para as opções, SIGINT/SIGTERM encerram depois do lote
+- [x] T035 [US7] Implementar `src/cli/rewrap-keys.command.ts` (zod para as opções, SIGINT/SIGTERM encerram depois do lote
       atual) e registrá-lo em `src/cli/cli-commands.module.ts`, importando o `CryptoModule`
 
 **Checkpoint**: US7 verde.

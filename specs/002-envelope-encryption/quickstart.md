@@ -55,7 +55,8 @@ Manualmente, no ambiente local:
 
 ```bash
 docker compose exec -e VAULT_TOKEN=dev-root-token vault vault write -f transit/keys/report-kek/rotate
-VAULT_ROLE_ID=dev-maintenance-role-id VAULT_SECRET_ID=dev-maintenance-secret-id npm run cli -- rewrap-keys --kek report-kek
+npm run build
+VAULT_TOKEN= VAULT_ROLE_ID=dev-maintenance-role-id VAULT_SECRET_ID=dev-maintenance-secret-id npm run cli -- rewrap-keys --kek report-kek
 ```
 
 Com a credencial da API no lugar da de manutenção, o comando termina com código 1 e a mensagem de falta de permissão.

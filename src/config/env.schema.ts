@@ -1,5 +1,13 @@
 import { z } from 'zod';
 
+/**
+ * Credencial opcional em que vazio vale como ausente. Permite sobrescrever o `.env` na linha de comando, por exemplo
+ * `VAULT_TOKEN= VAULT_ROLE_ID=... npm run cli -- rewrap-keys` com o perfil de manutenção (feature 002, D43).
+ */
+function optionalSecret() {
+  return z.preprocess((v) => (v === '' ? undefined : v), z.string().min(1).optional());
+}
+
 const MIN_SECRET_BYTES = 32;
 const PRODUCTION_MIN_HASH_LOG_N = 17;
 
@@ -44,10 +52,10 @@ export const envSchema = z
 
     VAULT_ADDR: z.url(),
     /** Só fora de produção. Em produção, a presença dele recusa a inicialização. */
-    VAULT_TOKEN: z.string().min(1).optional(),
+    VAULT_TOKEN: optionalSecret(),
     /** AppRole: obrigatório em produção. */
-    VAULT_ROLE_ID: z.string().min(1).optional(),
-    VAULT_SECRET_ID: z.string().min(1).optional(),
+    VAULT_ROLE_ID: optionalSecret(),
+    VAULT_SECRET_ID: optionalSecret(),
     VAULT_TIMEOUT_MS: z.coerce.number().int().min(100).max(5000).default(2000),
 
     S3_ENDPOINT: z.url(),

@@ -83,6 +83,17 @@ describe('validateEnv', () => {
     },
   );
 
+  it('trata VAULT_TOKEN vazio como ausente (comando rewrap-keys com o perfil de manutenção)', () => {
+    const env = validateEnv(baseEnv({ VAULT_TOKEN: '', VAULT_ROLE_ID: 'maint-role', VAULT_SECRET_ID: 'maint-secret' }));
+    expect(env.VAULT_TOKEN).toBeUndefined();
+    expect(env.VAULT_ROLE_ID).toBe('maint-role');
+    expect(() => validateEnv(prodEnv({ VAULT_TOKEN: '' }))).not.toThrow();
+  });
+
+  it('VAULT_TOKEN vazio sem AppRole continua recusado', () => {
+    expect(errorOf(baseEnv({ VAULT_TOKEN: '' }))).toContain('VAULT_TOKEN');
+  });
+
   it('recusa SESSION_SECRET igual a REPORTER_TOKEN_SECRET', () => {
     const same = `${SEGREDO}-com-32-bytes-ou-mais`;
     const message = errorOf(baseEnv({ SESSION_SECRET: same, REPORTER_TOKEN_SECRET: same }));

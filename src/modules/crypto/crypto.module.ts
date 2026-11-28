@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { VaultModule } from '../../infra/vault/vault.module.js';
+import { AuditModule } from '../audit/audit.module.js';
 import { AppSecretService } from './app-secret.service.js';
 import { DataKeyService } from './data-key.service.js';
 import { RecordCipher } from './record-cipher.service.js';
+import { RewrapService } from './rewrap.service.js';
 
 /**
  * Envelope encryption (AES-256-GCM) sobre o Vault Transit (contracts/crypto-module.md da feature 002).
@@ -10,8 +12,8 @@ import { RecordCipher } from './record-cipher.service.js';
  * `stream-cipher.ts` (`createEncryptStream`/`createDecryptStream`).
  */
 @Module({
-  imports: [VaultModule],
-  providers: [DataKeyService, RecordCipher, AppSecretService],
-  exports: [DataKeyService, RecordCipher, AppSecretService],
+  imports: [VaultModule, AuditModule],
+  providers: [DataKeyService, RecordCipher, AppSecretService, RewrapService],
+  exports: [DataKeyService, RecordCipher, AppSecretService, RewrapService],
 })
 export class CryptoModule {}

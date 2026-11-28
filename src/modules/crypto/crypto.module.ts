@@ -6,7 +6,8 @@ import { RecordCipher } from './record-cipher.service.js';
 
 /**
  * Envelope encryption (AES-256-GCM) sobre o Vault Transit (contracts/crypto-module.md da feature 002).
- * Único caminho para cifrar e abrir conteúdo sensível. Os serviços entram em cada história da feature.
+ * Único caminho para cifrar e abrir conteúdo sensível. O streaming de arquivos é exportado como funções em
+ * `stream-cipher.ts` (`createEncryptStream`/`createDecryptStream`).
  */
 @Module({
   imports: [VaultModule],

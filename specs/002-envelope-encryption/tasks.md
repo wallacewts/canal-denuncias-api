@@ -234,7 +234,7 @@ chamada ao Vault acontece com transação aberta.
 
 ### Tests for User Story 6 (mandatory for security and privacy rules) ⚠️
 
-- [ ] T030 [P] [US6] Testes de `src/modules/crypto/stream-cipher.spec.ts`: ida e volta com 0 byte, 1 byte, exatamente
+- [x] T030 [P] [US6] Testes de `src/modules/crypto/stream-cipher.spec.ts`: ida e volta com 0 byte, 1 byte, exatamente
       64 KiB, 64 KiB + 1 e 10 MB; corte no fim de um bloco e no meio de um bloco falham; dois blocos trocados falham;
       cabeçalho alterado falha; contexto de outro anexo falha; byte alterado falha; o sha256 informado é o dos bytes
       cifrados emitidos; com 10 MB gerados aos pedaços, o crescimento de memória (`heapUsed` + `arrayBuffers`) fica
@@ -242,7 +242,7 @@ chamada ao Vault acontece com transação aberta.
 
 ### Implementation for User Story 6
 
-- [ ] T031 [US6] Implementar `createEncryptStream`/`createDecryptStream` em `src/modules/crypto/stream-cipher.ts`
+- [x] T031 [US6] Implementar `createEncryptStream`/`createDecryptStream` em `src/modules/crypto/stream-cipher.ts`
       (`contracts/stream-format.md`, R4) e exportar no `CryptoModule`
 
 **Checkpoint**: US6 verde; a feature attachments pode usar.

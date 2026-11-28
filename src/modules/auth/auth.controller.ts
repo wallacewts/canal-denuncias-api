@@ -1,18 +1,23 @@
 import { Body, HttpCode, HttpStatus, Inject, Post, Req, UnauthorizedException } from '@nestjs/common';
-import { SessionService, SignInService } from '@nestjs/authentication';
+import { CurrentSession, CurrentUser, SessionService, SignInService, type SessionRecord } from '@nestjs/authentication';
 import type { Request } from 'express';
 import { DomainError } from '../../common/http/domain-error.js';
-import { AdminApi, OpenAdminRoute } from '../../common/http/route-decorators.js';
+import { AdminApi, OpenAdminRoute, StepRoute } from '../../common/http/route-decorators.js';
 import { AUTH_CLOCK, type AuthClock } from '../../infra/auth/auth-clock.js';
+import type { StaffUser } from '../../infra/auth/staff-user.js';
 import { PgMfaStore } from '../../infra/auth/stores/pg-mfa.store.js';
 import {
   challengeSchema,
+  enrollmentConfirmationSchema,
   signInSchema,
   type ChallengeInput,
+  type ConfirmationResponse,
+  type EnrollmentResponse,
   type SignInInput,
   type StepResponse,
 } from './auth.schemas.js';
 import { CredentialsService } from './credentials.service.js';
+import { MfaEnrollmentService } from './mfa-enrollment.service.js';
 import { nextStepFor } from './next-step.js';
 import { sessionExpiry } from './session-expiry.js';
 import { StaffCredentialsRepository } from './staff-credentials.repository.js';
@@ -35,6 +40,7 @@ export class AuthController {
     private readonly signInService: SignInService,
     private readonly sessions: SessionService,
     private readonly mfaStore: PgMfaStore,
+    private readonly enrollment: MfaEnrollmentService,
     @Inject(AUTH_CLOCK) private readonly clock: AuthClock,
   ) {}
 
@@ -76,6 +82,24 @@ export class AuthController {
     }
     await this.credentials.resetFailures(userId);
     return this.step(issued.session, userId);
+  }
+
+  @StepRoute('MFA_ENROLLMENT_REQUIRED')
+  @Post('mfa/enrollment')
+  @HttpCode(200)
+  enroll(@CurrentUser() user: StaffUser): Promise<EnrollmentResponse> {
+    return this.enrollment.enroll(user.id);
+  }
+
+  @StepRoute('MFA_ENROLLMENT_REQUIRED')
+  @Post('mfa/enrollment/confirmation')
+  @HttpCode(200)
+  confirmEnrollment(
+    @CurrentUser() user: StaffUser,
+    @CurrentSession() session: SessionRecord,
+    @Body({ schema: enrollmentConfirmationSchema }) body: { code: string },
+  ): Promise<ConfirmationResponse> {
+    return this.enrollment.confirm(user.id, session, body.code);
   }
 
   @OpenAdminRoute()

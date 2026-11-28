@@ -8,6 +8,7 @@ import { AuditModule } from '../audit/audit.module.js';
 import { AuthController } from './auth.controller.js';
 import { CredentialsService } from './credentials.service.js';
 import { MeSecurityController } from './me-security.controller.js';
+import { MfaEnrollmentService } from './mfa-enrollment.service.js';
 import { PasswordChangeService } from './password-change.service.js';
 import { StaffCredentialsRepository } from './staff-credentials.repository.js';
 
@@ -18,7 +19,13 @@ import { StaffCredentialsRepository } from './staff-credentials.repository.js';
 @Module({
   imports: [TypeOrmModule.forFeature([RecoveryCode, Session]), AuditModule],
   controllers: [AuthController, MeSecurityController],
-  providers: [passwordHasherProvider, StaffCredentialsRepository, CredentialsService, PasswordChangeService],
+  providers: [
+    passwordHasherProvider,
+    StaffCredentialsRepository,
+    CredentialsService,
+    PasswordChangeService,
+    MfaEnrollmentService,
+  ],
   exports: [TypeOrmModule, PasswordHasher],
 })
 export class AuthModule {}

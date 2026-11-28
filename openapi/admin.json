@@ -335,6 +335,55 @@
         ]
       }
     },
+    "/api/admin/v1/auth/mfa/enrollment": {
+      "post": {
+        "operationId": "AuthController_enroll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/v1/auth/mfa/enrollment/confirmation": {
+      "post": {
+        "operationId": "AuthController_confirmEnrollment",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "code": {
+                    "maxLength": 16,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/admin/v1/auth/sign-in": {
       "post": {
         "operationId": "AuthController_signIn",

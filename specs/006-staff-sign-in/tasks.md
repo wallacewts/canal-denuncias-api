@@ -173,9 +173,9 @@ now)` (incremento e bloqueio numa instrução, `RETURNING`), `resetLoginFailures
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T028 [P] [US2] Unitário `src/modules/auth/qr-png.spec.ts`: PNG com assinatura, IHDR e CRC válidos, dimensões
+- [x] T028 [P] [US2] Unitário `src/modules/auth/qr-png.spec.ts`: PNG com assinatura, IHDR e CRC válidos, dimensões
       pela escala e margem, matriz lida de volta igual à do `uqr`; URI com caracteres especiais
-- [ ] T029 [P] [US2] e2e `test/auth/first-access.e2e-spec.ts`: pessoa do `POST /users` → `PASSWORD_CHANGE_REQUIRED` →
+- [x] T029 [P] [US2] e2e `test/auth/first-access.e2e-spec.ts`: pessoa do `POST /users` → `PASSWORD_CHANGE_REQUIRED` →
       troca → `MFA_ENROLLMENT_REQUIRED` → cadastro (`otpauthUri`, `qrCodeDataUri` PNG decodificável, `secret`) →
       confirmação com código errado 422 `MFA_CODE_INVALID` (cadastro continua) → confirmação certa: 10 códigos, `DONE`,
       cookie novo, `AUTH_MFA_ENROLLED`; antes de `DONE`, `GET /me` e `GET /users` dão 401; cadastro fora da etapa → 403
@@ -185,9 +185,9 @@ now)` (incremento e bloqueio numa instrução, `RETURNING`), `resetLoginFailures
 
 ### Implementation for User Story 2
 
-- [ ] T030 [P] [US2] `src/modules/auth/qr-png.ts`: matriz do `uqr` → PNG 1 bit com `node:zlib` (`deflateSync`,
+- [x] T030 [P] [US2] `src/modules/auth/qr-png.ts`: matriz do `uqr` → PNG 1 bit com `node:zlib` (`deflateSync`,
       `crc32`) → `data:image/png;base64,…` (R5)
-- [ ] T031 [US2] `MfaEnrollmentService` em `src/modules/auth/mfa-enrollment.service.ts` e rotas
+- [x] T031 [US2] `MfaEnrollmentService` em `src/modules/auth/mfa-enrollment.service.ts` e rotas
       `POST /auth/mfa/enrollment` e `/enrollment/confirmation` no `AuthController` (`StepRoute` em
       `MFA_ENROLLMENT_REQUIRED`; `MfaService.enroll`, `SignInService.confirmMfa`, `generateRecoveryCodes`; R8)
 

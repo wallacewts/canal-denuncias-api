@@ -1,6 +1,6 @@
 import { PasswordHasher } from '@nestjs/authentication';
 import { Role } from '../../src/common/enums/role.enum.js';
-import { createStaff } from '../contract/auth/example/auth-helpers.js';
+import { createStaff, type Staff } from '../contract/auth/example/auth-helpers.js';
 import type { TestClock } from '../support/auth-clock.js';
 import type { TestApp } from '../support/test-app.js';
 import type { DataSource } from 'typeorm';
@@ -27,26 +27,31 @@ describe('Entrada: tempo constante (e2e)', () => {
 
   it('diferença entre inexistente e senha errada < 10% da verificação de senha', async () => {
     const hasher = t.app.get(PasswordHasher);
-    const accounts = [];
-    for (let i = 0; i < 20; i++) accounts.push(await createStaff(t.app, [Role.ANALYST], { mfa: false }));
+    const SAMPLES = 40;
+    const accounts: Staff[] = [];
+    for (let i = 0; i < SAMPLES; i++) accounts.push(await createStaff(t.app, [Role.ANALYST], { mfa: false }));
     const sample = await hasher.hash('qualquer-coisa');
-    const verify: number[] = [];
-    for (let i = 0; i < 10; i++) {
+    const time = async (fn: () => Promise<unknown>) => {
       const start = performance.now();
-      await hasher.verify('outra-coisa', sample);
-      verify.push(performance.now() - start);
-    }
+      await fn();
+      return performance.now() - start;
+    };
     const unknown: number[] = [];
     const wrong: number[] = [];
-    for (let i = 0; i < 20; i++) {
-      let start = performance.now();
-      await signIn(t.app, `ninguem.${i}@empresa.test`, 'senha-errada-qualquer').expect(401);
-      unknown.push(performance.now() - start);
-      start = performance.now();
-      await signIn(t.app, accounts[i].email, 'senha-errada-qualquer').expect(401);
-      wrong.push(performance.now() - start);
+    const verify: number[] = [];
+    // Amostras lado a lado, alternando quem vai primeiro (a vantagem de ir primeiro se distribui igual pelos dois
+    // lados); a comparação é das medianas de cada lado, robusta à carga das outras suítes rodando em paralelo.
+    for (let i = 0; i < SAMPLES; i++) {
+      const runUnknown = () =>
+        time(() => signIn(t.app, `ninguem.${i}@empresa.test`, 'senha-errada-qualquer').expect(401));
+      const runWrong = () => time(() => signIn(t.app, accounts[i].email, 'senha-errada-qualquer').expect(401));
+      const [u, w] = i % 2 === 0 ? [await runUnknown(), await runWrong()] : [0, 0];
+      const [w2, u2] = i % 2 === 1 ? [await runWrong(), await runUnknown()] : [w, u];
+      unknown.push(u2);
+      wrong.push(w2);
+      verify.push(await time(() => hasher.verify('outra-coisa', sample)));
     }
-    const diff = Math.abs(median(unknown) - median(wrong));
+    const diff = Math.abs(median(wrong) - median(unknown));
     process.stderr.write(
       `SC-002 (rotas reais): inexistente ${median(unknown).toFixed(1)} ms, senha errada ${median(wrong).toFixed(1)} ms, ` +
         `diferença ${diff.toFixed(1)} ms, verificação ${median(verify).toFixed(1)} ms\n`,

@@ -243,15 +243,15 @@ das rotas públicas (TRV-07).
 
 ### Tests for User Story 6
 
-- [ ] T044 [P] [US6] Teste unitário em `src/common/pagination/cursor.spec.ts`: codificação e decodificação base64url,
+- [x] T044 [P] [US6] Teste unitário em `src/common/pagination/cursor.spec.ts`: codificação e decodificação base64url,
       cursor adulterado gera erro de validação, `limit` acima de 100 recusado, padrão 20
-- [ ] T045 [P] [US6] Teste de integração em `test/common/pagination.e2e-spec.ts`: paginar `categories` com inserções
+- [x] T045 [P] [US6] Teste de integração em `test/common/pagination.e2e-spec.ts`: paginar `categories` com inserções
       entre páginas sem repetição nem perda, e última página com `nextCursor` nulo
 
 ### Implementation for User Story 6
 
-- [ ] T046 [P] [US6] Criar o schema de query (`limit`, `after`) e de resposta em `src/common/pagination/page.schema.ts`
-- [ ] T047 [US6] Implementar `encodeCursor`, `decodeCursor` e `paginate(queryBuilder, { limit, after })` com
+- [x] T046 [P] [US6] Criar o schema de query (`limit`, `after`) e de resposta em `src/common/pagination/page.schema.ts`
+- [x] T047 [US6] Implementar `encodeCursor`, `decodeCursor` e `paginate(queryBuilder, { limit, after })` com
       `WHERE id > :after ORDER BY id LIMIT :limit + 1` em `src/common/pagination/cursor.ts`
 
 **Checkpoint**: listagens das próximas features usam `paginate`.

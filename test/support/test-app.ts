@@ -6,6 +6,7 @@ import { LOG_DESTINATION } from '../../src/config/log-destination.js';
 import { loadLocalEnv } from './db-urls.js';
 import { LogCapture } from './log-capture.js';
 import { createSuiteDatabase, type SuiteDatabase } from './test-database.js';
+import { applyTestEnv } from './test-env.js';
 
 export interface TestApp {
   app: INestApplication;
@@ -26,7 +27,7 @@ export interface CreateTestAppOptions {
  */
 export async function createTestApp(options: CreateTestAppOptions = {}): Promise<TestApp> {
   loadLocalEnv();
-  process.env.NODE_ENV = 'test';
+  applyTestEnv();
 
   const database = await createSuiteDatabase();
   // O ConfigModule lê o ambiente ao importar o AppModule. O Vitest isola cada arquivo de teste,

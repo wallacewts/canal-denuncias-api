@@ -3,7 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from 'nestjs-pino';
 import type { DestinationStream } from 'pino';
-import { envSchema, type Env } from './config/env.schema.js';
+import type { Env } from './config/env.schema.js';
+import { validateEnv } from './config/env.validate.js';
 import { LOG_DESTINATION } from './config/log-destination.js';
 import { buildLoggerParams } from './config/logger.config.js';
 import { buildDataSourceOptions } from './database/database.options.js';
@@ -29,7 +30,7 @@ import { UsersModule } from './modules/users/users.module.js';
     ConfigModule.forRoot({
       isGlobal: true,
       cache: true,
-      validate: (raw) => envSchema.parse(raw),
+      validate: validateEnv,
     }),
     LoggerModule.forRootAsync({
       // null em produção (stdout). Os testes substituem por um stream em memória.

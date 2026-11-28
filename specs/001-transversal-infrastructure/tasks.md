@@ -150,18 +150,18 @@ log capturadas.
 
 ### Tests for User Story 3 (mandatory for security and privacy rules) ⚠️
 
-- [ ] T026 [P] [US3] Teste unitário em `src/config/env.schema.spec.ts`: produção com `VAULT_TOKEN` falha; produção
+- [x] T026 [P] [US3] Teste unitário em `src/config/env.schema.spec.ts`: produção com `VAULT_TOKEN` falha; produção
       sem `VAULT_ROLE_ID`/`VAULT_SECRET_ID` falha; segredo com menos de 32 bytes falha; `SESSION_SECRET` igual a
       `REPORTER_TOKEN_SECRET` falha; `PASSWORD_HASH_LOG_N` abaixo de 17 fora de `test` falha; a mensagem cita o nome
       da variável e nunca o valor
 
 ### Implementation for User Story 3
 
-- [ ] T027 [US3] Ampliar `src/config/env.schema.ts` conforme `contracts/environment.md`, com `superRefine` para as
+- [x] T027 [US3] Ampliar `src/config/env.schema.ts` conforme `contracts/environment.md`, com `superRefine` para as
       regras de produção e de teste
-- [ ] T028 [US3] Formatar os erros de validação de ambiente só com nomes de variáveis em
+- [x] T028 [US3] Formatar os erros de validação de ambiente só com nomes de variáveis em
       `src/config/env.validate.ts` e usá-lo no `ConfigModule` de `src/app.module.ts`
-- [ ] T029 [US3] Criar `test/support/test-env.ts` com os valores de teste (inclusive `PASSWORD_HASH_LOG_N=10`) e
+- [x] T029 [US3] Criar `test/support/test-env.ts` com os valores de teste (inclusive `PASSWORD_HASH_LOG_N=10`) e
       usá-lo em `test/support/test-app.ts`
 
 **Checkpoint**: configuração insegura não sobe.

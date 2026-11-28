@@ -94,4 +94,61 @@ describe('PgMfaStore: selagem do segredo (e2e)', () => {
     expect(openTx.length).toBeGreaterThan(0);
     expect(openTx.every((n) => n === 0)).toBe(true);
   });
+
+  describe('resetFor (feature 005, T030)', () => {
+    const state = async (id: string) =>
+      (
+        (await ds.query(
+          `SELECT mfa_secret_enc IS NOT NULL AS secret, mfa_pending_secret_enc IS NOT NULL AS pending,
+                  mfa_enabled_at IS NOT NULL AS enabled, mfa_last_used_step IS NOT NULL AS step,
+                  (SELECT count(*)::int FROM recovery_codes WHERE user_id = $1) AS codes
+             FROM users WHERE id = $1`,
+          [id],
+        )) as Array<Record<string, unknown>>
+      )[0];
+
+    const enrolled = async (): Promise<string> => {
+      const id = await newUser();
+      await store.saveTotp(id, { secret: SECRET, confirmed: true, pendingSecret: SECRET, lastUsedStep: 7 });
+      await store.saveRecoveryCodes(id, ['h1', 'h2', 'h3']);
+      expect(await state(id)).toEqual({ secret: true, pending: true, enabled: true, step: true, codes: 3 });
+      return id;
+    };
+
+    it('apaga segredo, pendente, passo, ativação e códigos, dentro da transação do chamador', async () => {
+      const id = await enrolled();
+      const keys = t.app.get<KeyService>(KEY_SERVICE);
+      const encrypt = keys.encrypt.bind(keys);
+      const decrypt = keys.decrypt.bind(keys);
+      let vaultCalls = 0;
+      keys.encrypt = async (...args) => (vaultCalls++, encrypt(...args));
+      keys.decrypt = async (...args) => (vaultCalls++, decrypt(...args));
+      try {
+        await ds.transaction((m) => store.resetFor(id, m));
+      } finally {
+        keys.encrypt = encrypt;
+        keys.decrypt = decrypt;
+      }
+      expect(vaultCalls).toBe(0);
+      expect(await state(id)).toEqual({ secret: false, pending: false, enabled: false, step: false, codes: 0 });
+      expect(await store.getTotp(id)).toBeUndefined();
+    });
+
+    it('com rollback, nada muda', async () => {
+      const id = await enrolled();
+      await ds
+        .transaction(async (m) => {
+          await store.resetFor(id, m);
+          throw new Error('desfaz');
+        })
+        .catch(() => undefined);
+      expect(await state(id)).toEqual({ secret: true, pending: true, enabled: true, step: true, codes: 3 });
+    });
+
+    it('sem MFA cadastrado, termina sem erro', async () => {
+      const id = await newUser();
+      await ds.transaction((m) => store.resetFor(id, m));
+      expect(await state(id)).toEqual({ secret: false, pending: false, enabled: false, step: false, codes: 0 });
+    });
+  });
 });

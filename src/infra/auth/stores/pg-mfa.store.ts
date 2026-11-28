@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import type { MfaStore, TotpRecord } from '@nestjs/authentication';
-import type { DataSource } from 'typeorm';
+import type { DataSource, EntityManager } from 'typeorm';
 import { AppSecretService } from '../../../modules/crypto/app-secret.service.js';
 import { encryptionContext } from '../../../modules/crypto/encryption-context.js';
+
+/** Apaga o autenticador: segredo, segredo pendente, ativação e último passo usado. */
+const CLEAR_TOTP_SQL = `UPDATE users SET mfa_secret_enc = NULL, mfa_pending_secret_enc = NULL, mfa_enabled_at = NULL,
+        mfa_last_used_step = NULL WHERE id = $1`;
 
 interface TotpRow {
   secret: Buffer | null;
@@ -25,6 +29,15 @@ export class PgMfaStore implements MfaStore {
     private readonly secrets: AppSecretService,
   ) {}
 
+  /**
+   * Reset do MFA por outra pessoa (feature 005, research R6): apaga o autenticador e os códigos de recuperação na
+   * transação do chamador, junto com o registro na trilha. Só apaga dado selado: nenhuma chamada ao Vault.
+   */
+  async resetFor(userId: string, manager: EntityManager): Promise<void> {
+    await manager.query(CLEAR_TOTP_SQL, [userId]);
+    await manager.query(`DELETE FROM recovery_codes WHERE user_id = $1`, [userId]);
+  }
+
   async getTotp(userId: string): Promise<TotpRecord | undefined> {
     const rows = (await this.ds.query(
       `SELECT mfa_secret_enc AS secret, mfa_pending_secret_enc AS pending,
@@ -45,11 +58,7 @@ export class PgMfaStore implements MfaStore {
 
   async saveTotp(userId: string, record: TotpRecord | null): Promise<void> {
     if (!record) {
-      await this.ds.query(
-        `UPDATE users SET mfa_secret_enc = NULL, mfa_pending_secret_enc = NULL, mfa_enabled_at = NULL,
-                mfa_last_used_step = NULL WHERE id = $1`,
-        [userId],
-      );
+      await this.ds.query(CLEAR_TOTP_SQL, [userId]);
       return;
     }
     // Selagem antes da escrita: nada de Vault com transação aberta.

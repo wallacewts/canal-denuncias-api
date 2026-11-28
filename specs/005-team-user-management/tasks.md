@@ -195,18 +195,18 @@ com operações simultâneas.
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T030 [P] [US4] Caso novo em `test/contract/auth/pg-mfa-store.e2e-spec.ts`: `resetFor` dentro de uma transação
+- [x] T030 [P] [US4] Caso novo em `test/contract/auth/pg-mfa-store.e2e-spec.ts`: `resetFor` dentro de uma transação
       apaga segredo, segredo pendente, último passo, `mfa_enabled_at` e códigos; com rollback nada muda; nenhuma chamada
       ao Vault
-- [ ] T031 [P] [US4] e2e `test/users/users-mfa-reset.e2e-spec.ts`: 204; autenticador e códigos somem; a sessão da
+- [x] T031 [P] [US4] e2e `test/users/users-mfa-reset.e2e-spec.ts`: 204; autenticador e códigos somem; a sessão da
       pessoa cai (401); `USER_MFA_RESET` com ator Administrador; reset do próprio MFA → 403; pessoa sem MFA → 204 e
       registro; outro perfil → 403; inexistente → 404; Administrador bloqueado no meio da requisição → 403
 
 ### Implementation for User Story 4
 
-- [ ] T032 [US4] `resetFor(userId, manager)` em `src/infra/auth/stores/pg-mfa.store.ts` (mesmas colunas de
+- [x] T032 [US4] `resetFor(userId, manager)` em `src/infra/auth/stores/pg-mfa.store.ts` (mesmas colunas de
       `saveTotp(null)` + `DELETE` dos códigos, research R6)
-- [ ] T033 [US4] `UsersService.resetMfa` e rota `POST /users/:id/mfa-reset` (`actOnOther`) em
+- [x] T033 [US4] `UsersService.resetMfa` e rota `POST /users/:id/mfa-reset` (`actOnOther`) em
       `src/modules/users/users.service.ts` e `src/modules/users/users.controller.ts` (`lockPair` e conferência de quem
       age, como no T028); `revokeAll` depois do commit
 

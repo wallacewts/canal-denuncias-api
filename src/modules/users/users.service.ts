@@ -8,6 +8,7 @@ import { UserStatus } from '../../common/enums/user-status.enum.js';
 import { DomainConflictError } from '../../common/http/domain-error.js';
 import type { Page, PageQuery } from '../../common/pagination/page.schema.js';
 import type { StaffUser } from '../../infra/auth/staff-user.js';
+import { PgMfaStore } from '../../infra/auth/stores/pg-mfa.store.js';
 import { AuditAction, AuditResourceType } from '../audit/audit-action.enum.js';
 import { AuditService } from '../audit/audit.service.js';
 import { ADMIN_LOCK } from './admin-lock.js';
@@ -25,6 +26,7 @@ export class UsersService {
     private readonly hasher: PasswordHasher,
     private readonly audit: AuditService,
     private readonly sessions: SessionService,
+    private readonly mfa: PgMfaStore,
   ) {}
 
   private readonly logger = new Logger(UsersService.name);
@@ -106,6 +108,26 @@ export class UsersService {
       await this.record(AuditAction.USER_ROLES_CHANGED, id, { before, after }, m);
     });
     return this.get(id);
+  }
+
+  /**
+   * Reset do MFA de outra pessoa (USERS-06, R6): autenticador e códigos apagados na transação do registro; as sessões
+   * caem depois do commit. Idempotente: sem MFA, termina e registra do mesmo jeito.
+   */
+  async resetMfa(actor: StaffUser, id: string): Promise<void> {
+    await this.mutate(actor, id, { adminLock: false }, async (m) => {
+      await this.mfa.resetFor(id, m);
+      await this.audit.record(
+        {
+          action: AuditAction.USER_MFA_RESET,
+          resourceType: AuditResourceType.USER,
+          resourceId: id,
+          result: AuditResult.SUCCESS,
+        },
+        m,
+      );
+    });
+    await this.revokeSessions(id);
   }
 
   /**

@@ -76,4 +76,11 @@ export class UsersController {
   ) {
     return this.users.changeRoles(actor, id, body.roles);
   }
+
+  @Can(UsersPolicy, 'actOnOther', targetId)
+  @Post(':id/mfa-reset')
+  @HttpCode(204)
+  async resetMfa(@CurrentUser() actor: StaffUser, @Param('id', { schema: userIdParam }) id: string): Promise<void> {
+    await this.users.resetMfa(actor, id);
+  }
 }

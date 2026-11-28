@@ -47,6 +47,16 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U postgres -d canal_denuncias"
           --health-interval 5s --health-timeout 3s --health-retries 10
+      vault:
+        image: hashicorp/vault:2.2
+        env:
+          VAULT_DEV_ROOT_TOKEN_ID: dev-root-token
+          VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+        ports: ['8200:8200']
+        options: >-
+          --cap-add=IPC_LOCK
+          --health-cmd "vault status -address=http://127.0.0.1:8200"
+          --health-interval 5s --health-timeout 3s --health-retries 10
     env:
       DATABASE_MIGRATOR_URL: postgres://app_migrator:ci_migrator_pw@localhost:5432/canal_denuncias
       DATABASE_URL: postgres://app_runtime:ci_runtime_pw@localhost:5432/canal_denuncias
@@ -70,6 +80,13 @@ jobs:
           POSTGRES_DB: canal_denuncias
           APP_MIGRATOR_PASSWORD: ci_migrator_pw
           APP_RUNTIME_PASSWORD: ci_runtime_pw
+      - name: Prepara o Vault de teste (Transit, KEKs e AppRole de dev, como no docker compose)
+        run: >-
+          docker run --rm --network host
+          -e VAULT_ADDR=http://127.0.0.1:8200 -e VAULT_TOKEN=dev-root-token
+          -v "$PWD/docker/vault/init-transit.sh:/init-transit.sh:ro"
+          -v "$PWD/docker/vault/api-dev-policy.hcl:/api-dev-policy.hcl:ro"
+          --entrypoint /bin/sh hashicorp/vault:2.2 /init-transit.sh
       - run: npm run migration:run
       - name: Entidades e banco sem divergência (falha se gerar migration)
         run: |

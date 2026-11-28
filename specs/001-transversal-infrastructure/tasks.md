@@ -179,27 +179,27 @@ da `identity-kek` (TRV-04).
 
 ### Tests for User Story 4 (mandatory for security and privacy rules) ⚠️
 
-- [ ] T030 [P] [US4] Teste unitário em `src/infra/vault/vault.client.spec.ts` com `fetch` simulado: timeout gera
+- [x] T030 [P] [US4] Teste unitário em `src/infra/vault/vault.client.spec.ts` com `fetch` simulado: timeout gera
       `KeyServiceUnavailableError` em até 2 s; Vault selado gera o mesmo erro; mensagem e propriedades do erro não
       contêm plaintext, `wrapped` nem token; `identity-kek` é recusada antes de qualquer chamada de rede
-- [ ] T031 [P] [US4] Teste unitário em `src/infra/vault/vault-auth.spec.ts`: renovação quando 2/3 do TTL passarem,
+- [x] T031 [P] [US4] Teste unitário em `src/infra/vault/vault-auth.spec.ts`: renovação quando 2/3 do TTL passarem,
       novo login AppRole se a renovação falhar, modo token fora de produção
-- [ ] T032 [P] [US4] Teste de integração em `test/infra/vault.e2e-spec.ts` contra o Vault do compose: gerar chave de
+- [x] T032 [P] [US4] Teste de integração em `test/infra/vault.e2e-spec.ts` contra o Vault do compose: gerar chave de
       dados, abrir, cifrar e decifrar com `app-kek`, recifrar
-- [ ] T033 [P] [US4] Teste de integração em `test/http/key-service-unavailable.e2e-spec.ts`: rota de fixture que usa o
+- [x] T033 [P] [US4] Teste de integração em `test/http/key-service-unavailable.e2e-spec.ts`: rota de fixture que usa o
       `KeyService` com `VAULT_ADDR` inacessível responde `ApiError` 503 em até 3 s
 
 ### Implementation for User Story 4
 
-- [ ] T034 [P] [US4] Criar `KeyServiceUnavailableError` (estende `ServiceUnavailableException`, mensagem fixa) em
+- [x] T034 [P] [US4] Criar `KeyServiceUnavailableError` (estende `ServiceUnavailableException`, mensagem fixa) em
       `src/infra/vault/key-service.errors.ts`
-- [ ] T035 [US4] Implementar login AppRole, modo token e renovação em `src/infra/vault/vault-auth.ts`
-- [ ] T036 [US4] Implementar o `KeyService` (`generateDataKey`, `decryptDataKey`, `encrypt`, `decrypt`, `rewrap`,
+- [x] T035 [US4] Implementar login AppRole, modo token e renovação em `src/infra/vault/vault-auth.ts`
+- [x] T036 [US4] Implementar o `KeyService` (`generateDataKey`, `decryptDataKey`, `encrypt`, `decrypt`, `rewrap`,
       allowlist `report-kek`/`app-kek`, `AbortSignal.timeout`) em `src/infra/vault/vault.client.ts`, conforme
       `contracts/key-service.md`
-- [ ] T037 [US4] Criar `src/infra/vault/vault.module.ts` exportando o token `KEY_SERVICE` e importá-lo em
+- [x] T037 [US4] Criar `src/infra/vault/vault.module.ts` exportando o token `KEY_SERVICE` e importá-lo em
       `src/app.module.ts`
-- [ ] T038 [US4] Criar a rota de fixture que usa o `KeyService` em `test/support/fixtures/key-service-fixture.module.ts`
+- [x] T038 [US4] Criar a rota de fixture que usa o `KeyService` em `test/support/fixtures/key-service-fixture.module.ts`
 
 **Checkpoint**: módulo `crypto` (feature 02) já pode ser construído sobre o `KeyService`.
 

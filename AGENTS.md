@@ -47,7 +47,21 @@ Regras que não podem ser quebradas:
   todo texto livre com `text({ max })`, nunca `z.string()` puro. Mensagens de `refine` nunca interpolam valores.
 - Controllers só com `@PublicApi('recurso')` ou `@AdminApi('recurso')`. Rota pública não tem parâmetro de caminho além
   de `:attachmentId` (o teste `test/conventions/public-routes.e2e-spec.ts` falha se tiver).
-- Auditoria só por `AuditService.record()`, de preferência com o `EntityManager` da transação da operação.
+- Auditoria só por `AuditService.record()`, de preferência com o `EntityManager` da transação da operação. A ação vem
+  do catálogo `AuditAction` (com `AuditResourceType`) e a metadata segue o schema da ação em
+  `audit-metadata.schemas.ts`: só UUID, enums, inteiros, datas e códigos, nunca texto. Ação nova = entrada no enum e no
+  mapa de schemas.
+- O ator da auditoria vem só do contexto (D46): rota `@PublicApi` → denunciante sem IP; `@AdminApi` → equipe com a
+  identidade do guard. Fora de requisição (CLI, jobs), rode dentro de `runAsSystem()`; processador de fila usa
+  `systemJob()`. A entrada de `record()` não aceita ator, IP nem user-agent.
+- Leituras sensíveis em rotas: `@Audited(ação, tipo, resolveId)`. O `resolveId` só lê parâmetros e query.
+- Toda rota `@AdminApi` exige identidade (401 sem ela, D47). Nos testes: `createTestApp({ identity: true })` e o
+  cabeçalho de `testIdentity()`; nunca importe `test/` de `src/` (teste de convenção).
+- A trilha é particionada por mês (D48). Ninguém altera nem apaga registro; a única remoção é a do comando
+  `audit-maintenance`, com o perfil `app_audit_maintenance`, de partições com mais de 5 anos (D49 a D51). Partição nova
+  só pela função `audit_ensure_partitions`.
+- Em SQL com `id::text AS id`, ordene pela coluna da tabela (`ORDER BY l.id`), não pelo alias: o alias em texto
+  ordena "10" antes de "5".
 - Chaves só pelo `KEY_SERVICE` (`src/infra/vault`). A API nunca usa a `identity-kek` nem tem `rewrap` (D43).
 - Conteúdo sensível só pelo `CryptoModule`: `DataKeyService.createReportKey`/`withReportKey` (a DEK só existe dentro
   da função e é zerada no fim), `RecordCipher` (JSON versionado com schema e texto), `AppSecretService` (segredos

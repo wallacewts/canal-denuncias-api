@@ -128,10 +128,13 @@ src/
 │   └── pagination/cursor-desc.ts           # novo: paginação decrescente sobre id bigint
 ├── infra/auth/
 │   ├── auth-identity.port.ts               # novo: porta AUTH_IDENTITY (padrão devolve null)
-│   └── admin-identity.guard.ts             # novo: 401 sem identidade na área admin
+│   ├── admin-identity.guard.ts             # novo: 401 sem identidade na área admin
+│   └── auth-infra.module.ts                # novo: registra a porta e o guard global
+├── infra/queue/system-job.ts               # novo: handler de job com ator sistema
 ├── modules/audit/
 │   ├── audit-action.enum.ts                # novo: catálogo de ações e tipos de recurso
 │   ├── audit-metadata.schemas.ts           # novo: schema de metadata por ação
+│   ├── audit.errors.ts                     # novo: AuditEntryRejected (I2)
 │   ├── audit-context.ts                    # novo: AsyncLocalStorage, runAsSystem
 │   ├── audit-context.interceptor.ts        # novo: abre o contexto por área de rota
 │   ├── audit.service.ts                    # já existe: passa a usar catálogo, schema e contexto
@@ -149,12 +152,18 @@ src/
 │   ├── verify-audit.command.ts             # novo
 │   └── audit-maintenance.command.ts        # novo
 └── database/migrations/
-    └── <ts>-AuditLogPartitioning.ts        # nova, escrita à mão
+    └── 1795863621798-AuditLogPartitioning.ts  # nova, escrita à mão
+src/modules/health/audit-partitions.indicator.ts  # novo: partições à frente no /ready
 
 test/
 ├── audit/                                  # catálogo, contexto, @Audited, consulta, verificação,
 │                                           # imutabilidade, partições, expurgo, âncora, migração, desempenho
-└── support/fake-identity.ts                # identidade só de teste
+└── support/
+    ├── fake-identity.ts                    # identidade só de teste
+    ├── db-roles.ts                         # conexão com cada perfil de banco (I3)
+    ├── audit-chain.ts                      # cadeias e partições antigas para os testes de retenção
+    ├── migrations.ts                       # DataSource de migrations no banco da suíte
+    └── kek-lock.ts                         # serializa as suítes que giram a report-kek (F1)
 
 docs/deploy/audit/README.md                 # runbook: agendamento, perfil de manutenção, verificação
 docker/postgres/01-roles.sh                 # + app_audit_maintenance

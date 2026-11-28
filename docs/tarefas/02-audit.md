@@ -20,7 +20,7 @@ Enum `AuditAction` e tipos de recurso usados por todos os módulos.
 
 **Critérios de aceite**
 
-- [ ] Ações iniciais: `AUTH_LOGIN_SUCCEEDED`, `AUTH_LOGIN_FAILED`, `AUTH_LOGOUT`, `AUTH_MFA_ENROLLED`,
+- [x] Ações iniciais: `AUTH_LOGIN_SUCCEEDED`, `AUTH_LOGIN_FAILED`, `AUTH_LOGOUT`, `AUTH_MFA_ENROLLED`,
       `AUTH_MFA_FAILED`, `AUTH_RECOVERY_CODE_USED`, `AUTH_PASSWORD_CHANGED`, `AUTH_SESSION_REVOKED`,
       `AUTH_TOKEN_REUSED`, `USER_CREATED`, `USER_UPDATED`, `USER_STATUS_CHANGED`, `USER_ROLES_CHANGED`,
       `USER_MFA_RESET`, `ACCESS_DENIED`, `CATEGORY_CREATED`, `CATEGORY_UPDATED`, `SETTING_UPDATED`,
@@ -32,7 +32,7 @@ Enum `AuditAction` e tipos de recurso usados por todos os módulos.
       `IDENTITY_REVEAL_APPROVED`, `IDENTITY_REVEAL_REJECTED`, `IDENTITY_REVEALED`, `LEGAL_HOLD_CHANGED`,
       `REPORT_SHREDDED`, `RETENTION_RUN`, `KEYS_REWRAPPED`, `AUDIT_LOG_VIEWED`, `AUDIT_CHAIN_VERIFIED`,
       `REPORTING_VIEWED`, `REPORTING_EXPORTED`.
-- [ ] Tamanho de cada nome cabe em `action varchar(60)`.
+- [x] Tamanho de cada nome cabe em `action varchar(60)`.
 
 ### AUDIT-02 · Gravação com cadeia de hash
 
@@ -73,10 +73,10 @@ O serviço descobre o ator sozinho, a partir do contexto da requisição.
 
 **Critérios de aceite**
 
-- [ ] Equipe interna: `STAFF`, id do usuário, IP real (via `trust proxy`) e user-agent truncado em 255.
-- [ ] Denunciante: `REPORTER`, sem usuário, **sem IP e sem user-agent**.
-- [ ] Jobs e CLI: `SYSTEM`, sem IP.
-- [ ] Teste: uma rota pública gera registro com `ip` e `user_agent` nulos, mesmo com `X-Forwarded-For` na
+- [x] Equipe interna: `STAFF`, id do usuário, IP real (via `trust proxy`) e user-agent truncado em 255.
+- [x] Denunciante: `REPORTER`, sem usuário, **sem IP e sem user-agent**.
+- [x] Jobs e CLI: `SYSTEM`, sem IP.
+- [x] Teste: uma rota pública gera registro com `ip` e `user_agent` nulos, mesmo com `X-Forwarded-For` na
       requisição.
 
 ### AUDIT-04 · Auditoria declarativa nas rotas
@@ -91,9 +91,9 @@ Decorator `@Audited(action, resourceType, resolverDoId)` mais interceptor, para 
 
 **Critérios de aceite**
 
-- [ ] Operações que mudam dados continuam gravando dentro da própria transação (AUDIT-02). O decorator serve para
+- [x] Operações que mudam dados continuam gravando dentro da própria transação (AUDIT-02). O decorator serve para
       leituras e para casos simples.
-- [ ] Teste de um handler que lança 403 e gera registro `DENIED`.
+- [x] Teste de um handler que lança 403 e gera registro `DENIED`.
 
 ### AUDIT-05 · Proteção do campo metadata
 
@@ -101,9 +101,9 @@ Decorator `@Audited(action, resourceType, resolverDoId)` mais interceptor, para 
 
 **Critérios de aceite**
 
-- [ ] `metadata` tipado por ação (ex.: `REPORT_STATUS_CHANGED` aceita `{ from, to, outcome }`). Campo de texto livre
+- [x] `metadata` tipado por ação (ex.: `REPORT_STATUS_CHANGED` aceita `{ from, to, outcome }`). Campo de texto livre
       não é aceito.
-- [ ] Teste: gravar `metadata` com chave fora do schema falha.
+- [x] Teste: gravar `metadata` com chave fora do schema falha.
 
 ### AUDIT-06 · Consulta da trilha
 
@@ -116,8 +116,8 @@ Decorator `@Audited(action, resourceType, resolverDoId)` mais interceptor, para 
 
 **Critérios de aceite**
 
-- [ ] Paginação por cursor em ordem decrescente de `id`.
-- [ ] Outros perfis recebem 403.
+- [x] Paginação por cursor em ordem decrescente de `id`.
+- [x] Outros perfis recebem 403.
 
 ### AUDIT-07 · Verificação de integridade da cadeia
 
@@ -129,10 +129,10 @@ Decorator `@Audited(action, resourceType, resolverDoId)` mais interceptor, para 
 
 **Critérios de aceite**
 
-- [ ] Recalcula a cadeia em lotes (streaming), sem carregar a tabela inteira.
-- [ ] Resposta `{ ok, checked, firstBrokenId }`.
-- [ ] Também disponível por CLI, para rodar agendado.
-- [ ] Teste: cadeia íntegra passa; registro adulterado por superusuário (com o trigger desligado só no teste) é
+- [x] Recalcula a cadeia em lotes (streaming), sem carregar a tabela inteira.
+- [x] Resposta `{ ok, checked, firstBrokenId }`.
+- [x] Também disponível por CLI, para rodar agendado.
+- [x] Teste: cadeia íntegra passa; registro adulterado por superusuário (com o trigger desligado só no teste) é
       detectado.
 
 ### AUDIT-08 · Teste automatizado de imutabilidade
@@ -143,9 +143,9 @@ Hoje a imutabilidade foi verificada à mão. Automatizar no e2e do CI.
 
 **Critérios de aceite**
 
-- [ ] Com `app_runtime`: `UPDATE` e `DELETE` em `audit_logs` falham por permissão.
-- [ ] Com `app_migrator`: `UPDATE`, `DELETE` e `TRUNCATE` falham pelo trigger.
-- [ ] `INSERT` com `actor_type = REPORTER` e `ip` preenchido falha pela CHECK.
+- [x] Com `app_runtime`: `UPDATE` e `DELETE` em `audit_logs` falham por permissão.
+- [x] Com `app_migrator`: `UPDATE`, `DELETE` e `TRUNCATE` falham pelo trigger.
+- [x] `INSERT` com `actor_type = REPORTER` e `ip` preenchido falha pela CHECK.
 
 ### AUDIT-09 · Retenção e particionamento da trilha
 
@@ -153,5 +153,7 @@ Hoje a imutabilidade foi verificada à mão. Automatizar no e2e do CI.
 
 **Critérios de aceite**
 
-- [ ] Prazo de guarda da trilha definido com o jurídico e o DPO.
-- [ ] Se o volume justificar, particionar por mês, sem quebrar a verificação da cadeia.
+- [ ] Prazo de guarda da trilha definido com o jurídico e o DPO. (5 anos decidido pelo usuário em 2026-11-28, D49;
+      falta a validação com o jurídico e o DPO e o registro no RIPD.)
+- [x] Particionar por mês, sem quebrar a verificação da cadeia (feita já na feature 003, com expurgo e âncora: D48 a
+      D51).

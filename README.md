@@ -83,16 +83,18 @@ docker compose --profile app run --rm api node dist/cli.js create-admin --name "
 
 ## Scripts
 
-| Script                                                          | Faz                                                          |
-| --------------------------------------------------------------- | ------------------------------------------------------------ |
-| `npm run start:dev`                                             | API com recarga automática                                   |
-| `npm run build`                                                 | Compila para `dist/`                                         |
-| `npm test` / `npm run test:cov`                                 | Testes unitários (com cobertura)                             |
-| `npm run test:e2e`                                              | Testes e2e (precisa do Postgres com as migrations aplicadas) |
-| `npm run lint` / `npm run typecheck` / `npm run format:check`   | Qualidade                                                    |
-| `npm run migration:create -- src/database/migrations/Nome`      | Migration vazia, escrita à mão                               |
-| `npm run migration:generate -- src/database/migrations/Nome`    | Migration gerada a partir das entidades                      |
-| `npm run migration:run` / `migration:revert` / `migration:show` | Aplica, desfaz a última, lista                               |
+| Script                                                          | Faz                                                                     |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `npm run start:dev`                                             | API com recarga automática                                              |
+| `npm run build`                                                 | Compila para `dist/`                                                    |
+| `npm test` / `npm run test:cov`                                 | Testes unitários (com cobertura)                                        |
+| `npm run test:e2e`                                              | Testes e2e (precisa do Postgres com as migrations aplicadas)            |
+| `npm run lint` / `npm run typecheck` / `npm run format:check`   | Qualidade                                                               |
+| `npm run migration:create -- src/database/migrations/Nome`      | Migration vazia, escrita à mão                                          |
+| `npm run migration:generate -- src/database/migrations/Nome`    | Migration gerada a partir das entidades                                 |
+| `npm run migration:run` / `migration:revert` / `migration:show` | Aplica, desfaz a última, lista                                          |
+| `npm run cli -- verify-audit`                                   | Verifica a cadeia da trilha de auditoria (0 íntegra, 1 quebrada)        |
+| `npm run cli -- audit-maintenance [--dry-run]`                  | Partições da trilha à frente e expurgo de 5 anos (perfil de manutenção) |
 
 ## Banco de dados
 
@@ -118,12 +120,13 @@ docker compose --profile app run --rm api node dist/cli.js create-admin --name "
   pela CLI.
 - O CI falha se as entidades e o banco divergirem (roda `migration:generate` e exige "No changes").
 
-| Migration           | Conteúdo                                                                                          |
-| ------------------- | ------------------------------------------------------------------------------------------------- |
-| `Extensions`        | `citext`                                                                                          |
-| `InitialSchema`     | 16 tabelas, enums, índices, FKs e CHECKs                                                          |
-| `AuditImmutability` | Triggers que bloqueiam `UPDATE`/`DELETE`/`TRUNCATE` em `audit_logs` + `REVOKE` para `app_runtime` |
-| `SeedCatalog`       | 3 categorias e valores padrão de SLA e retenção                                                   |
+| Migration              | Conteúdo                                                                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Extensions`           | `citext`                                                                                                                                                           |
+| `InitialSchema`        | 16 tabelas, enums, índices, FKs e CHECKs                                                                                                                           |
+| `AuditImmutability`    | Triggers que bloqueiam `UPDATE`/`DELETE`/`TRUNCATE` em `audit_logs` + `REVOKE` para `app_runtime`                                                                  |
+| `SeedCatalog`          | 3 categorias e valores padrão de SLA e retenção                                                                                                                    |
+| `AuditLogPartitioning` | `audit_logs` particionada por mês, `audit_purges` e as funções de manutenção (D48 a D51); operação em [`docs/deploy/audit/README.md`](docs/deploy/audit/README.md) |
 
 ## Variáveis de ambiente
 

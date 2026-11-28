@@ -326,19 +326,19 @@ publica (TRV-11, FR-038, FR-038a).
 
 ### Tests for User Story 9
 
-- [ ] T056 [US9] Teste de integração em `test/openapi/export.e2e-spec.ts`: rodar o export num diretório temporário
+- [x] T056 [US9] Teste de integração em `test/openapi/export.e2e-spec.ts`: rodar o export num diretório temporário
       com um módulo de fixture com uma rota pública e uma administrativa; `public.json` só tem `/api/public/v1/*`,
       `admin.json` só tem `/api/admin/v1/*`, cada um só com os schemas que usa (inclusive `ApiError`), `/health` fora
       dos dois, e duas execuções geram arquivos idênticos
 
 ### Implementation for User Story 9
 
-- [ ] T057 [US9] Implementar `src/scripts/export-openapi.ts`: app em modo `preview`, `SwaggerModule.createDocument`,
+- [x] T057 [US9] Implementar `src/scripts/export-openapi.ts`: app em modo `preview`, `SwaggerModule.createDocument`,
       separação por prefixo, poda de `components/schemas`, JSON com chaves ordenadas e `info.version` do
       `package.json`; se o modo preview não listar as rotas, usar o plano B do research (R9)
-- [ ] T058 [US9] Acrescentar `"openapi:export": "npm run build && node dist/scripts/export-openapi.js"` em
+- [x] T058 [US9] Acrescentar `"openapi:export": "npm run build && node dist/scripts/export-openapi.js"` em
       `package.json`, gerar e versionar `openapi/public.json` e `openapi/admin.json`
-- [ ] T059 [US9] Acrescentar ao job `quality` de `.github/workflows/ci.yml` o export, `git diff --exit-code openapi/`
+- [x] T059 [US9] Acrescentar ao job `quality` de `.github/workflows/ci.yml` o export, `git diff --exit-code openapi/`
       e o upload de `openapi/` como artefato
 
 **Checkpoint**: o `npm run api:sync` do front já consegue gerar os clientes `public` e `admin`.

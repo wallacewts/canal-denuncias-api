@@ -30,6 +30,15 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test:cov
+      - name: Contrato OpenAPI versionado em dia com o código
+        run: |
+          npm run openapi:export
+          git diff --exit-code openapi/
+      - name: Publica o contrato OpenAPI
+        uses: actions/upload-artifact@v7
+        with:
+          name: openapi
+          path: openapi/
       - name: Vulnerabilidades nas dependências de produção
         run: npm audit --omit=dev --audit-level=high
 

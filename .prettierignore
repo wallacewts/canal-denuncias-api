@@ -3,3 +3,5 @@
 dist/
 coverage/
 package-lock.json
+# Gerado por npm run openapi:export com formatação própria (conferida no CI)
+openapi/

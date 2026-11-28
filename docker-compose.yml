@@ -46,6 +46,7 @@ services:
       VAULT_TOKEN: dev-root-token
     volumes:
       - ./docker/vault/init-transit.sh:/init-transit.sh:ro
+      - ./docker/vault/api-dev-policy.hcl:/api-dev-policy.hcl:ro
     entrypoint: ['/bin/sh', '/init-transit.sh']
     restart: 'no'
 
@@ -102,6 +103,22 @@ services:
       LOG_LEVEL: info
       DATABASE_URL: postgres://app_runtime:dev_runtime_pw@postgres:5432/canal_denuncias
       CORS_ORIGINS: http://localhost:4200,http://localhost:4300
+      REDIS_URL: redis://redis:6379
+      VAULT_ADDR: http://vault:8200
+      VAULT_ROLE_ID: dev-api-role-id
+      VAULT_SECRET_ID: dev-api-secret-id
+      S3_ENDPOINT: http://s3:8333
+      S3_REGION: us-east-1
+      S3_BUCKET: attachments
+      S3_ACCESS_KEY: dev-access-key
+      S3_SECRET_KEY: dev-secret-key
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      SMTP_FROM: canal-denuncias@localhost
+      CLAMAV_HOST: clamav
+      CLAMAV_PORT: 3310
+      SESSION_SECRET: dev-session-secret-com-pelo-menos-32-bytes
+      REPORTER_TOKEN_SECRET: dev-reporter-token-secret-com-32-bytes-ou-mais
     ports: ['3000:3000']
 
 volumes:

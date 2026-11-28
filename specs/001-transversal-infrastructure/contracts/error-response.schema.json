@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "error-response.schema.json",
+  "title": "ApiError",
+  "description": "Corpo de toda resposta de erro da API (TRV-01). Nunca contém valores recebidos na requisição.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["statusCode", "error", "message", "requestId"],
+  "properties": {
+    "statusCode": { "type": "integer", "minimum": 400, "maximum": 599 },
+    "error": { "type": "string", "examples": ["Bad Request", "Conflict", "Service Unavailable"] },
+    "message": {
+      "oneOf": [
+        { "type": "string", "examples": ["Erro interno. Tente novamente mais tarde."] },
+        {
+          "type": "array",
+          "description": "Erros de validação (400): caminho e código, sem o valor recebido.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "code", "message"],
+            "properties": {
+              "path": { "type": "string", "examples": ["description"] },
+              "code": { "type": "string", "examples": ["too_big", "invalid_type", "unrecognized_keys"] },
+              "message": { "type": "string", "examples": ["Máximo de 5000 caracteres"] }
+            }
+          }
+        }
+      ]
+    },
+    "requestId": { "type": "string", "format": "uuid" }
+  }
+}

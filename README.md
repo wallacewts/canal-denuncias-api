@@ -9,16 +9,18 @@ tarefas por módulo, em [`docs/tarefas/`](docs/tarefas/README.md).
 
 ## Stack
 
-|                   |                                                     |
-| ----------------- | --------------------------------------------------- |
-| Runtime           | Node.js 26 (LTS), ESM                               |
-| Framework         | NestJS 12                                           |
-| Banco             | PostgreSQL 18 + TypeORM 1.x                         |
-| Chaves            | HashiCorp Vault (Transit)                           |
-| Anexos            | Storage S3-compatível (SeaweedFS no ambiente local) |
-| Filas             | Redis + BullMQ                                      |
-| Testes            | Vitest + Supertest                                  |
-| Lint / formatação | oxlint + Prettier                                   |
+|                   |                                                       |
+| ----------------- | ----------------------------------------------------- |
+| Runtime           | Node.js 26 (LTS), ESM                                 |
+| Framework         | NestJS 12                                             |
+| Banco             | PostgreSQL 18 + TypeORM 1.x                           |
+| Chaves            | HashiCorp Vault (Transit)                             |
+| Anexos            | Storage S3-compatível (SeaweedFS no ambiente local)   |
+| Filas             | Redis + BullMQ                                        |
+| Validação         | zod 4 (`StandardSchemaValidationPipe`)                |
+| Hash de senha     | scrypt (`PasswordHasher` do `@nestjs/authentication`) |
+| Testes            | Vitest + Supertest                                    |
+| Lint / formatação | oxlint + Prettier                                     |
 
 ## Rodando localmente
 

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "page.schema.json",
+  "title": "Page",
+  "description": "Resposta paginada por cursor (TRV-08). Entrada: ?limit=1..100 (padrão 20)&after=<nextCursor>.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["items", "nextCursor"],
+  "properties": {
+    "items": { "type": "array", "maxItems": 100 },
+    "nextCursor": {
+      "type": ["string", "null"],
+      "description": "Opaco (base64url do UUID v7 do último item). null na última página.",
+      "pattern": "^[A-Za-z0-9_-]+$"
+    }
+  }
+}

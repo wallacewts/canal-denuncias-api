@@ -1,0 +1,20 @@
+# Contrato: variáveis de ambiente (TRV-03)
+
+Validadas na inicialização por `src/config/env.schema.ts`. Uma variável obrigatória ausente ou inválida impede a API
+de subir, e a mensagem informa **o nome** da variável, nunca o valor.
+
+| Variável                                                                        | Obrigatória      | Regra                                                                                                        |
+| ------------------------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------ |
+| `NODE_ENV`, `PORT`, `LOG_LEVEL`, `CORS_ORIGINS`, `DATABASE_URL`, `DATABASE_SSL` | já existentes    | sem mudança                                                                                                  |
+| `REDIS_URL`                                                                     | sim              | URL `redis://` ou `rediss://`                                                                                |
+| `VAULT_ADDR`                                                                    | sim              | URL                                                                                                          |
+| `VAULT_TOKEN`                                                                   | fora de produção | Em `production`, a presença de `VAULT_TOKEN` **recusa** a inicialização (token raiz ou pessoal não é aceito) |
+| `VAULT_ROLE_ID`, `VAULT_SECRET_ID`                                              | em produção      | AppRole. A ausência em `production` recusa a inicialização                                                   |
+| `VAULT_TIMEOUT_MS`                                                              | não              | padrão 2000, máximo 5000                                                                                     |
+| `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`       | sim              | `S3_FORCE_PATH_STYLE` opcional (padrão `true`)                                                               |
+| `SMTP_HOST`, `SMTP_PORT`                                                        | sim              | `SMTP_USER`, `SMTP_PASSWORD` e `SMTP_FROM` opcionais                                                         |
+| `CLAMAV_HOST`, `CLAMAV_PORT`                                                    | sim              |                                                                                                              |
+| `SESSION_SECRET`                                                                | sim              | no mínimo 32 bytes                                                                                           |
+| `REPORTER_TOKEN_SECRET`                                                         | sim              | no mínimo 32 bytes, diferente de `SESSION_SECRET`                                                            |
+| `PASSWORD_HASH_LOG_N`                                                           | não              | `logN` do scrypt. Padrão 17. Valor abaixo de 17 só é aceito com `NODE_ENV=test` (ex.: 10, para os testes)    |
+| `MAX_ATTACHMENT_BYTES`                                                          | não              | padrão 10485760 (10 MB). Referência para o proxy                                                             |

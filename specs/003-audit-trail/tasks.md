@@ -197,14 +197,14 @@ grava equipe com IP real; comando grava sistema; fora de contexto, recusa.
 
 ### Tests for User Story 4 (mandatory for security and privacy rules) ⚠️
 
-- [ ] T028 [US4] Teste de integração em `test/audit/audit-immutability.e2e-spec.ts`: com `app_runtime`, `UPDATE` e
+- [x] T028 [US4] Teste de integração em `test/audit/audit-immutability.e2e-spec.ts`: com `app_runtime`, `UPDATE` e
       `DELETE` em `audit_logs` falham por permissão; com `app_migrator`, `UPDATE`, `DELETE` e `TRUNCATE` falham pelo
       gatilho; `INSERT` com `actor_type = REPORTER` e `ip` preenchido falha pela CHECK. Escrito de forma a valer também
       depois do particionamento (US7 acrescenta os casos por partição)
 
 ### Implementation for User Story 4
 
-- [ ] T029 [US4] Criar em `test/support/db-roles.ts` o helper que abre conexão com um perfil de banco
+- [x] T029 [US4] Criar em `test/support/db-roles.ts` o helper que abre conexão com um perfil de banco
       (`app_runtime`, `app_migrator`, `app_audit_maintenance`) no banco clonado da suíte, usado pelas US4 e US7
 
 **Checkpoint**: o CI falha se a imutabilidade deixar de valer.
@@ -435,9 +435,10 @@ Task: "T016 [US1] AUDIT_METADATA_SCHEMAS em src/modules/audit/audit-metadata.sch
 
 ## Pendências do analyze
 
-| ID  | Severidade | Pendência                                                                                                   | Onde resolver | Situação |
-| --- | ---------- | ----------------------------------------------------------------------------------------------------------- | ------------- | -------- |
-| U3  | LOW        | A verificação roda em transação de leitura; o `AUDIT_CHAIN_VERIFIED` é gravado depois, em transação própria | T039          | Aberto   |
-| C3  | LOW        | Teste de expurgo interrompido: erro depois da âncora desfaz âncora, partição e `AUDIT_LOG_PURGED` juntos    | T044          | Aberto   |
-| I2  | LOW        | `src/modules/audit/audit.errors.ts` (T017) fora da árvore do plano                                          | plan.md       | Aberto   |
-| I3  | LOW        | `test/support/db-roles.ts` (T029) fora da árvore do plano                                                   | plan.md       | Aberto   |
+| ID  | Severidade | Pendência                                                                                                                                                                                                                                       | Onde resolver                                                   | Situação |
+| --- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | -------- |
+| U3  | LOW        | A verificação roda em transação de leitura; o `AUDIT_CHAIN_VERIFIED` é gravado depois, em transação própria                                                                                                                                     | T039                                                            | Aberto   |
+| C3  | LOW        | Teste de expurgo interrompido: erro depois da âncora desfaz âncora, partição e `AUDIT_LOG_PURGED` juntos                                                                                                                                        | T044                                                            | Aberto   |
+| I2  | LOW        | `src/modules/audit/audit.errors.ts` (T017) fora da árvore do plano                                                                                                                                                                              | plan.md                                                         | Aberto   |
+| I3  | LOW        | `test/support/db-roles.ts` (T029) fora da árvore do plano                                                                                                                                                                                       | plan.md                                                         | Aberto   |
+| F1  | LOW        | Testes da feature 002 que giram a `report-kek` (`test/crypto/rewrap.e2e-spec.ts` e `test/cli/rewrap-keys.e2e-spec.ts`) disputam a mesma chave do Vault quando rodam em paralelo e falham de vez em quando ("nada a fazer", G3). Passam sozinhos | serializar essas suítes (`fileParallelism` por arquivo ou lock) | Aberto   |

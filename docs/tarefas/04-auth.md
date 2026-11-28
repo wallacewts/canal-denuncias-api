@@ -149,7 +149,7 @@ Ler antes: `.claude/skills/nestjs-auth/` e https://docs.nestjs.com/security/auth
 **Estimativa:** P · **Marco:** MVP · **Depende de:** AUTH-01
 
 - **Endpoints:** `PUT /api/admin/v1/me/password` (senha atual e nova).
-- **Auditoria:** `AUTH_PASSWORD_CHANGED`.
+- **Auditoria:** `AUTH_PASSWORD_CHANGED`, `AUTH_PASSWORD_CHANGE_FAILED`.
 
 **Critérios de aceite**
 
@@ -161,6 +161,19 @@ Ler antes: `.claude/skills/nestjs-auth/` e https://docs.nestjs.com/security/auth
 - [ ] Senha atual errada responde 422 com o código `CURRENT_PASSWORD_INVALID`, no mesmo formato dos outros erros da
       troca de senha, sem ecoar a senha na resposta, no log ou na auditoria. 401 continua significando só sessão
       ausente ou expirada. (Proposta do front, decidida pelo usuário em 28/11/2026.)
+- [ ] Limite de senha atual errada: os erros 1 a 4 na mesma sessão respondem 422 (`CURRENT_PASSWORD_INVALID`); o 5º
+      responde 429 e encerra a sessão (o cookie é apagado e a requisição seguinte dá 401; o usuário entra de novo).
+      Erro de política da senha nova não conta. O contador fica com a sessão, no Postgres, e sobe com um UPDATE
+      condicional (duas requisições simultâneas não passam do limite). O pacote não tem troca de senha, evento nem
+      contador para isso (só o bloqueio do MFA e a redefinição por e-mail), então é código da aplicação; o
+      encerramento usa o `SignInService.signOut`, que já grava `AUTH_SIGNED_OUT` pelo assinante. Decidido pelo
+      usuário em 28/11/2026.
+- [ ] Cada erro grava `AUTH_PASSWORD_CHANGE_FAILED` (ação nova no `AuditAction` e no mapa de schemas), com metadata
+      só `{ reason: 'CURRENT_PASSWORD_INVALID', attempt: 1..5, locked: boolean }`, nunca a senha.
+- [ ] Teste e2e: 4 erros dão 422 e 4 registros (`attempt` 1 a 4, `locked: false`); o 5º dá 429, a sessão some do
+      banco, o mesmo cookie dá 401 e o registro tem `locked: true`; 5 requisições simultâneas erradas encerram a sessão
+      uma única vez; a senha enviada (inclusive um texto curto como `XQZ`) não aparece na resposta, nos logs nem na
+      trilha; uma sessão nova começa o contador do zero.
 
 ### AUTH-06 · Guard global e usuário atual
 

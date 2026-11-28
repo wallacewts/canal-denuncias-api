@@ -236,10 +236,10 @@ nomeado.
 
 ### Tests for User Story 5 ⚠️ (escrever antes, devem falhar)
 
-- [ ] T033 [P] [US5] Sentinela `test/conventions/authorization-metadata.e2e-spec.ts`: aplicar `@Can()` e
+- [x] T033 [P] [US5] Sentinela `test/conventions/authorization-metadata.e2e-spec.ts`: aplicar `@Can()` e
       `@Can.Anyone()` a uma classe de teste e conferir que as chaves `authorization:can` e `authorization:can-anyone`
       aparecem no `Reflect` (quebra se o pacote mudar as chaves)
-- [ ] T034 [P] [US5] Convenção `test/conventions/admin-routes.e2e-spec.ts` (R4): app completo (`AppModule`, sem
+- [x] T034 [P] [US5] Convenção `test/conventions/admin-routes.e2e-spec.ts` (R4): app completo (`AppModule`, sem
       fixtures); percorre controllers `@AdminApi` pelo `DiscoveryService`/`MetadataScanner`; cada handler tem
       `@Can()` com política do mapa, ou `OpenAdminRoute`/`StepRoute`, ou `@Can.Anyone()` numa lista explícita com
       motivo (`GET /me` e rotas de `me-security`); falha nomeando a rota; logger de captura: nenhum "declare no check"
@@ -247,7 +247,7 @@ nomeado.
 
 ### Implementation for User Story 5
 
-- [ ] T035 [US5] Corrigir o que o T034 apontar (nenhuma rota esperada fora da lista depois do T020); manter a lista
+- [x] T035 [US5] Corrigir o que o T034 apontar (nenhuma rota esperada fora da lista depois do T020); manter a lista
       explícita no próprio teste, com o motivo de cada entrada (depois do T034)
 
 **Checkpoint**: T033 e T034 verdes.

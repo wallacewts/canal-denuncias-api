@@ -588,6 +588,56 @@
         ]
       }
     },
+    "/api/admin/v1/me/sessions": {
+      "delete": {
+        "operationId": "MeSecurityController_revokeAll",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "get": {
+        "operationId": "MeSecurityController_listSessions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/v1/me/sessions/{id}": {
+      "delete": {
+        "operationId": "MeSecurityController_revokeSession",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "pattern": "^[0-9a-f]{32}$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/admin/v1/users": {
       "get": {
         "operationId": "UsersController_list",

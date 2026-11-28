@@ -8,6 +8,7 @@ import { AuditModule } from '../../modules/audit/audit.module.js';
 import { CryptoModule } from '../../modules/crypto/crypto.module.js';
 import { AdminIdentityGuard } from './admin-identity.guard.js';
 import { LoginStepGuard } from './login-step.guard.js';
+import { deriveHmacKeys, HMAC_KEYS } from './hmac-keys.js';
 import { AUTH_CLOCK, systemClock, type AuthClock } from './auth-clock.js';
 import { AUTH_IDENTITY } from './auth-identity.port.js';
 import { AuthAuditSubscriber } from './auth-audit.subscriber.js';
@@ -81,7 +82,23 @@ export class AdminAreaGuardModule {}
     AuthorizationModule.forRoot(),
     AdminAreaGuardModule,
   ],
-  providers: [PgSessionStore, PgMfaStore, AuthStorageRegistration, StaffSessionProvider, AuthAuditSubscriber],
-  exports: [AdminAreaGuardModule, PgSessionStore, PgMfaStore],
+  providers: [
+    PgSessionStore,
+    PgMfaStore,
+    AuthStorageRegistration,
+    StaffSessionProvider,
+    AuthAuditSubscriber,
+    // Chaves de HMAC por finalidade (feature 006, R4a): id público de sessão e chave de conta do limite de tentativas.
+    {
+      provide: HMAC_KEYS,
+      inject: [ConfigService],
+      useFactory: (config: ConfigService<Env, true>) =>
+        deriveHmacKeys({
+          AUTH_HMAC_SECRET: config.get('AUTH_HMAC_SECRET', { infer: true }),
+          SESSION_SECRET: config.get('SESSION_SECRET', { infer: true }),
+        }),
+    },
+  ],
+  exports: [AdminAreaGuardModule, PgSessionStore, PgMfaStore, HMAC_KEYS],
 })
 export class AuthInfraModule {}

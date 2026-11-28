@@ -199,14 +199,14 @@ now)` (incremento e bloqueio numa instrução, `RETURNING`), `resetLoginFailures
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T032 [P] [US4] e2e `test/auth/own-sessions.e2e-spec.ts`: duas sessões listadas com criação, último uso, IP,
+- [x] T032 [P] [US4] e2e `test/auth/own-sessions.e2e-spec.ts`: duas sessões listadas com criação, último uso, IP,
       navegador e a atual marcada, sem o id do cookie nem o id interno; encerrar a outra (204) e ela cai; id de sessão
       de outra pessoa → 404; `DELETE /me/sessions` encerra todas (cookie apagado, `AUTH_SESSION_REVOKED`); sessão
       pendente → 401
 
 ### Implementation for User Story 4
 
-- [ ] T033 [US4] `OwnSessionsService` em `src/modules/auth/own-sessions.service.ts` (id público por HMAC com a chave
+- [x] T033 [US4] `OwnSessionsService` em `src/modules/auth/own-sessions.service.ts` (id público por HMAC com a chave
       `session-public-id`, R4a e R13) e rotas `GET /me/sessions`, `DELETE /me/sessions/:id`, `DELETE /me/sessions` no
       `me-security.controller.ts`
 

@@ -9,6 +9,7 @@ import { AuthController } from './auth.controller.js';
 import { CredentialsService } from './credentials.service.js';
 import { MeSecurityController } from './me-security.controller.js';
 import { MfaEnrollmentService } from './mfa-enrollment.service.js';
+import { OwnSessionsService } from './own-sessions.service.js';
 import { PasswordChangeService } from './password-change.service.js';
 import { StaffCredentialsRepository } from './staff-credentials.repository.js';
 
@@ -25,6 +26,7 @@ import { StaffCredentialsRepository } from './staff-credentials.repository.js';
     CredentialsService,
     PasswordChangeService,
     MfaEnrollmentService,
+    OwnSessionsService,
   ],
   exports: [TypeOrmModule, PasswordHasher],
 })

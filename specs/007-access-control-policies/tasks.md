@@ -256,18 +256,18 @@ nomeado.
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T036 [P] Regras no `AGENTS.md` (ler antes): rota de denúncia declara a habilidade na rota e usa
+- [x] T036 [P] Regras no `AGENTS.md` (ler antes): rota de denúncia declara a habilidade na rota e usa
       `ReportAccessService.resolve` no serviço (nada de 404/410 próprio); listagem de denúncias só com
       `scopeReportsFor`; alcance por registro só no `recordScope` do catálogo; método novo de política = entrada no
       `policy-abilities.ts`; `@Can.Anyone()` só na lista do teste de convenção
-- [ ] T037 [P] Backlog e ADR: marcar os critérios atendidos do ACL-01 a ACL-05 em `docs/tarefas/05-access-control.md`
+- [x] T037 [P] Backlog e ADR: marcar os critérios atendidos do ACL-01 a ACL-05 em `docs/tarefas/05-access-control.md`
       (ler antes) e atualizar a seção "O que já existe e o que cada tarefa seguinte constrói" do ADR 0053 (políticas,
       `scopeReportsFor`, `ReportAccessService`, contrato em `specs/007-access-control-policies/contracts/`)
-- [ ] T038 [P] Comentários desatualizados: `src/infra/auth/admin-identity.guard.ts` (menção à ACL-02) e cabeçalho de
+- [x] T038 [P] Comentários desatualizados: `src/infra/auth/admin-identity.guard.ts` (menção à ACL-02) e cabeçalho de
       `src/infra/auth/auth-audit.subscriber.ts`
-- [ ] T039 Cobertura mínima de 80% em `src/modules/access-control` no `vitest.config.coverage.ts`
-- [ ] T040 `npm run openapi:export` sem diferença em `openapi/` (nenhuma rota real mudou; o `GET /me` igual, SC-007)
-- [ ] T041 Rodar os cenários do `quickstart.md` e a suíte completa, cada um separado: lint, typecheck, format,
+- [x] T039 Cobertura mínima de 80% em `src/modules/access-control` no `vitest.config.coverage.ts`
+- [x] T040 `npm run openapi:export` sem diferença em `openapi/` (nenhuma rota real mudou; o `GET /me` igual, SC-007)
+- [x] T041 Rodar os cenários do `quickstart.md` e a suíte completa, cada um separado: lint, typecheck, format,
       unitários, e2e, `npm run test:timing`, build e openapi em dia; gitleaks
 
 ---

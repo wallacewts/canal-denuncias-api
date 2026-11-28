@@ -8,8 +8,8 @@ import { AUTH_IDENTITY, type AuthIdentity, type StaffIdentity } from './auth-ide
 export type RequestWithIdentity = Request & { staffIdentity?: StaffIdentity };
 
 /**
- * Área administrativa negada por padrão (D47, princípio IV): sem identidade, 401. A checagem de perfil de cada rota
- * fica com o access-control (ACL-02); as rotas da trilha checam o perfil AUDITOR por conta própria.
+ * Área administrativa negada por padrão (D47, princípio IV): sem identidade, 401. A permissão de cada rota fica com a
+ * declaração `@Can()` e as políticas do access-control (feature 007), inclusive as rotas da trilha (`AuditPolicy`).
  */
 @Injectable()
 export class AdminIdentityGuard implements CanActivate {

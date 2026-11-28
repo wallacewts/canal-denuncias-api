@@ -65,8 +65,9 @@ Regras que não podem ser quebradas:
   cookie: nenhum token portador nem refresh token (canal de tokens só por decisão própria futura). Sessões e MFA só
   nos stores Postgres de `src/infra/auth/stores/` (`allowInMemoryStorage: false`).
 - `@PublicApi` já abre a rota no guard global. Nada de `@Public()` em rota administrativa: rota de login ou do
-  desafio MFA usa `OpenAdminRoute()`. Toda rota administrativa declara `@Can(Política, 'habilidade')` ou
-  `@Can.Anyone()` com `authorize()` no serviço; sem declaração, responde 403 e aparece no log da inicialização.
+  desafio MFA usa `OpenAdminRoute()`. Toda rota administrativa declara `@Can(Política, 'método')`; sem declaração,
+  responde 403 e aparece no log da inicialização. `@Can.Anyone()` só nas rotas da própria pessoa listadas em
+  `ANYONE_ALLOWED` (`test/conventions/admin-route-checks.ts`); o teste de convenção falha fora disso (D62).
 - Eventos de autenticação e negações entram na trilha só pelo `AuthAuditSubscriber`; evento novo do pacote = entrada
   no mapeamento dele e no catálogo da auditoria. Tempo de sessão e MFA nos testes: `TestClock` no `AUTH_CLOCK`.
   Tempos da sessão só em `src/infra/auth/session-policy.ts`.
@@ -81,6 +82,15 @@ Regras que não podem ser quebradas:
 - Habilidade nova só no catálogo `src/modules/access-control/abilities.ts` (D55), no formato
   `^[a-z][a-z-]*\.[a-z][a-z-]*$`; políticas consultam `hasAbility`, nunca o perfil direto. O `GET /me` devolve o
   catálogo: renomear ou remover um código quebra o front. Mudou a matriz do ACL-01, mude o catálogo junto (teste).
+- Alcance por registro (todas ou só as atribuídas) só no `recordScope` do catálogo (D60); nada de perfil em política.
+  Método novo de política = entrada no `src/modules/access-control/policy-abilities.ts` (código e tipo de recurso
+  da trilha, D61; teste).
+- Denúncias (D59, D60, D62; contrato em `specs/007-access-control-policies/contracts/access-control.md`): a rota
+  declara a habilidade (`ReportsPolicy.list`/`readAny`/`triageAny`/`treatAny`, `IdentityRevealPolicy.requestAny`/
+  `decideAny`, `RetentionPolicy.manage`); rota por id chama `ReportAccessService.resolve(user, id, habilidade)`
+  antes de tudo (404 igual para fora do escopo e inexistente, auditado; 410 com `{ content: true }`) e depois
+  `authorize()` com os fatos devolvidos; nunca 404/410 próprio nem consulta antes do `resolve`. Listagem só com
+  `scopeReportsFor(user, qb)` no query builder, nunca filtro depois de carregar.
 - Erro de regra de negócio com `DomainError`/`DomainConflictError` e `code` estável em maiúsculas (D56); `details` só
   com inteiros e códigos, nunca valor recebido.
 - Operação que pode mudar a quantidade de Administradores ativos roda com o lock de `src/modules/users/admin-lock.ts`

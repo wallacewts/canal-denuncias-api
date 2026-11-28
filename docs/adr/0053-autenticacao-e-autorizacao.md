@@ -125,6 +125,8 @@ Para quem especifica as próximas features (inclusive o login do backoffice no f
 - **Guards globais**, nesta ordem: autenticação do pacote, autorização do pacote, `AdminIdentityGuard` e
   `LoginStepGuard` (feature 006). `@PublicApi` abre a rota (sem cookie, sem identidade); `@AdminApi` exige sessão com
   MFA verificado; rota administrativa sem `@Can()`/`@Can.Anyone()` responde 403 e aparece no log da inicialização.
+  O teste de convenção (`test/conventions/admin-routes.e2e-spec.ts`, feature 007) exige `@Can()` com política do mapa
+  de habilidades; `@Can.Anyone()` só nas rotas da própria pessoa da lista `ANYONE_ALLOWED`.
 - **`OpenAdminRoute()`** (`src/common/http/route-decorators.ts`): abre uma rota administrativa antes da sessão
   completa (entrada, desafio MFA, saída). A auditoria dela sai como equipe sem usuário, com IP.
 - **Login da equipe (feature 006, D57)** em `src/modules/auth/`: entrada, desafio, primeiro acesso (troca da senha
@@ -135,12 +137,30 @@ Para quem especifica as próximas features (inclusive o login do backoffice no f
 - **Eventos de auditoria** (`AuthAuditSubscriber`): `mfa-verified` → `AUTH_SIGNED_IN` (com `recovery-code`, também
   `AUTH_RECOVERY_CODE_USED`); `mfa-enabled` → `AUTH_MFA_ENROLLED`; `mfa-failed` → `AUTH_MFA_FAILED` (`locked`);
   `sign-out` → `AUTH_SIGNED_OUT`, ou `AUTH_SESSION_REVOKED` (`scope: all`) quando é "sair de todos os lugares";
-  negação da autorização → `ACCESS_DENIED` (`policy`, `ability`). A senha sozinha nunca é login; o fim do primeiro
-  acesso e as falhas de entrada e de troca de senha são registrados pelos serviços da feature 006.
+  negação da autorização → `ACCESS_DENIED` (`policy`, `ability`, `code` do catálogo e o tipo de recurso da política,
+  D61). A senha sozinha nunca é login; o fim do primeiro acesso e as falhas de entrada e de troca de senha são
+  registrados pelos serviços da feature 006.
+- **Controle de acesso (feature 007, D59 a D62)** em `src/modules/access-control/` (contrato para as features de
+  domínio em `specs/007-access-control-policies/contracts/access-control.md`):
+  - **Políticas** (`policies/`): `UsersPolicy`, `ReportsPolicy` (`list`, `readAny`, `triageAny`, `treatAny` na rota;
+    `read`, `triage`, `treat` sobre o registro), `IdentityRevealPolicy` (`requestAny`, `decideAny`; `request`,
+    `decide` com four-eyes), `RetentionPolicy` (`manage`; `manageReport`), `SettingsPolicy` (`sla`, `retention`),
+    `CatalogPolicy` (`manageCategories`), `AuditPolicy` (`read`, já usada pela trilha) e `DashboardPolicy` (`read`).
+    Todas consultam só o catálogo (`hasAbility`) e a função de escopo; o alcance por perfil está no `recordScope` do
+    catálogo (D60).
+  - **Denúncia por id**: a rota declara a habilidade e o serviço chama primeiro
+    `ReportAccessService.resolve(user, id, 'reports.read', { content: true })`. Fora do escopo (não atribuída ou
+    bloqueada por conflito) e id inexistente dão o mesmo 404, com a mesma consulta e o mesmo `ACCESS_DENIED`
+    (`reason` `OUT_OF_SCOPE`/`NOT_FOUND`, D59); expurgada dentro do escopo, 410 `REPORT_SHREDDED`. Com os fatos
+    devolvidos, a operação: `authorization.authorize(ReportsPolicy, 'treat', user, facts)` (ou `triage`, `request`,
+    `decide`, `manageReport`), 403 para quem lê mas não pode. Nunca 404/410 próprio nem leitura antes do `resolve`.
+  - **Listagem**: `scopeReportsFor(user, repo.createQueryBuilder('r'))` antes dos filtros e do `paginate()`: atribuição
+    e bloqueio no `WHERE` da mesma consulta; sem a habilidade, `FALSE`.
 
-**Só de teste (`test/contract/auth/example/`, nunca importado por `src/`):** a `ExamplePolicy`, as rotas
-`example-admin` e a função de escopo de exemplo (provas de autorização). O login de exemplo virou o definitivo na
-feature 006.
+**Só de teste (`test/contract/auth/example/`, nunca importado por `src/`):** a `ExamplePolicy` e as rotas
+`example-admin` (provas do pacote da feature 004), que já usam a função de escopo real; a cópia da função de escopo
+saiu na feature 007. O login de exemplo virou o definitivo na feature 006. A rota que exercita o `resolve` como as
+features de domínio vão fazer está em `test/support/fixtures/report-access-fixture.module.ts`.
 
 **Fluxo do backoffice** (rotas reais, contrato em `specs/006-staff-sign-in/contracts/auth-api.md`, conferido contra o
 contrato do front por `test/openapi/auth-contract.e2e-spec.ts`): `POST /auth/sign-in` → 200 com `nextStep` e os
@@ -157,11 +177,11 @@ no proxy de desenvolvimento); senão, navegadores sem `Sec-Fetch-Site` teriam a 
 
 **Feito / falta construir:**
 
-| Tarefa        | Situação                                                                                                            |
-| ------------- | ------------------------------------------------------------------------------------------------------------------- |
-| AUTH-01 a 08  | Feito na feature 006 (D57)                                                                                          |
-| USERS-02 a 07 | Feito na feature 005; a troca obrigatória e o cadastro do MFA no primeiro login, na feature 006                     |
-| ACL-01 a 05   | Políticas reais em `src/modules/access-control/` conforme o mapeamento acima (o catálogo de códigos já existe, D55) |
+| Tarefa        | Situação                                                                                                           |
+| ------------- | ------------------------------------------------------------------------------------------------------------------ |
+| AUTH-01 a 08  | Feito na feature 006 (D57)                                                                                         |
+| USERS-02 a 07 | Feito na feature 005; a troca obrigatória e o cadastro do MFA no primeiro login, na feature 006                    |
+| ACL-01 a 05   | Feito na feature 007 (D59 a D62); o uso nas rotas reais de denúncia fica para REP, CASE, MSG, IDV, RET, CAT e REPT |
 
 ## Alternativas consideradas
 

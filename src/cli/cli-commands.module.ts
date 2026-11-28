@@ -7,10 +7,11 @@ import { CliOutput } from './cli-output.js';
 import { CreateAdminCommand } from './create-admin.command.js';
 import { PasswordPrompt } from './password-prompt.js';
 import { RewrapKeysCommand } from './rewrap-keys.command.js';
+import { VerifyAuditCommand } from './verify-audit.command.js';
 
 /** Comandos da CLI administrativa e suas dependências. Importado pela CLI e pelos testes. */
 @Module({
   imports: [UsersModule, AuthModule, AuditModule, CryptoModule],
-  providers: [CreateAdminCommand, RewrapKeysCommand, PasswordPrompt, CliOutput],
+  providers: [CreateAdminCommand, RewrapKeysCommand, VerifyAuditCommand, PasswordPrompt, CliOutput],
 })
 export class CliCommandsModule {}

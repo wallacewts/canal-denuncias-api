@@ -249,15 +249,15 @@ id certo; o comando sai com 1 quando quebrada.
 
 ### Tests for User Story 6 (mandatory for security and privacy rules) ⚠️
 
-- [ ] T035 [P] [US6] Teste unitário em `src/modules/audit/audit-verifier.service.spec.ts` sobre uma cadeia em memória:
+- [x] T035 [P] [US6] Teste unitário em `src/modules/audit/audit-verifier.service.spec.ts` sobre uma cadeia em memória:
       íntegra, registro alterado, registro removido, gênese errada e trilha vazia
-- [ ] T036 [US6] Teste de integração em `test/audit/audit-verifier.e2e-spec.ts`: com o gatilho desligado só no teste
+- [x] T036 [US6] Teste de integração em `test/audit/audit-verifier.e2e-spec.ts`: com o gatilho desligado só no teste
       (superusuário), alterar um registro e remover outro e conferir `ok: false` com o primeiro id afetado; registros
       gravados durante a verificação não causam quebra (ponto de corte); a rota responde ao Auditor, 403 aos demais (com
       `ACCESS_DENIED` gravado) e 401 sem identidade; a verificação grava `AUDIT_CHAIN_VERIFIED`
-- [ ] T037 [P] [US6] Teste de integração do comando em `test/cli/verify-audit.e2e-spec.ts`: código 0 e JSON com
+- [x] T037 [P] [US6] Teste de integração do comando em `test/cli/verify-audit.e2e-spec.ts`: código 0 e JSON com
       `"ok": true` na trilha íntegra, código 1 na quebrada, registro `SYSTEM` sem IP
-- [ ] T038 [P] [US6] Teste de desempenho em `test/audit/audit-performance.e2e-spec.ts`: fixture de 100.000 registros
+- [x] T038 [P] [US6] Teste de desempenho em `test/audit/audit-performance.e2e-spec.ts`: fixture de 100.000 registros
       encadeados inseridos direto no banco; mede a verificação (meta de 1 minuto) e a memória viva durante ela (amostras
       com `gc()` e `--no-concurrent-array-buffer-sweeping`, como na 002), comparando 10.000 × 100.000 registros para
       provar que não cresce com o tamanho da trilha e a primeira página da consulta com
@@ -265,11 +265,11 @@ id certo; o comando sai com 1 quando quebrada.
 
 ### Implementation for User Story 6
 
-- [ ] T039 [US6] Criar o `AuditVerifierService` (ponto de corte, lotes de 1.000, `REPEATABLE READ READ ONLY`,
+- [x] T039 [US6] Criar o `AuditVerifierService` (ponto de corte, lotes de 1.000, `REPEATABLE READ READ ONLY`,
       `computeAuditHash` da 001; a âncora entra na US7) em `src/modules/audit/audit-verifier.service.ts`
-- [ ] T040 [US6] Criar `POST /api/admin/v1/audit-logs/verification` em `src/modules/audit/audit.controller.ts` e rodar
+- [x] T040 [US6] Criar `POST /api/admin/v1/audit-logs/verification` em `src/modules/audit/audit.controller.ts` e rodar
       `npm run openapi:export`
-- [ ] T041 [US6] Criar o comando `verify-audit` em `src/cli/verify-audit.command.ts` e registrá-lo em
+- [x] T041 [US6] Criar o comando `verify-audit` em `src/cli/verify-audit.command.ts` e registrá-lo em
       `src/cli/cli-commands.module.ts`
 
 **Checkpoint**: adulteração da trilha é detectada por rota e por comando agendável.

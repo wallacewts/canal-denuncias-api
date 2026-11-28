@@ -1,10 +1,11 @@
-import { ForbiddenException, Get, Query, Req } from '@nestjs/common';
+import { ForbiddenException, Get, HttpCode, Post, Query, Req } from '@nestjs/common';
 import { AuditResult } from '../../common/enums/audit-result.enum.js';
 import { Role } from '../../common/enums/role.enum.js';
 import { AdminApi } from '../../common/http/route-decorators.js';
 import type { RequestWithIdentity } from '../../infra/auth/admin-identity.guard.js';
 import { AuditAction, AuditResourceType } from './audit-action.enum.js';
 import { AuditQueryService, auditLogQuerySchema, usedFilters, type AuditLogQuery } from './audit-query.service.js';
+import { AuditVerifierService } from './audit-verifier.service.js';
 import { AuditService } from './audit.service.js';
 
 /** Rotas do Auditor (contracts/admin-audit-api.md). Só o perfil AUDITOR lê a trilha (D25). */
@@ -13,6 +14,7 @@ export class AuditController {
   constructor(
     private readonly audit: AuditService,
     private readonly queries: AuditQueryService,
+    private readonly verifier: AuditVerifierService,
   ) {}
 
   @Get()
@@ -26,6 +28,14 @@ export class AuditController {
       metadata: { filters: usedFilters(query), count: page.items.length },
     });
     return page;
+  }
+
+  /** Verifica a integridade da cadeia (AUDIT-07). Síncrona: 100 mil registros em menos de 1 minuto (SC-006). */
+  @Post('verification')
+  @HttpCode(200)
+  async verify(@Req() request: RequestWithIdentity) {
+    await this.assertAuditor(request);
+    return this.verifier.verifyAndRecord();
   }
 
   /** Até a ACL-02 assumir as permissões, a checagem do perfil fica aqui e a recusa é registrada (FR-019). */

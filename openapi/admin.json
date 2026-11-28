@@ -246,6 +246,20 @@
           "admin"
         ]
       }
+    },
+    "/api/admin/v1/audit-logs/verification": {
+      "post": {
+        "operationId": "AuditController_verify",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      }
     }
   },
   "servers": [],

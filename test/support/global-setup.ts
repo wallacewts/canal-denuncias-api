@@ -26,6 +26,17 @@ export default async function setup(): Promise<void> {
       await admin.query(`DROP DATABASE IF EXISTS "${datname}" WITH (FORCE)`);
     }
 
+    // Perfil de manutenção da trilha (feature 003): o volume local pode ser anterior a ele. As migrations só concedem
+    // os EXECUTE das funções de manutenção se o perfil existir.
+    await admin.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'app_audit_maintenance') THEN
+          CREATE ROLE app_audit_maintenance LOGIN PASSWORD 'dev_audit_maintenance_pw';
+        END IF;
+      END $$
+    `);
+
     await admin.query(`CREATE DATABASE "${TEMPLATE_DATABASE}" OWNER app_migrator`);
   } finally {
     await admin.end();
@@ -39,6 +50,7 @@ export default async function setup(): Promise<void> {
       ALTER SCHEMA public OWNER TO app_migrator;
       REVOKE ALL ON SCHEMA public FROM PUBLIC;
       GRANT USAGE ON SCHEMA public TO app_runtime;
+      GRANT USAGE ON SCHEMA public TO app_audit_maintenance;
       ALTER DEFAULT PRIVILEGES FOR ROLE app_migrator IN SCHEMA public
         GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app_runtime;
       ALTER DEFAULT PRIVILEGES FOR ROLE app_migrator IN SCHEMA public

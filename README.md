@@ -96,10 +96,21 @@ docker compose --profile app run --rm api node dist/cli.js create-admin --name "
 
 ## Banco de dados
 
-- **Dois perfis**, criados por [`docker/postgres/01-roles.sh`](docker/postgres/01-roles.sh):
+- **Três perfis**, criados por [`docker/postgres/01-roles.sh`](docker/postgres/01-roles.sh):
   - `app_migrator`: dono do schema. Usado só pelas migrations (`DATABASE_MIGRATOR_URL`).
   - `app_runtime`: usado pela API (`DATABASE_URL`). Só DML, sem `UPDATE`/`DELETE` em `audit_logs` e sem acesso à
     tabela de migrations.
+  - `app_audit_maintenance`: só para o comando `audit-maintenance` (`DATABASE_AUDIT_MAINTENANCE_URL`), que cria as
+    partições da trilha e remove as que passaram de 5 anos (D50). A API não usa.
+- **Volume local criado antes da feature 003:** o script de perfis só roda num volume novo. Para criar o
+  `app_audit_maintenance` sem apagar o banco local (não use `docker compose down -v`), rode uma vez, **antes** de
+  `npm run migration:run`:
+
+  ```bash
+  docker compose exec -T postgres psql -U postgres -d canal_denuncias -c \
+    "CREATE ROLE app_audit_maintenance LOGIN PASSWORD 'dev_audit_maintenance_pw'; GRANT USAGE ON SCHEMA public TO app_audit_maintenance;"
+  ```
+
 - **`synchronize` nunca é ligado.** Toda mudança de schema passa por migration.
 - **Revise toda migration gerada antes do commit.** O TypeORM tenta criar mais de uma vez os enums usados em mais de
   uma tabela (`actor_type`, `report_status`, `report_outcome`). A `InitialSchema` já foi corrigida à mão.

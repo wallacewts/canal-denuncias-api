@@ -1,31 +1,26 @@
 <!--
 Sync Impact Report
-- Versão: template → 1.0.0 (primeira ratificação)
-- Princípios definidos:
-  I. Anonimato do denunciante (inegociável)
-  II. Minimização e finalidade (LGPD)
-  III. Criptografia por padrão
-  IV. Acesso mínimo e negado por padrão
-  V. Auditoria imutável
-  VI. Banco de dados como última linha de defesa
-  VII. Testes primeiro nas regras de segurança
-  VIII. Qualidade e entrega
-  IX. Simplicidade
-- Seções adicionadas: Restrições técnicas, Fluxo de desenvolvimento, Governança
+- Versão: 1.0.0 → 1.1.0 (MINOR: regra do princípio V ampliada com a exceção de retenção da trilha)
+- Princípios modificados:
+  V. Auditoria imutável (título mantido): a trilha continua append-only; passa a admitir uma única remoção, a de
+  partições inteiras depois do prazo de guarda (D49), por função restrita ao perfil de manutenção (D50), com âncora
+  conferida pela verificação da cadeia (D51)
+- Seções adicionadas: nenhuma
 - Seções removidas: nenhuma
 - Templates:
-  ✅ .specify/templates/plan-template.md (Constitution Check com os portões I a IX)
-  ✅ .specify/templates/tasks-template.md (testes obrigatórios para regras de segurança e privacidade)
-  ✅ .specify/templates/spec-template.md (seção obrigatória de privacidade e segurança)
-  ✅ .specify/templates/checklist-template.md (sem referência a princípios; nada a mudar)
+  ✅ .specify/templates/plan-template.md (portão V cita a exceção de retenção)
+  ✅ .specify/templates/tasks-template.md (sem mudança: testes já obrigatórios para regras de auditoria)
+  ✅ .specify/templates/spec-template.md (sem mudança)
+  ✅ .specify/templates/checklist-template.md (sem mudança)
 - TODOs adiados: nenhum
+- Histórico: 1.0.0 (2026-11-27) primeira ratificação
 -->
 
 # Constituição da API do Canal de Denúncias
 
 API do sistema de denúncias de vazamento de dados. Recebe denúncias anônimas de colaboradores, parceiros e
 terceiros e precisa ser ela mesma um exemplo de conformidade com a LGPD. As decisões de arquitetura que
-fundamentam estes princípios estão em `docs/adr/README.md` (D01 a D26) e o backlog em `docs/tarefas/`.
+fundamentam estes princípios estão em `docs/adr/README.md` (D01 a D52) e o backlog em `docs/tarefas/`.
 
 ## Core Principles
 
@@ -83,9 +78,13 @@ vazamento por erro de código.
   transação da operação.
 - `audit_logs` é append-only, com cadeia de hash e advisory lock. Nenhum código DEVE fazer `UPDATE` ou `DELETE`
   nessa tabela.
+- A única remoção permitida é a de partições inteiras após o prazo de guarda da trilha (D49), por função restrita ao
+  perfil de manutenção, nunca pela API (D50), registrada na mesma transação e com âncora conferida pela verificação da
+  cadeia (D51). Nenhum outro mecanismo DEVE remover registros da trilha.
 
 **Justificativa:** a trilha precisa provar quem acessou o quê e quando, inclusive contra quem administra o
-sistema.
+sistema. A remoção por partição cumpre o prazo de guarda da LGPD sem desligar a imutabilidade, e a âncora impede que
+o mecanismo seja usado para apagar registros recentes.
 
 ### VI. Banco de dados como última linha de defesa
 
@@ -156,4 +155,4 @@ sistema.
   ampliar uma regra, PATCH para ajustes de redação.
 - Orientações do dia a dia ficam em `AGENTS.md` e `README.md`, que não podem contradizer esta constituição.
 
-**Version**: 1.0.0 | **Ratified**: 2026-11-27 | **Last Amended**: 2026-11-27
+**Version**: 1.1.0 | **Ratified**: 2026-11-27 | **Last Amended**: 2026-11-28

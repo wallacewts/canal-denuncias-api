@@ -3,6 +3,8 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import { setupApp } from '../../src/app.setup.js';
 import { LOG_DESTINATION } from '../../src/config/log-destination.js';
+import { AUTH_IDENTITY } from '../../src/infra/auth/auth-identity.port.js';
+import { FakeIdentity } from './fake-identity.js';
 import { loadLocalEnv } from './db-urls.js';
 import { LogCapture } from './log-capture.js';
 import { createSuiteDatabase, type SuiteDatabase } from './test-database.js';
@@ -26,6 +28,11 @@ export interface CreateTestAppOptions {
    * os AppRoles de dev, para provar que as políticas reais bastam (G1 da feature 002).
    */
   vault?: 'root' | 'api' | 'maintenance';
+  /**
+   * Liga a identidade só de teste (`fake-identity.ts`): a área admin reconhece o cabeçalho `x-test-identity`. Sem
+   * esta opção, vale a porta padrão e toda rota admin responde 401, como em produção até a AUTH-06.
+   */
+  identity?: boolean;
 }
 
 const APPROLES = {
@@ -56,6 +63,7 @@ export async function createTestApp(options: CreateTestAppOptions = {}): Promise
   let builder = Test.createTestingModule({ imports: [AppModule, ...(options.imports ?? [])] })
     .overrideProvider(LOG_DESTINATION)
     .useValue(logs);
+  if (options.identity) builder = builder.overrideProvider(AUTH_IDENTITY).useValue(new FakeIdentity());
   for (const { provide, useValue } of options.overrides ?? []) {
     builder = builder.overrideProvider(provide).useValue(useValue);
   }

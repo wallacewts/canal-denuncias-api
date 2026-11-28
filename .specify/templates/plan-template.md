@@ -46,7 +46,7 @@ Confira cada portão contra `.specify/memory/constitution.md`. Marque ✅ ou exp
 - [ ] II. Minimização: só o essencial é coletado; conteúdo de denúncia fora de logs, auditoria e erros; nenhuma telemetria externa
 - [ ] III. Criptografia: dados sensíveis cifrados com envelope encryption; a API não usa a `identity-kek`
 - [ ] IV. Acesso: toda rota administrativa declara permissão; escopo aplicado no `WHERE`; four-eyes onde houver revelação
-- [ ] V. Auditoria: toda leitura e escrita sensível gera registro na mesma transação; nada altera `audit_logs`
+- [ ] V. Auditoria: toda leitura e escrita sensível gera registro na mesma transação; nada altera `audit_logs`; remoção só de partição inteira após o prazo, pelo perfil de manutenção, com âncora (D49–D51)
 - [ ] VI. Banco: regras críticas em CHECK/FK/UNIQUE; migration revisada com `down()`; entidade registrada em `entities.ts`
 - [ ] VII. Testes: cada regra de segurança e privacidade tem teste escrito antes e que falha se a regra quebrar
 - [ ] VIII. Qualidade: stack fixa, lint, tipos, testes e CI verdes, sem segredo no repositório

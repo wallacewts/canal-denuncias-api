@@ -91,24 +91,24 @@ log capturadas.
 
 ### Tests for User Story 1 (mandatory for security and privacy rules) ⚠️
 
-- [ ] T014 [P] [US1] Teste unitário em `src/common/http/http-exception.filter.spec.ts`: formato para 400, 401, 403,
+- [x] T014 [P] [US1] Teste unitário em `src/common/http/http-exception.filter.spec.ts`: formato para 400, 401, 403,
       404, 409 e 500; `QueryFailedError` `23505` → 409 e `23503` → 409/404 sem nome de constraint; erro 500 cuja
       mensagem original contém texto de relato responde mensagem genérica sem esse texto; erro de parse do corpo
       (JSON malformado) responde 400 com mensagem fixa, sem trecho do corpo; violação `23514` (CHECK) responde 500
       genérico
-- [ ] T015 [P] [US1] Teste de integração em `test/http/errors.e2e-spec.ts`: `requestId` da resposta igual ao `req.id`
+- [x] T015 [P] [US1] Teste de integração em `test/http/errors.e2e-spec.ts`: `requestId` da resposta igual ao `req.id`
       da linha de log; o corpo enviado nunca aparece na resposta nem nas linhas de log capturadas; JSON malformado e corpo
       vazio contendo texto de relato respondem 400 sem esse texto na resposta e no log
 
 ### Implementation for User Story 1
 
-- [ ] T016 [P] [US1] Criar o tipo `ApiError` e as mensagens genéricas em português em `src/common/http/api-error.ts`
-- [ ] T017 [P] [US1] Criar o módulo de fixture com rotas que lançam cada tipo de erro em
+- [x] T016 [P] [US1] Criar o tipo `ApiError` e as mensagens genéricas em português em `src/common/http/api-error.ts`
+- [x] T017 [P] [US1] Criar o módulo de fixture com rotas que lançam cada tipo de erro em
       `test/support/fixtures/error-fixture.module.ts`
-- [ ] T018 [US1] Implementar o filtro global em `src/common/http/http-exception.filter.ts` (stack só no log, corpo da
+- [x] T018 [US1] Implementar o filtro global em `src/common/http/http-exception.filter.ts` (stack só no log, corpo da
       requisição nunca copiado, `requestId` vindo de `req.id`, erro de parse do body com mensagem fixa e sem a mensagem
       original do parser)
-- [ ] T019 [US1] Registrar o filtro em `src/app.setup.ts`
+- [x] T019 [US1] Registrar o filtro em `src/app.setup.ts`
 
 **Checkpoint**: erros seguros em toda a API.
 

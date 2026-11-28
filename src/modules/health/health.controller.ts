@@ -1,11 +1,13 @@
 import { Controller, Get } from '@nestjs/common';
 import { HealthCheck, HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
+import { AuditPartitionsIndicator } from './audit-partitions.indicator.js';
 
 @Controller()
 export class HealthController {
   constructor(
     private readonly health: HealthCheckService,
     private readonly db: TypeOrmHealthIndicator,
+    private readonly partitions: AuditPartitionsIndicator,
   ) {}
 
   /** Liveness: o processo está de pé. Não toca no banco. */
@@ -15,10 +17,13 @@ export class HealthController {
     return this.health.check([]);
   }
 
-  /** Readiness: consegue atender (banco acessível). Redis, storage e Vault entram junto com os módulos que os usam. */
+  /**
+   * Readiness: consegue atender (banco acessível e partições da trilha para o mês corrente e o seguinte). Redis,
+   * storage e Vault entram junto com os módulos que os usam.
+   */
   @Get('ready')
   @HealthCheck()
   readiness() {
-    return this.health.check([() => this.db.pingCheck('database')]);
+    return this.health.check([() => this.db.pingCheck('database'), () => this.partitions.check()]);
   }
 }

@@ -99,7 +99,7 @@ services:
     depends_on:
       migrate: { condition: service_completed_successfully }
       vault-init: { condition: service_completed_successfully }
-    environment:
+    environment: &api-env
       NODE_ENV: production
       PORT: 3000
       LOG_LEVEL: info
@@ -122,6 +122,20 @@ services:
       SESSION_SECRET: dev-session-secret-com-pelo-menos-32-bytes
       REPORTER_TOKEN_SECRET: dev-reporter-token-secret-com-32-bytes-ou-mais
     ports: ['3000:3000']
+
+  # Exemplo da manutenção diária da trilha (D50): cria as partições à frente e expurga as que passaram de 5 anos.
+  # Em produção, rode este comando uma vez por dia por agendador do sistema (docs/deploy/audit/README.md).
+  audit-maintenance:
+    build: { context: ., target: runtime }
+    profiles: [app]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      vault-init: { condition: service_completed_successfully }
+    environment:
+      <<: *api-env
+      DATABASE_AUDIT_MAINTENANCE_URL: postgres://app_audit_maintenance:dev_audit_maintenance_pw@postgres:5432/canal_denuncias
+    command: ['node', 'dist/cli.js', 'audit-maintenance']
+    restart: 'no'
 
 volumes:
   pgdata:

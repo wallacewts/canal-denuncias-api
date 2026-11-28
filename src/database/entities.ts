@@ -1,5 +1,6 @@
 import { Attachment } from '../modules/attachments/entities/attachment.entity.js';
 import { AuditLog } from '../modules/audit/entities/audit-log.entity.js';
+import { AuditPurge } from '../modules/audit/entities/audit-purge.entity.js';
 import { RecoveryCode } from '../modules/auth/entities/recovery-code.entity.js';
 import { Session } from '../modules/auth/entities/session.entity.js';
 import { InternalNote } from '../modules/case-management/entities/internal-note.entity.js';
@@ -37,4 +38,5 @@ export const ENTITIES = [
   Message,
   Attachment,
   AuditLog,
+  AuditPurge,
 ];

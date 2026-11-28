@@ -31,7 +31,9 @@ de apuração".
 
 **Critérios de aceite**
 
-- [ ] Mensagens da equipe saem com autor "Equipe de apuração", sem id e sem nome.
+- [ ] O autor de cada mensagem vem em **código**: `REPORTER` (o próprio denunciante) ou `TEAM` (equipe), sem id e sem
+      nome de quem escreveu. O rótulo "Equipe de apuração" fica no front. Proposta vinda do plano da feature 003 do
+      web, aprovada em 2026-11-28.
 - [ ] A rota pública devolve só a **data** de cada mensagem (`AAAA-MM-DD`, sem hora), tanto das mensagens da equipe
       quanto das do próprio denunciante: o denunciante e as exportações veem só datas, para que o horário não possa
       ser cruzado com crachá ou VPN (decidido pelo usuário em 2026-11-28). A equipe continua vendo o horário exato

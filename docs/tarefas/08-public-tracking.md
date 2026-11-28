@@ -23,6 +23,9 @@ porta de entrada para mensagens e anexos.
 - [ ] Sucesso devolve um token de 15 minutos, válido só para aquela denúncia (`sub` = id da denúncia, audiência
       `reporter`), assinado com segredo próprio de 32 bytes ou mais. O token vai no corpo e o portal guarda só em
       memória.
+- [ ] A resposta de sucesso traz, junto do token, `expiresAt`: data e hora ISO 8601 (UTC) da expiração da credencial
+      (15 minutos depois da emissão), para o front avisar antes de expirar sem ler o conteúdo do token. Proposta vinda
+      do plano da feature 003 do web, aprovada em 2026-11-28.
 - [ ] Teste: o token de uma denúncia não acessa outra.
 
 ### PUB-02 · Guard do denunciante

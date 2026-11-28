@@ -286,48 +286,48 @@ pelo `app_runtime` é recusada; lacuna sem âncora é quebra.
 
 ### Tests for User Story 7 (mandatory for security and privacy rules) ⚠️
 
-- [ ] T042 [US7] Teste da migration em `test/audit/audit-partitioning-migration.e2e-spec.ts`: num banco com registros
+- [x] T042 [US7] Teste da migration em `test/audit/audit-partitioning-migration.e2e-spec.ts`: num banco com registros
       na tabela antiga, a migration preserva contagem, ids e hashes e a verificação continua íntegra; o `down()` volta à
       tabela comum com a mesma conferência; a migration aborta se a conferência falhar (simulado)
-- [ ] T043 [US7] Estender `test/audit/audit-immutability.e2e-spec.ts` com os casos por partição: `app_runtime` não faz
+- [x] T043 [US7] Estender `test/audit/audit-immutability.e2e-spec.ts` com os casos por partição: `app_runtime` não faz
       `DELETE`, `UPDATE` nem `TRUNCATE` direto numa partição; `app_migrator` não faz `TRUNCATE` numa partição (gatilho);
       `app_runtime` não executa `audit_purge_partition` nem `audit_ensure_partitions`; `audit_purges` é append-only
-- [ ] T044 [US7] Teste de integração em `test/audit/audit-retention.e2e-spec.ts`. As partições com mais de 5 anos são
+- [x] T044 [US7] Teste de integração em `test/audit/audit-retention.e2e-spec.ts`. As partições com mais de 5 anos são
       criadas pelo teste como superusuário (só no teste), com o mesmo gatilho de `TRUNCATE` e os mesmos `REVOKE`s que a
       função aplica, e recebem registros encadeados inseridos direto no banco: `audit_ensure_partitions(3)` cria o que falta, com gatilho e `REVOKE` em cada uma;
       o expurgo remove só a partição mais antiga com mais de 5 anos + 1 dia, grava a âncora e o `AUDIT_LOG_PURGED` na
       mesma transação; recusa partição recente, partição que não é a mais antiga e nome que não é partição (com nome
       curto `XQZ`, sem eco na mensagem); a verificação depois do expurgo é íntegra e informa `anchoredAt`
-- [ ] T045 [US7] Teste de âncora forjada em `test/audit/audit-anchor.e2e-spec.ts`: remover registros recentes por fora
+- [x] T045 [US7] Teste de âncora forjada em `test/audit/audit-anchor.e2e-spec.ts`: remover registros recentes por fora
       (superusuário, só no teste) resulta em quebra; inserir pelo `app_runtime` um `AUDIT_LOG_PURGED` falso sem linha em
       `audit_purges` resulta em quebra; âncora com `purged_through` mais recente que 5 anos é recusada pela CHECK
-- [ ] T046 [P] [US7] Teste do comando em `test/cli/audit-maintenance.e2e-spec.ts`: `--dry-run` não altera nada; sem
+- [x] T046 [P] [US7] Teste do comando em `test/cli/audit-maintenance.e2e-spec.ts`: `--dry-run` não altera nada; sem
       `DATABASE_AUDIT_MAINTENANCE_URL`, recusa com código 1; com o perfil de manutenção, cria partições, expurga e
       imprime o JSON com os totais; com a URL do `app_runtime`, falha por permissão
-- [ ] T047 [P] [US7] Teste de prontidão em `test/health.e2e-spec.ts`: `/ready` responde 200 com um detalhe de
+- [x] T047 [P] [US7] Teste de prontidão em `test/health.e2e-spec.ts`: `/ready` responde 200 com um detalhe de
       aviso quando há menos de 1 mês de partições à frente, e 503 quando não há partição para o mês corrente ou o
       seguinte (inserções falhariam)
 
 ### Implementation for User Story 7
 
-- [ ] T048 [US7] Escrever à mão a migration `src/database/migrations/<ts>-AuditLogPartitioning.ts` conforme
+- [x] T048 [US7] Escrever à mão a migration `src/database/migrations/<ts>-AuditLogPartitioning.ts` conforme
       `contracts/partitioning.md` (tabela particionada, partições até +12 meses com gatilho de `TRUNCATE` e `REVOKE`,
       cópia com conferência de contagem e último hash, sequência, troca de nomes, gatilhos, `REVOKE`/`GRANT`,
       `audit_purges` e as duas funções `SECURITY DEFINER` com `EXECUTE` revogado de `PUBLIC` e `app_runtime` e
       concedido a `app_audit_maintenance` se ele existir), com `down()` funcional
-- [ ] T049 [US7] Ajustar a entidade em `src/modules/audit/entities/audit-log.entity.ts` (PK `(id, occurred_at)`, sem
+- [x] T049 [US7] Ajustar a entidade em `src/modules/audit/entities/audit-log.entity.ts` (PK `(id, occurred_at)`, sem
       unicidade de `hash`), criar `src/modules/audit/entities/audit-purge.entity.ts`, registrá-la em
       `src/database/entities.ts` e confirmar que `migration:generate` responde "No changes"
-- [ ] T050 [US7] Acrescentar a âncora ao `AuditVerifierService` (regras de `contracts/partitioning.md`) em
+- [x] T050 [US7] Acrescentar a âncora ao `AuditVerifierService` (regras de `contracts/partitioning.md`) em
       `src/modules/audit/audit-verifier.service.ts`
-- [ ] T051 [US7] Criar o `AuditMaintenanceService` (conexão com `DATABASE_AUDIT_MAINTENANCE_URL`, `ensure` e expurgo
+- [x] T051 [US7] Criar o `AuditMaintenanceService` (conexão com `DATABASE_AUDIT_MAINTENANCE_URL`, `ensure` e expurgo
       partição a partição, cada expurgo com `AUDIT_LOG_PURGED` na mesma transação, em `runAsSystem`) em
       `src/modules/audit/audit-maintenance.service.ts`
-- [ ] T052 [US7] Criar o comando `audit-maintenance` (com `--dry-run`) em `src/cli/audit-maintenance.command.ts` e
+- [x] T052 [US7] Criar o comando `audit-maintenance` (com `--dry-run`) em `src/cli/audit-maintenance.command.ts` e
       registrá-lo em `src/cli/cli-commands.module.ts`
-- [ ] T053 [P] [US7] Criar o indicador de partições à frente no `/ready` em `src/modules/health/`: 200 com aviso com
+- [x] T053 [P] [US7] Criar o indicador de partições à frente no `/ready` em `src/modules/health/`: 200 com aviso com
       menos de 1 mês à frente; 503 sem partição para o mês corrente ou o seguinte
-- [ ] T054 [P] [US7] Acrescentar ao perfil `app` do `docker-compose.yml` um serviço de exemplo `audit-maintenance`
+- [x] T054 [P] [US7] Acrescentar ao perfil `app` do `docker-compose.yml` um serviço de exemplo `audit-maintenance`
       (mesma imagem, comando `node dist/cli.js audit-maintenance`) e escrever o runbook em `docs/deploy/audit/README.md`
       (agendamento diário por cron, timer do systemd ou CronJob; perfil de manutenção; verificação agendada com
       `verify-audit`; o que fazer quando a verificação acusar quebra)

@@ -36,6 +36,27 @@ export interface VerifyOptions {
 
 const DEFAULT_BATCH = 1000;
 
+interface AnchorRow {
+  partition_name: string;
+  rows_removed: string;
+  anchor_audit_id: string | null;
+  anchor_prev_hash: Buffer | null;
+  purged_through: Date;
+  purged_at: Date;
+}
+
+interface ChainStart {
+  prevHash: Buffer;
+  anchoredAt: string | null;
+  anchor: AnchorRow | null;
+}
+
+function fiveYearsBefore(date: Date): Date {
+  const d = new Date(date);
+  d.setUTCFullYear(d.getUTCFullYear() - 5);
+  return d;
+}
+
 /**
  * Percorre a cadeia registro a registro: o `prev_hash` de cada um precisa ser o hash do anterior, e o hash precisa
  * bater com o conteúdo. Para no primeiro registro quebrado. Função pura, sem banco.
@@ -96,6 +117,15 @@ function toChainRow(r: RawRow): ChainRow {
   };
 }
 
+/** O registro `AUDIT_LOG_PURGED` do expurgo que gerou a âncora: mesma partição e mesmo total. */
+function isPurgeRecordOf(row: RawRow, anchor: AnchorRow): boolean {
+  return (
+    row.action === AuditAction.AUDIT_LOG_PURGED &&
+    row.metadata?.['partition'] === anchor.partition_name &&
+    String(row.metadata?.['rowsRemoved']) === anchor.rows_removed
+  );
+}
+
 /**
  * Verificação de integridade da cadeia (AUDIT-07). Fixa um ponto de corte no início (o maior id existente), lê em
  * lotes por id crescente numa transação `REPEATABLE READ READ ONLY` (fotografia consistente, sem bloquear gravações) e
@@ -120,6 +150,7 @@ export class AuditVerifierService {
 
       const start = await this.startOfChain(manager);
       const walker = new ChainWalker(start.prevHash);
+      let purgeRecordFound = start.anchor === null;
       let last = '0';
       for (;;) {
         const rows = (await manager.query(`SELECT * FROM audit_logs WHERE id > $1 AND id <= $2 ORDER BY id LIMIT $3`, [
@@ -135,9 +166,15 @@ export class AuditVerifierService {
             stopped = true;
             break;
           }
+          if (!purgeRecordFound && isPurgeRecordOf(row, start.anchor!)) purgeRecordFound = true;
         }
         if (stopped) break;
         last = String(rows.at(-1)!.id);
+      }
+      const walked = walker.result();
+      // A âncora só vale se o AUDIT_LOG_PURGED correspondente estiver na cadeia verificada (R9).
+      if (walked.ok && !purgeRecordFound) {
+        return { ok: false, checked: walked.checked, firstBrokenId: start.anchoredAt, anchoredAt: null };
       }
       return { ...walker.result(), anchoredAt: start.anchoredAt };
     });
@@ -160,8 +197,33 @@ export class AuditVerifierService {
     return result;
   }
 
-  /** De onde a cadeia parte. Sem expurgo, da gênese (a âncora entra na US7). */
-  protected startOfChain(_manager: EntityManager): Promise<{ prevHash: Buffer; anchoredAt: string | null }> {
-    return Promise.resolve({ prevHash: GENESIS_HASH, anchoredAt: null });
+  /**
+   * De onde a cadeia parte (R9). Sem expurgo, da gênese. Depois de um expurgo, do primeiro registro restante, mas só se
+   * a âncora mais recente de `audit_purges` (gravada apenas pela função de expurgo) apontar para ele, com o mesmo
+   * `prev_hash` e o prazo de 5 anos respeitado. Qualquer outra lacuna no início faz o primeiro registro quebrar.
+   */
+  protected async startOfChain(manager: EntityManager): Promise<ChainStart> {
+    const [first] = (await manager.query(
+      // Ordena pelo id numérico da tabela, não pelo alias em texto ("10" viria antes de "5").
+      `SELECT l.id::text AS id, l.occurred_at, l.prev_hash FROM audit_logs l ORDER BY l.id LIMIT 1`,
+    )) as Array<{ id: string; occurred_at: Date; prev_hash: Buffer }>;
+    if (!first || first.prev_hash.equals(GENESIS_HASH))
+      return { prevHash: GENESIS_HASH, anchoredAt: null, anchor: null };
+
+    const [anchor] = (await manager.query(
+      `SELECT partition_name, rows_removed::text AS rows_removed, anchor_audit_id::text AS anchor_audit_id,
+              anchor_prev_hash, purged_through, purged_at
+       FROM audit_purges ORDER BY id DESC LIMIT 1`,
+    )) as Array<AnchorRow>;
+    const valid =
+      anchor !== undefined &&
+      anchor.anchor_audit_id === first.id &&
+      anchor.anchor_prev_hash !== null &&
+      anchor.anchor_prev_hash.equals(first.prev_hash) &&
+      anchor.purged_through.getTime() <= fiveYearsBefore(anchor.purged_at).getTime() &&
+      first.occurred_at.getTime() >= anchor.purged_through.getTime();
+    // Âncora inválida: a caminhada parte da gênese e quebra no primeiro registro.
+    if (!valid) return { prevHash: GENESIS_HASH, anchoredAt: null, anchor: null };
+    return { prevHash: first.prev_hash, anchoredAt: first.id, anchor };
   }
 }

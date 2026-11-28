@@ -5,6 +5,7 @@ import { ActorType } from '../../common/enums/actor-type.enum.js';
 import { AuditResult } from '../../common/enums/audit-result.enum.js';
 import { KEY_SERVICE, type KeyService } from '../../infra/vault/key-service.js';
 import { KeyServiceRequestError } from '../../infra/vault/key-service.errors.js';
+import { AuditAction, AuditResourceType } from '../audit/audit-action.enum.js';
 import { AuditService } from '../audit/audit.service.js';
 import { Report } from '../reports/entities/report.entity.js';
 
@@ -84,8 +85,8 @@ export class RewrapService {
     } finally {
       await this.audit.record({
         actorType: ActorType.SYSTEM,
-        action: 'KEYS_REWRAP_RUN',
-        resourceType: 'kek',
+        action: AuditAction.KEYS_REWRAP_RUN,
+        resourceType: AuditResourceType.KEK,
         resourceId: KEK,
         result: !crashed && result.completed && result.failed === 0 ? AuditResult.SUCCESS : AuditResult.FAILURE,
         metadata: {
@@ -140,8 +141,8 @@ export class RewrapService {
       await this.audit.record(
         {
           actorType: ActorType.SYSTEM,
-          action: 'KEYS_REWRAPPED',
-          resourceType: 'kek',
+          action: AuditAction.KEYS_REWRAPPED,
+          resourceType: AuditResourceType.KEK,
           resourceId: KEK,
           result: AuditResult.SUCCESS,
           metadata: { latestVersion: result.latestVersion, batch, rewrapped, skipped },

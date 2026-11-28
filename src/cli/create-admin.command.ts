@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { ActorType } from '../common/enums/actor-type.enum.js';
 import { AuditResult } from '../common/enums/audit-result.enum.js';
 import { Role } from '../common/enums/role.enum.js';
+import { AuditAction, AuditResourceType } from '../modules/audit/audit-action.enum.js';
 import { AuditService } from '../modules/audit/audit.service.js';
 import { checkPasswordPolicy } from '../modules/auth/password/password-policy.js';
 import { EmailAlreadyRegisteredError, UsersRepository } from '../modules/users/users.repository.js';
@@ -87,8 +88,8 @@ export class CreateAdminCommand extends CommandRunner {
         await this.audit.record(
           {
             actorType: ActorType.SYSTEM,
-            action: 'USER_CREATED',
-            resourceType: 'user',
+            action: AuditAction.USER_CREATED,
+            resourceType: AuditResourceType.USER,
             resourceId: user.id,
             result: AuditResult.SUCCESS,
             metadata: { roles: [Role.ADMIN], forced: options.force },

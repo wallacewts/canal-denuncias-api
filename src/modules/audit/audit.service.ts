@@ -4,7 +4,11 @@ import { DataSource, type EntityManager } from 'typeorm';
 import type { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity.js';
 import { ActorType } from '../../common/enums/actor-type.enum.js';
 import type { AuditResult } from '../../common/enums/audit-result.enum.js';
+import { z } from 'zod';
+import { AuditAction, AuditResourceType } from './audit-action.enum.js';
 import { computeAuditHash, GENESIS_HASH } from './audit-hash.js';
+import { AUDIT_RESOURCE_ID, toRejectionReasons, validateAuditMetadata } from './audit-metadata.schemas.js';
+import { AuditEntryRejected } from './audit.errors.js';
 import { AuditLog } from './entities/audit-log.entity.js';
 
 /** Chave do advisory lock que serializa as gravações: sem ele, duas gravações leriam o mesmo último hash. */
@@ -13,16 +17,24 @@ const AUDIT_CHAIN_LOCK = 0x41_55_44_49; // "AUDI"
 export interface AuditEntry {
   actorType: ActorType;
   actorUserId?: string | null;
-  action: string;
-  resourceType: string;
+  /** Do catálogo fechado (D45). */
+  action: AuditAction;
+  resourceType: AuditResourceType;
+  /** Até 64 caracteres, só letras, dígitos e `_.:-`. */
   resourceId?: string | null;
   result: AuditResult;
   /** Só para ator STAFF. Para REPORTER e SYSTEM é descartado (constituição, princípio I). */
   ip?: string | null;
   userAgent?: string | null;
-  /** Só IDs e códigos. Nunca dado pessoal nem conteúdo de denúncia. */
+  /** Validada pelo schema da ação (`AUDIT_METADATA_SCHEMAS`): só IDs, códigos, números, datas e booleanos. */
   metadata?: Record<string, unknown> | null;
 }
+
+const entryShape = z.object({
+  action: z.enum(AuditAction),
+  resourceType: z.enum(AuditResourceType),
+  resourceId: AUDIT_RESOURCE_ID.nullish(),
+});
 
 /**
  * Único jeito de escrever na trilha de auditoria (núcleo da AUDIT-02, trazido para a feature 001 pela D33).
@@ -33,7 +45,12 @@ export class AuditService {
   constructor(@InjectDataSource() private readonly dataSource: DataSource) {}
 
   async record(entry: AuditEntry, manager?: EntityManager): Promise<AuditLog> {
-    return manager ? this.write(entry, manager) : this.dataSource.transaction((m) => this.write(entry, m));
+    // Validação antes de abrir transação ou pegar o lock: um registro recusado não toca no banco.
+    const shape = entryShape.safeParse(entry);
+    if (!shape.success) throw new AuditEntryRejected(toRejectionReasons(shape.error.issues));
+    const metadata = validateAuditMetadata(entry.action, entry.metadata ?? undefined);
+    const valid = { ...entry, metadata };
+    return manager ? this.write(valid, manager) : this.dataSource.transaction((m) => this.write(valid, m));
   }
 
   private async write(entry: AuditEntry, manager: EntityManager): Promise<AuditLog> {

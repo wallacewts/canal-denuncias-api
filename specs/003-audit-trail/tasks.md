@@ -101,26 +101,26 @@ campo extra ou texto livre (recusadas, sem o valor na mensagem nem no log).
 
 ### Tests for User Story 1 (mandatory for security and privacy rules) ⚠️
 
-- [ ] T012 [P] [US1] Teste unitário do catálogo em `src/modules/audit/audit-action.enum.spec.ts`: toda ação cabe em 60
+- [x] T012 [P] [US1] Teste unitário do catálogo em `src/modules/audit/audit-action.enum.spec.ts`: toda ação cabe em 60
       caracteres, todo tipo de recurso em 40, toda ação tem schema de metadata e o catálogo contém as ações da AUDIT-01
       mais `KEYS_REWRAP_RUN` e `AUDIT_LOG_PURGED`
-- [ ] T013 [P] [US1] Teste unitário dos schemas em `src/modules/audit/audit-metadata.schemas.spec.ts`: aceita os
+- [x] T013 [P] [US1] Teste unitário dos schemas em `src/modules/audit/audit-metadata.schemas.spec.ts`: aceita os
       formatos de `contracts/audit-catalog.md`; recusa chave extra, texto livre curto (`XQZ`) e longo, UUID inválido e
       enum desconhecido; o erro só tem códigos e caminhos, sem o valor nem os nomes de chaves recebidas
-- [ ] T014 [US1] Teste de integração em `test/audit/audit-record.e2e-spec.ts`: `record()` recusa ação fora do catálogo e
+- [x] T014 [US1] Teste de integração em `test/audit/audit-record.e2e-spec.ts`: `record()` recusa ação fora do catálogo e
       metadata inválida **antes** de abrir transação (nenhuma linha nova, nenhum lock), sem `XQZ` na mensagem nem no
       log capturado; `USER_CREATED`, `KEYS_REWRAPPED` e `KEYS_REWRAP_RUN` continuam gravando como hoje
 
 ### Implementation for User Story 1
 
-- [ ] T015 [P] [US1] Criar `AuditAction` e `AuditResourceType` em `src/modules/audit/audit-action.enum.ts`
-- [ ] T016 [P] [US1] Criar `AUDIT_METADATA_SCHEMAS` e o tipo `AuditMetadata<A>` em
+- [x] T015 [P] [US1] Criar `AuditAction` e `AuditResourceType` em `src/modules/audit/audit-action.enum.ts`
+- [x] T016 [P] [US1] Criar `AUDIT_METADATA_SCHEMAS` e o tipo `AuditMetadata<A>` em
       `src/modules/audit/audit-metadata.schemas.ts`, com os tipos restritos de `contracts/audit-catalog.md` (sem
       `text()` nem `z.string()` livre)
-- [ ] T017 [US1] Fazer `AuditService.record()` exigir `AuditAction`/`AuditResourceType` e validar a metadata antes da
+- [x] T017 [US1] Fazer `AuditService.record()` exigir `AuditAction`/`AuditResourceType` e validar a metadata antes da
       transação, com o erro `AuditMetadataRejected` de mensagem fixa e sem `cause`, em
       `src/modules/audit/audit.service.ts` e `src/modules/audit/audit.errors.ts`
-- [ ] T018 [US1] Ajustar os chamadores atuais ao catálogo tipado: `src/cli/create-admin.command.ts`,
+- [x] T018 [US1] Ajustar os chamadores atuais ao catálogo tipado: `src/cli/create-admin.command.ts`,
       `src/modules/crypto/rewrap.service.ts` e `test/support/factories.ts`
 
 **Checkpoint**: nenhuma ação fora do catálogo nem texto livre chega à trilha.

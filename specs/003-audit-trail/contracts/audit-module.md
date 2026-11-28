@@ -15,8 +15,9 @@ record<A extends AuditAction>(entry: AuditEntry<A>, manager?: EntityManager): Pr
 
 - **Não aceita** `actorType`, `actorUserId`, `ip` nem `userAgent`: vêm do `AuditContext` (FR-012).
 - Valida a metadata **antes** de abrir a transação. Erros:
-  - `AuditMetadataRejected` (mensagem fixa: "Metadados de auditoria inválidos."; só códigos e caminhos das issues;
-    sem `cause`);
+  - `AuditEntryRejected` (mensagem fixa: "Registro de auditoria recusado."; `reasons` só com código e caminho de cada
+    problema, sem valor nem nome de chave recebida; sem `cause`), para ação ou tipo fora do catálogo, identificador
+    inválido e metadata fora do formato;
   - `AuditActorUndetermined` (mensagem fixa: "Ator da auditoria indeterminado."), fora de contexto.
 - Com `manager`, grava na transação do chamador (sem mudança em relação à 001).
 

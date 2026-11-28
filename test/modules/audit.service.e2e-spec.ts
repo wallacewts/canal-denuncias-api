@@ -1,6 +1,7 @@
 import { DataSource } from 'typeorm';
 import { ActorType } from '../../src/common/enums/actor-type.enum.js';
 import { AuditResult } from '../../src/common/enums/audit-result.enum.js';
+import { AuditAction, AuditResourceType } from '../../src/modules/audit/audit-action.enum.js';
 import { computeAuditHash, GENESIS_HASH } from '../../src/modules/audit/audit-hash.js';
 import { AuditService } from '../../src/modules/audit/audit.service.js';
 import type { AuditLog } from '../../src/modules/audit/entities/audit-log.entity.js';
@@ -21,12 +22,14 @@ describe('AuditService.record (e2e)', () => {
     await t.close();
   });
 
-  const entry = (action: string) => ({
+  /** Uma ação do catálogo; o marcador vai no id do recurso. A metadata aninhada exercita a forma canônica. */
+  const entry = (tag: string) => ({
     actorType: ActorType.SYSTEM,
-    action,
-    resourceType: 'test',
+    action: AuditAction.AUDIT_LOG_VIEWED,
+    resourceType: AuditResourceType.AUDIT_LOG,
+    resourceId: tag,
     result: AuditResult.SUCCESS,
-    metadata: { b: 2, a: { d: 1, c: 0 } },
+    metadata: { count: 2, filters: { to: '2026-11-28T00:00:00.000Z', action: AuditAction.USER_CREATED } },
   });
 
   async function chain(): Promise<AuditLog[]> {

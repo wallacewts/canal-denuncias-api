@@ -63,4 +63,33 @@ describe('Metadata por ação (AUDIT-05, D45)', () => {
     rejection(AuditAction.REPORT_ASSIGNED, { userId: SHORT });
     expect(() => validateAuditMetadata(AuditAction.REPORT_ASSIGNED, { userId: randomUUID() })).not.toThrow();
   });
+
+  describe('ações de autenticação e acesso negado (feature 004, T006)', () => {
+    it('aceitam só os formatos do contrato', () => {
+      expect(() => validateAuditMetadata(AuditAction.AUTH_SIGNED_IN, { method: 'password' })).not.toThrow();
+      expect(() => validateAuditMetadata(AuditAction.AUTH_SIGNED_OUT, undefined)).not.toThrow();
+      expect(() => validateAuditMetadata(AuditAction.AUTH_MFA_FAILED, { locked: false })).not.toThrow();
+      expect(() => validateAuditMetadata(AuditAction.AUTH_SESSION_REVOKED, { scope: 'all' })).not.toThrow();
+      expect(() =>
+        validateAuditMetadata(AuditAction.ACCESS_DENIED, { policy: 'ExamplePolicy', ability: 'treat' }),
+      ).not.toThrow();
+      expect(() => validateAuditMetadata(AuditAction.ACCESS_DENIED, { policy: null, ability: null })).not.toThrow();
+    });
+
+    it.each([SHORT, LONG])('recusam senha, código, token ou id de sessão na metadata, sem eco (%#)', (secret) => {
+      for (const [action, metadata] of [
+        [AuditAction.AUTH_SIGNED_IN, { method: 'password', password: secret }],
+        [AuditAction.AUTH_SIGNED_IN, { method: secret }],
+        [AuditAction.AUTH_MFA_FAILED, { code: secret }],
+        [AuditAction.AUTH_SIGNED_OUT, { sessionId: secret }],
+        [AuditAction.AUTH_SESSION_REVOKED, { token: secret }],
+        [AuditAction.ACCESS_DENIED, { policy: secret.repeat(30), ability: 'read' }],
+        [AuditAction.ACCESS_DENIED, { policy: 'ExamplePolicy', ability: 'read', user: secret }],
+      ] as const) {
+        const error = rejection(action, metadata);
+        expect(JSON.stringify(error)).not.toContain(secret);
+        expect(error.message).not.toContain(secret);
+      }
+    });
+  });
 });

@@ -1,45 +1,40 @@
-import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, type Relation } from 'typeorm';
-import { UuidV7PrimaryColumn } from '../../../common/database/uuid-v7.decorator.js';
+import { Check, Column, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn, type Relation } from 'typeorm';
 import { User } from '../../users/entities/user.entity.js';
 
-/** Sessões da equipe interna (refresh token com rotação e detecção de reuso por família). */
+/**
+ * Sessão da equipe interna no formato do `SessionStore` do `@nestjs/authentication` (D53). A chave é o SHA-256 do
+ * token do cookie (o token nunca é guardado). Sem renovação por tokens: revogar é apagar a linha.
+ */
 @Entity('sessions')
-@Index(['userId'])
-@Index(['familyId'])
+@Index('IDX_sessions_user_id', ['userId'])
+@Index('IDX_sessions_expires_at', ['expiresAt'])
+@Check('CHK_sessions_expiry', `"expires_at" > "created_at"`)
 export class Session {
-  @UuidV7PrimaryColumn()
+  @PrimaryColumn({ type: 'varchar', length: 64, primaryKeyConstraintName: 'PK_sessions_id' })
   id: string;
 
   @Column({ type: 'uuid' })
   userId: string;
 
-  /** sha256 do refresh token */
-  @Column({ type: 'varchar', unique: true, select: false })
-  refreshTokenHash: string;
-
-  @Column({ type: 'uuid' })
-  familyId: string;
-
-  /** Só da equipe interna. Nunca há sessão de denunciante. */
-  @Column({ type: 'inet', nullable: true })
-  ip: string | null;
-
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  userAgent: string | null;
-
-  @CreateDateColumn({ type: 'timestamptz' })
+  @Column({ type: 'timestamptz' })
   createdAt: Date;
 
-  @Column({ type: 'timestamptz', default: () => 'now()' })
-  lastSeenAt: Date;
-
+  /** Expiração absoluta (8 h): a atividade nunca a estende. */
   @Column({ type: 'timestamptz' })
   expiresAt: Date;
 
-  @Column({ type: 'timestamptz', nullable: true })
-  revokedAt: Date | null;
+  /** Última atividade, para a expiração por inatividade (15 min). Só avança. */
+  @Column({ type: 'timestamptz' })
+  lastActiveAt: Date;
+
+  @Column({ type: 'enum', enum: ['pending', 'verified'], enumName: 'session_mfa_state', nullable: true })
+  mfa: 'pending' | 'verified' | null;
+
+  /** Só `{ ip, userAgent }` da equipe interna. */
+  @Column({ type: 'jsonb', nullable: true })
+  metadata: Record<string, unknown> | null;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: 'user_id', foreignKeyConstraintName: 'FK_sessions_user' })
   user: Relation<User>;
 }

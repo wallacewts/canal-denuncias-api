@@ -109,15 +109,14 @@
             "required": false,
             "schema": {
               "enum": [
-                "AUTH_LOGIN_SUCCEEDED",
+                "AUTH_SIGNED_IN",
                 "AUTH_LOGIN_FAILED",
-                "AUTH_LOGOUT",
+                "AUTH_SIGNED_OUT",
                 "AUTH_MFA_ENROLLED",
                 "AUTH_MFA_FAILED",
                 "AUTH_RECOVERY_CODE_USED",
                 "AUTH_PASSWORD_CHANGED",
                 "AUTH_SESSION_REVOKED",
-                "AUTH_TOKEN_REUSED",
                 "USER_CREATED",
                 "USER_UPDATED",
                 "USER_STATUS_CHANGED",

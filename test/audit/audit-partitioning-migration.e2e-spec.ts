@@ -29,13 +29,23 @@ describe('Migration AuditLogPartitioning (e2e)', () => {
       return { rows: rows.rows, partitioned: kind.rows[0].relkind === 'p' };
     });
 
+  /** Desfaz as migrations até a AuditLogPartitioning, inclusive (as posteriores a ela são desfeitas antes). */
+  const undoPartitioning = async () => {
+    const lastName = async () =>
+      ((await ds.query(`SELECT name FROM typeorm_migrations ORDER BY id DESC LIMIT 1`)) as Array<{ name: string }>)[0]
+        .name;
+    while (!(await lastName()).startsWith('AuditLogPartitioning')) await ds.undoLastMigration({ transaction: 'each' });
+    await ds.undoLastMigration({ transaction: 'each' });
+  };
+
   beforeAll(async () => {
     loadLocalEnv();
     applyTestEnv();
     db = await createSuiteDatabase();
     ds = await migrationDataSource(db);
-    // Volta ao estado anterior ao particionamento e grava uma trilha em três meses diferentes.
-    await ds.undoLastMigration({ transaction: 'each' });
+    // Volta ao estado anterior ao particionamento (desfazendo também as migrations posteriores a ele) e grava uma
+    // trilha em três meses diferentes.
+    await undoPartitioning();
     await withRole(db, 'app_runtime', (c) =>
       insertChainedRows(c, [
         { occurredAt: new Date('2026-09-15T10:00:00.000Z'), resourceId: 'a' },
@@ -89,7 +99,7 @@ describe('Migration AuditLogPartitioning (e2e)', () => {
 
   it('down(): volta à tabela comum preservando tudo; up() de novo deixa o banco como estava', async () => {
     const partitioned = await snapshot();
-    await ds.undoLastMigration({ transaction: 'each' });
+    await undoPartitioning();
     const plain = await snapshot();
     expect(plain.partitioned).toBe(false);
     expect(plain.rows).toEqual(partitioned.rows);
@@ -101,7 +111,7 @@ describe('Migration AuditLogPartitioning (e2e)', () => {
   });
 
   it('um registro fora das partições previstas aborta a migration sem perder nada', async () => {
-    await ds.undoLastMigration({ transaction: 'each' });
+    await undoPartitioning();
     const before = await snapshot();
     await withRole(db, 'app_runtime', (c) =>
       insertChainedRows(

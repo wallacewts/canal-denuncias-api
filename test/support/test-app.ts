@@ -4,7 +4,7 @@ import { Test } from '@nestjs/testing';
 import { setupApp } from '../../src/app.setup.js';
 import { LOG_DESTINATION } from '../../src/config/log-destination.js';
 import { AUTH_IDENTITY } from '../../src/infra/auth/auth-identity.port.js';
-import { FakeIdentity } from './fake-identity.js';
+import { FakeIdentity, TestIdentityModule } from './fake-identity.js';
 import { loadLocalEnv } from './db-urls.js';
 import { LogCapture } from './log-capture.js';
 import { createSuiteDatabase, type SuiteDatabase } from './test-database.js';
@@ -60,9 +60,8 @@ export async function createTestApp(options: CreateTestAppOptions = {}): Promise
   const { AppModule } = await import('../../src/app.module.js');
 
   const logs = new LogCapture();
-  let builder = Test.createTestingModule({ imports: [AppModule, ...(options.imports ?? [])] })
-    .overrideProvider(LOG_DESTINATION)
-    .useValue(logs);
+  const imports = [AppModule, ...(options.identity ? [TestIdentityModule] : []), ...(options.imports ?? [])];
+  let builder = Test.createTestingModule({ imports }).overrideProvider(LOG_DESTINATION).useValue(logs);
   if (options.identity) builder = builder.overrideProvider(AUTH_IDENTITY).useValue(new FakeIdentity());
   for (const { provide, useValue } of options.overrides ?? []) {
     builder = builder.overrideProvider(provide).useValue(useValue);

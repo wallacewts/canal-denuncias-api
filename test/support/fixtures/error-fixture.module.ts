@@ -1,3 +1,4 @@
+import { Public } from '@nestjs/authentication';
 import {
   BadRequestException,
   Controller,
@@ -24,6 +25,7 @@ function dbError(code: string): QueryFailedError {
 }
 
 /** Rotas só de teste que provocam cada tipo de erro. */
+@Public()
 @Controller('fixtures/errors')
 class ErrorFixtureController {
   @Get(':kind')

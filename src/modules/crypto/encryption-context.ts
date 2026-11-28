@@ -13,6 +13,7 @@ export const ENCRYPTED_FIELDS = [
   'attachments.original_name_enc',
   'attachments.object',
   'users.mfa_secret_enc',
+  'users.mfa_pending_secret_enc',
 ] as const;
 
 export type EncryptedField = (typeof ENCRYPTED_FIELDS)[number];

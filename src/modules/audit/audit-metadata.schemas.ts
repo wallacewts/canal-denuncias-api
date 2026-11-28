@@ -51,7 +51,25 @@ const SPECIFIC: Partial<Record<AuditAction, z.ZodType>> = {
     count: count(),
   }),
   [AuditAction.SETTING_UPDATED]: z.strictObject({ key: z.string().regex(/^[a-zA-Z0-9_.]{1,80}$/) }),
-  [AuditAction.ACCESS_DENIED]: z.strictObject({ required: z.enum(Role).optional() }).optional(),
+  [AuditAction.AUTH_SIGNED_IN]: z.strictObject({ method: z.enum(['password']) }),
+  [AuditAction.AUTH_MFA_FAILED]: z.strictObject({ locked: z.boolean() }).optional(),
+  [AuditAction.AUTH_SESSION_REVOKED]: z.strictObject({ scope: z.enum(['all']) }),
+  // Política e habilidade são nomes de código (classe e método), nunca texto livre nem dado do registro.
+  [AuditAction.ACCESS_DENIED]: z
+    .strictObject({
+      required: z.enum(Role).optional(),
+      policy: z
+        .string()
+        .regex(/^[A-Z][A-Za-z0-9]{0,63}$/)
+        .nullable()
+        .optional(),
+      ability: z
+        .string()
+        .regex(/^[a-z][A-Za-z0-9-]{0,39}$/)
+        .nullable()
+        .optional(),
+    })
+    .optional(),
   [AuditAction.KEYS_REWRAPPED]: z.strictObject({
     latestVersion: count(),
     batch: count(),

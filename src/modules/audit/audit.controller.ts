@@ -1,4 +1,5 @@
 import { ForbiddenException, Get, HttpCode, Post, Query, Req } from '@nestjs/common';
+import { Can } from '@nestjs/authorization';
 import { AuditResult } from '../../common/enums/audit-result.enum.js';
 import { Role } from '../../common/enums/role.enum.js';
 import { AdminApi } from '../../common/http/route-decorators.js';
@@ -9,6 +10,8 @@ import { AuditVerifierService } from './audit-verifier.service.js';
 import { AuditService } from './audit.service.js';
 
 /** Rotas do Auditor (contracts/admin-audit-api.md). Só o perfil AUDITOR lê a trilha (D25). */
+// O perfil AUDITOR é checado em cada handler (com ACCESS_DENIED próprio); vira política no access-control (ACL-01).
+@Can.Anyone()
 @AdminApi('audit-logs')
 export class AuditController {
   constructor(

@@ -1,4 +1,8 @@
+import { type ExecutionContext, Injectable, Module } from '@nestjs/common';
+import { AuthenticationProvider, AuthenticationRegistry, type AuthenticationResult } from '@nestjs/authentication';
 import type { Request } from 'express';
+import { UserStatus } from '../../src/common/enums/user-status.enum.js';
+import type { StaffUser } from '../../src/infra/auth/staff-user.js';
 import { Role } from '../../src/common/enums/role.enum.js';
 import type { AuthIdentity, StaffIdentity } from '../../src/infra/auth/auth-identity.port.js';
 
@@ -26,3 +30,27 @@ export class FakeIdentity implements AuthIdentity {
 export function testIdentity(userId: string, ...roles: Role[]): Record<string, string> {
   return { [TEST_IDENTITY_HEADER]: `${userId}:${roles.join(',')}` };
 }
+
+/**
+ * Provider de autenticação SÓ DE TESTE: o guard global do `@nestjs/authentication` aceita o mesmo cabeçalho
+ * `x-test-identity`, como uma sessão já verificada. Registrado só por `createTestApp({ identity: true })`.
+ */
+@Injectable()
+export class FakeIdentityAuthProvider extends AuthenticationProvider<StaffUser> {
+  private readonly fake = new FakeIdentity();
+
+  constructor(registry: AuthenticationRegistry) {
+    super();
+    registry.registerProvider(this, { order: 10 });
+  }
+
+  async authenticate(context: ExecutionContext): Promise<AuthenticationResult<StaffUser> | null> {
+    const request = context.switchToHttp().getRequest<Request>();
+    const identity = await this.fake.resolve(request);
+    if (!identity) return null;
+    return { user: { id: identity.userId, roles: identity.roles, status: UserStatus.ACTIVE }, mfa: 'verified' };
+  }
+}
+
+@Module({ providers: [FakeIdentityAuthProvider] })
+export class TestIdentityModule {}

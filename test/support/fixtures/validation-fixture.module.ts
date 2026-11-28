@@ -1,3 +1,4 @@
+import { Public } from '@nestjs/authentication';
 import { Body, Controller, HttpCode, Module, Post, Query } from '@nestjs/common';
 import { z } from 'zod';
 import { strictObject, text } from '../../../src/common/validation/schemas.js';
@@ -10,6 +11,7 @@ export const fixtureBodySchema = strictObject({
 const fixtureQuerySchema = strictObject({ page: z.coerce.number().int().min(1).optional() });
 
 /** Rota só de teste com corpo e query validados por schema zod. */
+@Public()
 @Controller('fixtures/validation')
 class ValidationFixtureController {
   @Post()

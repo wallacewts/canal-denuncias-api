@@ -1,3 +1,4 @@
+import { Can } from '@nestjs/authorization';
 import { Body, ForbiddenException, Get, InternalServerErrorException, Module, Param, Post } from '@nestjs/common';
 import { AuditResult } from '../../../src/common/enums/audit-result.enum.js';
 import { AuditAction, AuditResourceType } from '../../../src/modules/audit/audit-action.enum.js';
@@ -34,6 +35,7 @@ export class PublicAuditFixtureController {
   }
 }
 
+@Can.Anyone()
 @AdminApi('audit-fixtures')
 export class AdminAuditFixtureController {
   constructor(private readonly audit: AuditService) {}

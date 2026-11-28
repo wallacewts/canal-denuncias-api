@@ -1,17 +1,17 @@
 /**
  * Catálogo fechado de ações da trilha (AUDIT-01, D45). Ação nova entra aqui e em `AUDIT_METADATA_SCHEMAS`, com um
- * formato de metadata sem texto livre. Nomes com até 60 caracteres (`audit_logs.action`).
+ * formato de metadata sem texto livre. Nomes com até 60 caracteres (`audit_logs.action`). Os nomes de autenticação
+ * seguem a D53 (`AUTH_SIGNED_IN`, `AUTH_SIGNED_OUT`; sem renovação por tokens, logo sem `AUTH_TOKEN_REUSED`).
  */
 export enum AuditAction {
-  AUTH_LOGIN_SUCCEEDED = 'AUTH_LOGIN_SUCCEEDED',
+  AUTH_SIGNED_IN = 'AUTH_SIGNED_IN',
   AUTH_LOGIN_FAILED = 'AUTH_LOGIN_FAILED',
-  AUTH_LOGOUT = 'AUTH_LOGOUT',
+  AUTH_SIGNED_OUT = 'AUTH_SIGNED_OUT',
   AUTH_MFA_ENROLLED = 'AUTH_MFA_ENROLLED',
   AUTH_MFA_FAILED = 'AUTH_MFA_FAILED',
   AUTH_RECOVERY_CODE_USED = 'AUTH_RECOVERY_CODE_USED',
   AUTH_PASSWORD_CHANGED = 'AUTH_PASSWORD_CHANGED',
   AUTH_SESSION_REVOKED = 'AUTH_SESSION_REVOKED',
-  AUTH_TOKEN_REUSED = 'AUTH_TOKEN_REUSED',
   USER_CREATED = 'USER_CREATED',
   USER_UPDATED = 'USER_UPDATED',
   USER_STATUS_CHANGED = 'USER_STATUS_CHANGED',

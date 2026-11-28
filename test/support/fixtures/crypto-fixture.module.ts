@@ -1,3 +1,4 @@
+import { Can } from '@nestjs/authorization';
 import { Get, Module, Param } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -18,6 +19,7 @@ export type CryptoFailureMode =
  * Rota só de teste (US5): abre uma denúncia gravada e provoca, sob demanda, cada falha de criptografia. A resposta de
  * sucesso nunca devolve o conteúdo; as falhas chegam ao filtro global como em produção.
  */
+@Can.Anyone()
 @AdminApi('fixtures/crypto')
 class CryptoFixtureController {
   private readonly offline = new DataKeyService(

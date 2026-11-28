@@ -42,46 +42,46 @@ começa antes.
 
 ### Testes da fase (escrever antes)
 
-- [ ] T003 [P] Teste da migration `AuthStores` (sobe e desce; colunas, CHECKs e `UNIQUE (user_id, code_hash)`;
+- [x] T003 [P] Teste da migration `AuthStores` (sobe e desce; colunas, CHECKs e `UNIQUE (user_id, code_hash)`;
       `typeorm migration:generate` sem divergência depois de aplicada) em
       `test/contract/auth/auth-stores.migration.e2e-spec.ts`
-- [ ] T004 [P] Suíte `authenticationStoreContract()` de `@nestjs/authentication/testing` com `concurrent: true` contra
+- [x] T004 [P] Suíte `authenticationStoreContract()` de `@nestjs/authentication/testing` com `concurrent: true` contra
       `PgSessionStore` e `PgMfaStore` no Postgres da suíte em `test/contract/auth/store-contract.e2e-spec.ts`
-- [ ] T005 [P] Teste do `PgMfaStore`: o valor gravado em `users.mfa_secret_enc` e `users.mfa_pending_secret_enc` nunca
+- [x] T005 [P] Teste do `PgMfaStore`: o valor gravado em `users.mfa_secret_enc` e `users.mfa_pending_secret_enc` nunca
       contém o segredo base32 e só abre com o `AppSecretService` do mesmo usuário; nenhuma chamada ao Vault acontece
       com transação aberta (espiar `queryRunner.isTransactionActive`) em `test/contract/auth/pg-mfa-store.e2e-spec.ts`
-- [ ] T006 [P] Teste do catálogo: ações `AUTH_SIGNED_IN`, `AUTH_SIGNED_OUT`, `AUTH_MFA_FAILED`, `AUTH_SESSION_REVOKED`
+- [x] T006 [P] Teste do catálogo: ações `AUTH_SIGNED_IN`, `AUTH_SIGNED_OUT`, `AUTH_MFA_FAILED`, `AUTH_SESSION_REVOKED`
       e `ACCESS_DENIED` aceitas só com a metadata do contrato; senha, código, token ou id de sessão na metadata são
       recusados sem eco (inclusive `XQZ`) em `src/modules/audit/audit-action.enum.spec.ts` e
       `src/modules/audit/audit-metadata.schemas.spec.ts`
-- [ ] T007 [P] Teste da área pública: rota `@PublicApi` não lê nem emite cookie de sessão, ignora `Authorization` e
+- [x] T007 [P] Teste da área pública: rota `@PublicApi` não lê nem emite cookie de sessão, ignora `Authorization` e
       continua sem IP na auditoria; `/health` e `/ready` abertos em `test/contract/auth/public-area.e2e-spec.ts`
 
 ### Implementação da fase
 
-- [ ] T008 Migration à mão `src/database/migrations/<timestamp>-AuthStores.ts` conforme `data-model.md` (ajusta
+- [x] T008 Migration à mão `src/database/migrations/<timestamp>-AuthStores.ts` conforme `data-model.md` (ajusta
       `sessions`, `users` e `recovery_codes`; cria `mfa_failures` e o enum `session_mfa_state`; `down()` restaura o
       formato anterior)
-- [ ] T009 [P] Entidades: ajustar `src/modules/auth/entities/session.entity.ts`, `recovery-code.entity.ts` e
+- [x] T009 [P] Entidades: ajustar `src/modules/auth/entities/session.entity.ts`, `recovery-code.entity.ts` e
       `src/modules/users/entities/user.entity.ts`; criar `src/modules/auth/entities/mfa-failure.entity.ts`; registrar em
       `src/database/entities.ts`
-- [ ] T010 [P] Acrescentar `users.mfa_pending_secret_enc` em `ENCRYPTED_FIELDS`
+- [x] T010 [P] Acrescentar `users.mfa_pending_secret_enc` em `ENCRYPTED_FIELDS`
       (`src/modules/crypto/encryption-context.ts`) e nos campos aceitos pelo `src/modules/crypto/app-secret.service.ts`
-- [ ] T011 [P] `PgSessionStore` em `src/infra/auth/stores/pg-session.store.ts` (contrato em `contracts/stores.md`:
+- [x] T011 [P] `PgSessionStore` em `src/infra/auth/stores/pg-session.store.ts` (contrato em `contracts/stores.md`:
       leitura com `JOIN users` no `extra`, `touchSession` condicional, `deleteSession` com contagem)
-- [ ] T012 [P] `PgMfaStore` em `src/infra/auth/stores/pg-mfa.store.ts` (sela antes do `UPDATE` e abre depois do
+- [x] T012 [P] `PgMfaStore` em `src/infra/auth/stores/pg-mfa.store.ts` (sela antes do `UPDATE` e abre depois do
       `SELECT` com o `AppSecretService`; `claimTotpStep`, `consumeRecoveryCode` e `recordMfaFailure` em uma instrução)
-- [ ] T013 Provider singleton que registra os dois stores com `AuthenticationStorage.registerSource({ sessions, mfa })`
+- [x] T013 Provider singleton que registra os dois stores com `AuthenticationStorage.registerSource({ sessions, mfa })`
       em `src/infra/auth/auth-storage.provider.ts`
-- [ ] T014 Acrescentar as ações do T006 ao catálogo e aos schemas em `src/modules/audit/audit-action.enum.ts` e
+- [x] T014 Acrescentar as ações do T006 ao catálogo e aos schemas em `src/modules/audit/audit-action.enum.ts` e
       `src/modules/audit/audit-metadata.schemas.ts`
-- [ ] T015 Configurar `AuthenticationModule` (opções de `contracts/auth-integration.md`: `idleTtl` 15m, `absoluteTtl`
+- [x] T015 Configurar `AuthenticationModule` (opções de `contracts/auth-integration.md`: `idleTtl` 15m, `absoluteTtl`
       8h, `sameSite: 'strict'`, `mfa.encryption: false`, sem `accessToken`, `allowInMemoryStorage: false`) e depois
       `AuthorizationModule` em `src/infra/auth/auth-infra.module.ts`; criar `src/infra/auth/staff-session.provider.ts`
       (`SessionCookieProvider`, usuário e perfis recarregados a cada requisição, `DISABLED` → `null`)
-- [ ] T016 `@PublicApi` passa a compor `@Public()` em `src/common/http/route-decorators.ts`; `@Public()` em `/health`,
+- [x] T016 `@PublicApi` passa a compor `@Public()` em `src/common/http/route-decorators.ts`; `@Public()` em `/health`,
       `/ready` (`src/modules/health/`) e no Swagger (`src/app.setup.ts`)
-- [ ] T017 Apoio de teste: relógio controlável injetado em `SessionService` e `MfaService` e opção
+- [x] T017 Apoio de teste: relógio controlável injetado em `SessionService` e `MfaService` e opção
       `createTestApp({ auth: 'real' })` (stores Postgres reais, módulo de exemplo) em `test/support/auth-clock.ts` e
       `test/support/test-app.ts`; o módulo de exemplo `test/contract/auth/example/example.module.ts` (só de teste,
       nunca importado por `src/`)

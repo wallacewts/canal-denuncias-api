@@ -1,7 +1,7 @@
 import { type CanActivate, type ExecutionContext, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
-import { API_AREA_METADATA, type ApiArea } from '../../common/http/route-decorators.js';
+import { ADMIN_OPEN_METADATA, API_AREA_METADATA, type ApiArea } from '../../common/http/route-decorators.js';
 import { AUTH_IDENTITY, type AuthIdentity, type StaffIdentity } from './auth-identity.port.js';
 
 /** Identidade resolvida pelo guard, lida depois pelo contexto da auditoria. */
@@ -22,6 +22,12 @@ export class AdminIdentityGuard implements CanActivate {
     if (context.getType() !== 'http') return true;
     const area = this.reflector.get<ApiArea | undefined>(API_AREA_METADATA, context.getClass());
     if (area !== 'admin') return true;
+    // Rotas administrativas abertas de propósito (entrar, segundo fator) não têm identidade ainda.
+    const open = this.reflector.getAllAndOverride<boolean | undefined>(ADMIN_OPEN_METADATA, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (open) return true;
 
     const request = context.switchToHttp().getRequest<RequestWithIdentity>();
     const identity = await this.identity.resolve(request);

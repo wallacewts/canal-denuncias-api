@@ -1,7 +1,10 @@
 import { Controller, Get } from '@nestjs/common';
+import { Public } from '@nestjs/authentication';
 import { HealthCheck, HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
 import { AuditPartitionsIndicator } from './audit-partitions.indicator.js';
 
+/** Fora das duas áreas, sem credencial (o orquestrador chama sem sessão). */
+@Public()
 @Controller()
 export class HealthController {
   constructor(

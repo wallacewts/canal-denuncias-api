@@ -1,3 +1,4 @@
+import { Public } from '@nestjs/authentication';
 import { Controller, Get, Module, Query } from '@nestjs/common';
 import { TypeOrmModule, InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
@@ -6,6 +7,7 @@ import { pageQuerySchema, type PageQuery } from '../../../src/common/pagination/
 import { Category } from '../../../src/modules/catalog/entities/category.entity.js';
 
 /** Rota só de teste que pagina a tabela de categorias. */
+@Public()
 @Controller('fixtures/pagination')
 class PaginationFixtureController {
   constructor(@InjectRepository(Category) private readonly categories: Repository<Category>) {}

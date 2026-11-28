@@ -3,7 +3,7 @@ import { KEY_SERVICE, type KeyService } from '../../infra/vault/key-service.js';
 import type { EncryptedField, EncryptionContext } from './encryption-context.js';
 
 /** Campos cifrados direto no Vault com a `app-kek` (dado pequeno; a chave nunca sai do Vault). */
-const APP_SECRET_FIELDS: readonly EncryptedField[] = ['users.mfa_secret_enc'];
+const APP_SECRET_FIELDS: readonly EncryptedField[] = ['users.mfa_secret_enc', 'users.mfa_pending_secret_enc'];
 
 /**
  * Segredos da aplicação (CRYPTO-05, D42): cifrados no Vault com `associated_data` igual ao contexto do registro, para

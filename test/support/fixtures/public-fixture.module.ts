@@ -1,3 +1,4 @@
+import { Can } from '@nestjs/authorization';
 import { Get, Module, Param, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { AdminApi, PublicApi } from '../../../src/common/http/route-decorators.js';
@@ -20,6 +21,7 @@ class PublicFixtureController {
 }
 
 /** Rota administrativa só de teste. */
+@Can.Anyone()
 @AdminApi('fixtures')
 class AdminFixtureController {
   @Get('sensitive')

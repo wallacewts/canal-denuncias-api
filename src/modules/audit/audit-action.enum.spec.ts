@@ -2,15 +2,14 @@ import { AUDIT_METADATA_SCHEMAS } from './audit-metadata.schemas.js';
 import { AuditAction, AuditResourceType } from './audit-action.enum.js';
 
 const AUDIT_01 = [
-  'AUTH_LOGIN_SUCCEEDED',
+  'AUTH_SIGNED_IN',
   'AUTH_LOGIN_FAILED',
-  'AUTH_LOGOUT',
+  'AUTH_SIGNED_OUT',
   'AUTH_MFA_ENROLLED',
   'AUTH_MFA_FAILED',
   'AUTH_RECOVERY_CODE_USED',
   'AUTH_PASSWORD_CHANGED',
   'AUTH_SESSION_REVOKED',
-  'AUTH_TOKEN_REUSED',
   'USER_CREATED',
   'USER_UPDATED',
   'USER_STATUS_CHANGED',
@@ -66,6 +65,12 @@ describe('Catálogo da auditoria (AUDIT-01, D45)', () => {
   it('toda ação cabe em action varchar(60) e todo tipo de recurso em resource_type varchar(40)', () => {
     for (const action of actions) expect(action.length).toBeLessThanOrEqual(60);
     for (const type of Object.values(AuditResourceType)) expect(type.length).toBeLessThanOrEqual(40);
+  });
+
+  it('nomes de autenticação fixados pela D53: sem AUTH_TOKEN_REUSED, AUTH_LOGIN_SUCCEEDED nem AUTH_LOGOUT', () => {
+    expect(actions).not.toContain('AUTH_TOKEN_REUSED');
+    expect(actions).not.toContain('AUTH_LOGIN_SUCCEEDED');
+    expect(actions).not.toContain('AUTH_LOGOUT');
   });
 
   it('toda ação tem um schema de metadata', () => {

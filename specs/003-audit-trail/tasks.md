@@ -220,9 +220,9 @@ grava equipe com IP real; comando grava sistema; fora de contexto, recusa.
 
 ### Tests for User Story 5 (mandatory for security and privacy rules) ⚠️
 
-- [ ] T030 [P] [US5] Teste unitário do cursor decrescente em `src/common/pagination/cursor-desc.spec.ts`: ida e volta
+- [x] T030 [P] [US5] Teste unitário do cursor decrescente em `src/common/pagination/cursor-desc.spec.ts`: ida e volta
       do bigint, recusa de cursor adulterado, não canônico ou curto (`XQZ`)
-- [ ] T031 [US5] Teste de integração em `test/audit/audit-query.e2e-spec.ts`: Auditor recebe a primeira página em ordem
+- [x] T031 [US5] Teste de integração em `test/audit/audit-query.e2e-spec.ts`: Auditor recebe a primeira página em ordem
       decrescente e o cursor da próxima; cada filtro (ator, ação, tipo, id do recurso, período) restringe; perfil
       `ANALYST` recebe 403 e gera `ACCESS_DENIED`; sem identidade, 401; ação fora do catálogo, período invertido, limite
       fora da faixa e cursor adulterado dão 400 com mensagem fixa e sem o valor; a consulta grava `AUDIT_LOG_VIEWED`
@@ -230,9 +230,9 @@ grava equipe com IP real; comando grava sistema; fora de contexto, recusa.
 
 ### Implementation for User Story 5
 
-- [ ] T032 [P] [US5] Criar `paginateDesc()` e o cursor bigint em `src/common/pagination/cursor-desc.ts`
-- [ ] T033 [P] [US5] Criar o schema de filtros e o `AuditQueryService` em `src/modules/audit/audit-query.service.ts`
-- [ ] T034 [US5] Criar `GET /api/admin/v1/audit-logs` (perfil `AUDITOR`, `ACCESS_DENIED` nos demais) em
+- [x] T032 [P] [US5] Criar `paginateDesc()` e o cursor bigint em `src/common/pagination/cursor-desc.ts`
+- [x] T033 [P] [US5] Criar o schema de filtros e o `AuditQueryService` em `src/modules/audit/audit-query.service.ts`
+- [x] T034 [US5] Criar `GET /api/admin/v1/audit-logs` (perfil `AUDITOR`, `ACCESS_DENIED` nos demais) em
       `src/modules/audit/audit.controller.ts`, registrar no `src/modules/audit/audit.module.ts` e rodar
       `npm run openapi:export` (commitar `openapi/admin.json`)
 

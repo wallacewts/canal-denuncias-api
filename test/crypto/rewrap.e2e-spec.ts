@@ -13,6 +13,7 @@ import { ReportContentV1Schema } from '../../src/modules/reports/report-content.
 import { createEncryptedReport, cryptoDeps, type CryptoDeps } from '../support/factories.js';
 import { createTestApp, type TestApp } from '../support/test-app.js';
 import { rotateKek } from '../support/vault-admin.js';
+import { acquireKekRotationLock } from '../support/kek-lock.js';
 
 interface AuditRow {
   action: string;
@@ -27,12 +28,15 @@ interface AuditRow {
 
 /** CRYPTO-06 / US7: a suíte sobe com o AppRole `maintenance` (o único com rewrap); o root só gira a chave. */
 describe('Recifragem das chaves das denúncias (e2e)', () => {
+  /** Serializa com as outras suítes que giram a report-kek (pendência F1). */
+  let kekLock: { release(): Promise<void> };
   let t: TestApp;
   let ds: DataSource;
   let rewrap: RewrapService;
   let deps: CryptoDeps;
 
   beforeAll(async () => {
+    kekLock = await acquireKekRotationLock();
     t = await createTestApp({ vault: 'maintenance' });
     ds = t.app.get(DataSource);
     rewrap = t.app.get(RewrapService);
@@ -51,6 +55,7 @@ describe('Recifragem das chaves das denúncias (e2e)', () => {
   });
 
   afterAll(async () => {
+    await kekLock?.release();
     await t.close();
   });
 

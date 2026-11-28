@@ -88,7 +88,166 @@
     "version": "0.0.1"
   },
   "openapi": "3.0.0",
-  "paths": {},
+  "paths": {
+    "/api/admin/v1/audit-logs": {
+      "get": {
+        "operationId": "AuditController_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "actorUserId",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "action",
+            "required": false,
+            "schema": {
+              "enum": [
+                "AUTH_LOGIN_SUCCEEDED",
+                "AUTH_LOGIN_FAILED",
+                "AUTH_LOGOUT",
+                "AUTH_MFA_ENROLLED",
+                "AUTH_MFA_FAILED",
+                "AUTH_RECOVERY_CODE_USED",
+                "AUTH_PASSWORD_CHANGED",
+                "AUTH_SESSION_REVOKED",
+                "AUTH_TOKEN_REUSED",
+                "USER_CREATED",
+                "USER_UPDATED",
+                "USER_STATUS_CHANGED",
+                "USER_ROLES_CHANGED",
+                "USER_MFA_RESET",
+                "ACCESS_DENIED",
+                "CATEGORY_CREATED",
+                "CATEGORY_UPDATED",
+                "SETTING_UPDATED",
+                "REPORT_CREATED",
+                "REPORT_LIST_VIEWED",
+                "REPORT_VIEWED",
+                "REPORT_STATUS_CHANGED",
+                "REPORT_PRIORITY_CHANGED",
+                "REPORT_ASSIGNED",
+                "REPORT_UNASSIGNED",
+                "REPORT_ACCESS_BLOCKED",
+                "REPORT_ACCESS_UNBLOCKED",
+                "INTERNAL_NOTE_CREATED",
+                "INTERNAL_NOTES_VIEWED",
+                "REPORTER_ACCESS_GRANTED",
+                "REPORTER_ACCESS_DENIED",
+                "REPORTER_REPORT_VIEWED",
+                "MESSAGE_SENT",
+                "MESSAGES_VIEWED",
+                "ATTACHMENT_UPLOADED",
+                "ATTACHMENT_REJECTED",
+                "ATTACHMENT_DOWNLOADED",
+                "ATTACHMENT_INTEGRITY_FAILED",
+                "IDENTITY_REVEAL_REQUESTED",
+                "IDENTITY_REVEAL_APPROVED",
+                "IDENTITY_REVEAL_REJECTED",
+                "IDENTITY_REVEALED",
+                "LEGAL_HOLD_CHANGED",
+                "REPORT_SHREDDED",
+                "RETENTION_RUN",
+                "KEYS_REWRAPPED",
+                "KEYS_REWRAP_RUN",
+                "AUDIT_LOG_VIEWED",
+                "AUDIT_CHAIN_VERIFIED",
+                "AUDIT_LOG_PURGED",
+                "REPORTING_VIEWED",
+                "REPORTING_EXPORTED"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "resourceType",
+            "required": false,
+            "schema": {
+              "enum": [
+                "user",
+                "session",
+                "category",
+                "setting",
+                "report",
+                "message",
+                "attachment",
+                "identity",
+                "internal_note",
+                "kek",
+                "audit_log",
+                "reporting",
+                "system"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "resourceId",
+            "required": false,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_.:-]{1,64}$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "after",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      }
+    }
+  },
   "servers": [],
   "tags": [
     {

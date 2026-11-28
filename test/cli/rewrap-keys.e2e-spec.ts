@@ -10,6 +10,7 @@ import { RewrapService } from '../../src/modules/crypto/rewrap.service.js';
 import { createEncryptedReport, cryptoDeps } from '../support/factories.js';
 import { createTestApp, type TestApp } from '../support/test-app.js';
 import { rotateKek } from '../support/vault-admin.js';
+import { acquireKekRotationLock } from '../support/kek-lock.js';
 
 class CapturedOutput {
   lines: string[] = [];
@@ -28,12 +29,15 @@ function approleClient(roleId: string, secretId: string): VaultClient {
 
 /** contracts/cli-rewrap-keys.md: saídas, códigos e nada de valores na saída. */
 describe('rewrap-keys (e2e)', () => {
+  /** Serializa com as outras suítes que giram a report-kek (pendência F1). */
+  let kekLock: { release(): Promise<void> };
   let t: TestApp;
   let ds: DataSource;
   const output = new CapturedOutput();
   let command: RewrapKeysCommand;
 
   beforeAll(async () => {
+    kekLock = await acquireKekRotationLock();
     t = await createTestApp({
       vault: 'maintenance',
       imports: [CliCommandsModule],
@@ -44,6 +48,7 @@ describe('rewrap-keys (e2e)', () => {
   });
 
   afterAll(async () => {
+    await kekLock?.release();
     await t.close();
   });
 

@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { vaultAdmin } from '../support/vault-admin.js';
+import { acquireKekRotationLock } from '../support/kek-lock.js';
 
 type Profile = 'api' | 'maintenance' | 'identity-worker';
 
@@ -17,12 +18,15 @@ function capabilities(hcl: string): Record<string, string[]> {
 
 /** CRYPTO-07 / SC-006: as políticas de produção, aplicadas ao Vault local, permitem e recusam o que o contrato diz. */
 describe('Políticas do Vault de produção (e2e)', () => {
+  /** Serializa com as outras suítes que giram a report-kek (pendência F1). */
+  let kekLock: { release(): Promise<void> };
   const tokens = {} as Record<Profile, string>;
   let reportCt: string;
   let appCt: string;
   let identityCt: string;
 
   beforeAll(async () => {
+    kekLock = await acquireKekRotationLock();
     for (const profile of ['api', 'maintenance', 'identity-worker'] as Profile[]) {
       const policy = await readFile(new URL(`${profile}.hcl`, POLICY_DIR), 'utf8');
       const name = `test-prod-${profile}`;
@@ -41,6 +45,10 @@ describe('Políticas do Vault de produção (e2e)', () => {
     ).data.data.ciphertext;
     identityCt = (await vaultAdmin<{ data: { ciphertext: string } }>('POST', 'transit/datakey/plaintext/identity-kek'))
       .data.data.ciphertext;
+  });
+
+  afterAll(async () => {
+    await kekLock?.release();
   });
 
   const call = (profile: Profile, method: 'GET' | 'POST', path: string, body?: unknown) =>

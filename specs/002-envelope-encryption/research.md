@@ -152,7 +152,8 @@ $antigo` e um registro `KEYS_REWRAPPED` do lote, gravado com o `EntityManager` d
 - **Decision**:
   - `docs/deploy/vault/policies/`: `api.hcl` (datakey e decrypt na `report-kek`; encrypt e decrypt na `app-kek`; nada
     na `identity-kek`; sem rewrap), `maintenance.hcl` (rewrap na `report-kek` e leitura de `transit/keys/report-kek`)
-    e `identity-worker.hcl` (encrypt e decrypt na `identity-kek`, só documentada, já que o serviço é do IDV-06).
+    e `identity-worker.hcl` (`datakey` e `decrypt` na `identity-kek`, porque a identidade também usa envelope
+    encryption; só documentada, já que o serviço é do IDV-06).
   - `docs/deploy/vault/README.md`: inicialização com 5 partes de chave e quórum de 3 (Shamir), armazenamento integrado
     (raft), snapshots de backup, audit device em arquivo, sem core dump e sem heap snapshot no container da API.
   - Ambiente local: a política `api-dev` perde o `rewrap` (paridade com produção), e o `init-transit.sh` cria o AppRole

@@ -412,9 +412,9 @@ Task: "T022 newRecordId() em src/modules/crypto/record-id.ts"
 
 | ID  | Situação  | Pendência                                                                                                                       | Onde resolver |
 | --- | --------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| G3  | Aberto    | Cobrir a queda do Vault no meio da recifragem: execução com `FAILURE` e nova execução terminando o serviço                      | T032          |
-| I1  | Aberto    | O R7 do `research.md` dizia que a KEK ia na metadata; o data-model coloca em `resource_id`. Vale o data-model                   | T034          |
-| U1  | Aberto    | Medição de memória do streaming estável: amostrar o pico e chamar `gc()` antes de medir (`--expose-gc`) ou medir `arrayBuffers` | T030          |
-| U2  | Aberto    | Detalhar o mecanismo da T016 (ex.: `queryRunner.isTransactionActive` no momento da chamada) e conferir a fixture da T011        | T011, T016    |
+| G3  | Resolvido | Cobrir a queda do Vault no meio da recifragem: execução com `FAILURE` e nova execução terminando o serviço                      | T032          |
+| I1  | Resolvido | O R7 do `research.md` dizia que a KEK ia na metadata; o data-model coloca em `resource_id`. Vale o data-model                   | T034          |
+| U1  | Resolvido | Medição de memória do streaming estável: amostrar o pico e chamar `gc()` antes de medir (`--expose-gc`) ou medir `arrayBuffers` | T030          |
+| U2  | Resolvido | Detalhar o mecanismo da T016 (ex.: `queryRunner.isTransactionActive` no momento da chamada) e conferir a fixture da T011        | T011, T016    |
 | I2  | Resolvido | `EncryptedColumn` inclui `attachments.object`, que não é coluna: renomear para `EncryptedField` ou documentar a exceção         | T010          |
-| I3  | Aberto    | O Prettier precisa de duas passadas no `tasks.md`: rodar duas vezes antes do commit da fase                                     | cada commit   |
+| I3  | Resolvido | O Prettier precisa de duas passadas no `tasks.md`: rodar duas vezes antes do commit da fase                                     | cada commit   |

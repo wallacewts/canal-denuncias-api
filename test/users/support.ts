@@ -1,12 +1,11 @@
 import type { Role } from '../../src/common/enums/role.enum.js';
 import { AUTH_CLOCK } from '../../src/infra/auth/auth-clock.js';
 import { createStaff, signInFully, type Staff } from '../contract/auth/example/auth-helpers.js';
-import { ExampleAuthModule } from '../contract/auth/example/example.module.js';
 import { TestClock } from '../support/auth-clock.js';
 import { createTestApp, type CreateTestAppOptions, type TestApp } from '../support/test-app.js';
 
 /**
- * Apoio dos e2e da feature 005: app com o login de exemplo da feature 004 (só de teste) e relógio controlado. As
+ * Apoio dos e2e da feature 005: app com relógio controlado; as sessões vêm do login definitivo (feature 006). As
  * rotas de equipe exigem a sessão real (política sobre `request.user`), então nada de identidade simulada.
  */
 export async function createUsersApp(
@@ -15,7 +14,7 @@ export async function createUsersApp(
 ): Promise<TestApp & { clock: TestClock }> {
   const t = await createTestApp({
     vault: 'api',
-    imports: [ExampleAuthModule, ...(extra.imports ?? [])],
+    imports: extra.imports,
     overrides: [{ provide: AUTH_CLOCK, useValue: clock }, ...(extra.overrides ?? [])],
   });
   return Object.assign(t, { clock });

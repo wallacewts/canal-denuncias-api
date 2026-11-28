@@ -1,5 +1,10 @@
 import { Controller, Get, Module } from '@nestjs/common';
-import { AuthenticationModule, AuthenticationRegistry, SessionCookieProvider } from '@nestjs/authentication';
+import {
+  AuthenticationModule,
+  AuthenticationRegistry,
+  SessionCookieProvider,
+  SignInService,
+} from '@nestjs/authentication';
 import { Injectable } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getDataSourceToken } from '@nestjs/typeorm';
@@ -18,7 +23,7 @@ describe('Sessão: expirações, persistência e encerramento (e2e, teste de con
   let t: TestApp;
   let ds: DataSource;
   const clock = new TestClock();
-  const ME = '/api/admin/v1/example-auth/me';
+  const ME = '/api/admin/v1/me';
   const server = () => t.app.getHttpServer();
 
   const options = () => ({
@@ -146,7 +151,7 @@ describe('Sessão: expirações, persistência e encerramento (e2e, teste de con
     store.createSession = () => Promise.reject(new Error('banco indisponível'));
     try {
       const res = await request(server())
-        .post('/api/admin/v1/example-auth/sign-in')
+        .post('/api/admin/v1/auth/sign-in')
         .send({ email: staff.email, password: staff.password });
       expect(res.status).toBeGreaterThanOrEqual(500);
       expect(([] as string[]).concat(res.headers['set-cookie'] ?? []).some((c) => c.includes('sid='))).toBe(false);
@@ -162,7 +167,8 @@ describe('Sessão: expirações, persistência e encerramento (e2e, teste de con
     const b = await signInFully(t.app, staff, clock.now());
     await request(server()).get(ME).set('Cookie', a).expect(200);
     await request(server()).get(ME).set('Cookie', b).expect(200);
-    await request(server()).post('/api/admin/v1/example-auth/sign-out-everywhere').set('Cookie', a).expect(204);
+    // A rota `DELETE /me/sessions` é da US4 da feature 006 (com teste próprio); aqui, o serviço do pacote direto.
+    await t.app.get(SignInService).signOutEverywhere(staff.id);
     await request(server()).get(ME).set('Cookie', a).expect(401);
     await request(server()).get(ME).set('Cookie', b).expect(401);
     const rows = await waitForAudit(t.app, staff.id, 'AUTH_SESSION_REVOKED');

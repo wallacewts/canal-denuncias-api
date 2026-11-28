@@ -9,7 +9,6 @@ import { PasswordPrompt } from '../../../src/cli/password-prompt.js';
 import { AuditFixtureModule } from '../../support/fixtures/audit-fixture.module.js';
 import { createTestApp, type TestApp } from '../../support/test-app.js';
 import { signInFully, totp } from './example/auth-helpers.js';
-import { ExampleAuthModule } from './example/example.module.js';
 
 /**
  * Encaixe com o que já existe (US4, T029, FR-013, FR-014): o administrador do `create-admin` entra sem migração de
@@ -28,7 +27,7 @@ describe('Encaixe da autenticação com create-admin, AUTH_IDENTITY e auditoria 
     const answers = [SENHA, SENHA];
     t = await createTestApp({
       vault: 'api',
-      imports: [CliCommandsModule, AuditFixtureModule, ExampleAuthModule],
+      imports: [CliCommandsModule, AuditFixtureModule],
       overrides: [
         { provide: PasswordPrompt, useValue: { ask: async () => answers.shift() } },
         { provide: CliOutput, useValue: { info: () => undefined, error: () => undefined } },
@@ -61,8 +60,8 @@ describe('Encaixe da autenticação com create-admin, AUTH_IDENTITY e auditoria 
     }>;
     expect(row.password_hash).toBe(admin.hashBefore);
     expect(row.password_hash).toMatch(/^\$scrypt\$/);
-    const me = await request(server()).get('/api/admin/v1/example-auth/me').set('Cookie', admin.cookie).expect(200);
-    expect(me.body).toEqual({ id: admin.id });
+    const me = await request(server()).get('/api/admin/v1/me').set('Cookie', admin.cookie).expect(200);
+    expect((me.body as { id: string }).id).toBe(admin.id);
   });
 
   it('rota @AdminApi auditada grava ator equipe com o id do usuário da sessão e o IP', async () => {

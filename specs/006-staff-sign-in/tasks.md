@@ -84,38 +84,38 @@ progressivo, saída e o fluxo inteiro sem o login de exemplo.
 
 ### Tests for User Story 1 ⚠️ (escrever antes, devem falhar)
 
-- [ ] T013 [P] [US1] Unitário `src/modules/auth/credentials.service.spec.ts`: cálculo do bloqueio com a configuração
+- [x] T013 [P] [US1] Unitário `src/modules/auth/credentials.service.spec.ts`: cálculo do bloqueio com a configuração
       (15 min × 2^nível, teto 24 h, limiar 5) e motivo codificado de cada caso
-- [ ] T014 [P] [US1] e2e `test/auth/sign-in.e2e-spec.ts`: senha certa → 200 `MFA_REQUIRED` com horários e cookie que
+- [x] T014 [P] [US1] e2e `test/auth/sign-in.e2e-spec.ts`: senha certa → 200 `MFA_REQUIRED` com horários e cookie que
       não abre `GET /me` (401); inexistente, senha errada, `BLOCKED`, `DISABLED` e bloqueio temporário → mesmo corpo
       401 (comparado sem `requestId`); diferença de tempo inexistente × senha errada < 10% (20 de cada, impressa como
       na feature 004); `AUTH_LOGIN_FAILED` com o motivo e sem e-mail; rehash de hash com custo menor; senha e e-mail
       fora de logs e trilha (texto inteiro e `XQZ`)
-- [ ] T015 [P] [US1] e2e `test/auth/lockout.e2e-spec.ts` (com `TestClock`): 5 falhas → bloqueio de 15 min (senha certa
+- [x] T015 [P] [US1] e2e `test/auth/lockout.e2e-spec.ts` (com `TestClock`): 5 falhas → bloqueio de 15 min (senha certa
       ainda dá 401 genérico); passado o tempo, entra; nova série → 30 min; teto de 24 h; códigos errados no desafio
       somam no mesmo contador; entrada completa zera; 10 falhas simultâneas não passam do limiar (um bloqueio só)
-- [ ] T016 [P] [US1] e2e `test/auth/mfa-challenge.e2e-spec.ts`: código válido (passo atual e ±1) → 200 `DONE`, cookie
+- [x] T016 [P] [US1] e2e `test/auth/mfa-challenge.e2e-spec.ts`: código válido (passo atual e ±1) → 200 `DONE`, cookie
       novo e o antigo sem valor; código errado ou repetido → 422 `MFA_CODE_INVALID` com a sessão pendente intacta; 5
       errados → 423 `MFA_LOCKED`; código de recuperação (minúsculas e espaços normalizados) vale uma vez e grava
       `AUTH_RECOVERY_CODE_USED`; sem sessão pendente → 401; corpo com os dois códigos ou nenhum → 400; com autenticador
       e troca obrigatória → `PASSWORD_CHANGE_REQUIRED` depois do desafio (Q2); sessão pendente que expira antes do
       desafio (com `TestClock`) → 401 (G2)
-- [ ] T017 [P] [US1] e2e `test/auth/full-flow.e2e-spec.ts` (AUTH-06): entrada, desafio, `GET /me` 200, saída 204 com
+- [x] T017 [P] [US1] e2e `test/auth/full-flow.e2e-spec.ts` (AUTH-06): entrada, desafio, `GET /me` 200, saída 204 com
       cookie apagado, `GET /me` 401; saída também com sessão pendente; atributos do cookie de cada resposta que o
       define (`__Host-`, `HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/`, G2); nada do login de exemplo importado
 
 ### Implementation for User Story 1
 
-- [ ] T018 [US1] Contadores atômicos em `src/modules/users/users.repository.ts`: `registerLoginFailure(id, config,
+- [x] T018 [US1] Contadores atômicos em `src/modules/users/users.repository.ts`: `registerLoginFailure(id, config,
 now)` (incremento e bloqueio numa instrução, `RETURNING`), `resetLoginFailures(id)`, `updatePasswordHash`
-- [ ] T019 [US1] `CredentialsService` em `src/modules/auth/credentials.service.ts` (promovido do
+- [x] T019 [US1] `CredentialsService` em `src/modules/auth/credentials.service.ts` (promovido do
       `ExampleCredentials`): hash sempre verificado antes de status e bloqueio, motivo na trilha, falha registrada,
       rehash (R3)
-- [ ] T020 [US1] `AuthController` em `src/modules/auth/auth.controller.ts` (`@AdminApi('auth')`):
+- [x] T020 [US1] `AuthController` em `src/modules/auth/auth.controller.ts` (`@AdminApi('auth')`):
       `POST /auth/sign-in`, `POST /auth/mfa/challenge` (422/423 pela contagem de falhas recentes, R9; falha soma no
       contador de login) e `POST /auth/sign-out` (`OpenAdminRoute()`); respostas com `nextStep` e horários; zerar o
       contador na entrada completa; registro no `src/modules/auth/auth.module.ts`
-- [ ] T021 [US1] Trocar o login de exemplo pelas rotas definitivas nos testes: `test/users/support.ts`,
+- [x] T021 [US1] Trocar o login de exemplo pelas rotas definitivas nos testes: `test/users/support.ts`,
       `test/contract/auth/example/auth-helpers.ts`, `test/contract/auth/sign-in-mfa.e2e-spec.ts`,
       `session-expiry.e2e-spec.ts`, `integration.e2e-spec.ts` e `test/users/last-login.e2e-spec.ts`; remover
       `ExampleAuthController` e `ExampleCredentials` (fica só a parte de autorização do exemplo, R1); suíte inteira

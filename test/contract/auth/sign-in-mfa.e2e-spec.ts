@@ -1,5 +1,3 @@
-import { performance } from 'node:perf_hooks';
-import { PasswordHasher } from '@nestjs/authentication';
 import { getDataSourceToken } from '@nestjs/typeorm';
 import request from 'supertest';
 import type { DataSource } from 'typeorm';
@@ -16,15 +14,19 @@ import {
   waitForAudit,
   type Staff,
 } from './example/auth-helpers.js';
-import { ExampleCredentials } from './example/example-auth.controller.js';
-import { ExampleAuthModule } from './example/example.module.js';
 
-/** Login, MFA e cookie com o pacote escolhido (US2, T020, FR-005 a FR-007, FR-010, FR-011, FR-015). */
+/**
+ * Login, MFA e cookie com o pacote escolhido (feature 004, US2), agora pelas rotas definitivas da feature 006 (o login
+ * de exemplo foi promovido). Código recusado é 422 (feature 006, Q1); o tempo constante está em
+ * `test/auth/sign-in-timing.e2e-spec.ts`.
+ */
 describe('Login com senha e segundo fator (e2e, teste de contrato)', () => {
   let t: TestApp;
   let ds: DataSource;
   const clock = new TestClock();
-  const ME = '/api/admin/v1/example-auth/me';
+  const ME = '/api/admin/v1/me';
+  const SIGN_IN = '/api/admin/v1/auth/sign-in';
+  const MFA = '/api/admin/v1/auth/mfa/challenge';
   const SHORT = 'XQZ';
 
   const server = () => t.app.getHttpServer();
@@ -32,7 +34,6 @@ describe('Login com senha e segundo fator (e2e, teste de contrato)', () => {
   beforeAll(async () => {
     t = await createTestApp({
       vault: 'api',
-      imports: [ExampleAuthModule],
       overrides: [{ provide: AUTH_CLOCK, useValue: clock }],
     });
     ds = t.app.get<DataSource>(getDataSourceToken());
@@ -51,47 +52,40 @@ describe('Login com senha e segundo fator (e2e, teste de contrato)', () => {
   it('só a senha não abre rota protegida; senha + TOTP abre', async () => {
     const staff = await newStaff();
     const first = await request(server())
-      .post('/api/admin/v1/example-auth/sign-in')
+      .post(SIGN_IN)
       .send({ email: staff.email, password: staff.password })
       .expect(200);
-    expect(first.body).toEqual({ mfaRequired: true });
+    expect(first.body).toMatchObject({ nextStep: 'MFA_REQUIRED' });
     const pending = sessionCookie(first)!;
     await request(server()).get(ME).set('Cookie', pending).expect(401);
 
     const second = await request(server())
-      .post('/api/admin/v1/example-auth/mfa')
+      .post(MFA)
       .set('Cookie', pending)
       .send({ code: totp(staff.secret!, clock.now()) })
       .expect(200);
     const verified = sessionCookie(second)!;
     expect(verified).not.toEqual(pending); // id trocado depois do MFA
-    await request(server()).get(ME).set('Cookie', verified).expect(200, { id: staff.id });
+    const me = await request(server()).get(ME).set('Cookie', verified).expect(200);
+    expect((me.body as { id: string }).id).toBe(staff.id);
     await request(server()).get(ME).set('Cookie', pending).expect(401); // o id antigo morreu
   });
 
   it('o mesmo código TOTP é recusado na segunda vez', async () => {
     const staff = await newStaff();
     const code = totp(staff.secret!, clock.now());
-    for (const expected of [200, 401]) {
-      const first = await request(server())
-        .post('/api/admin/v1/example-auth/sign-in')
-        .send({ email: staff.email, password: staff.password });
-      await request(server())
-        .post('/api/admin/v1/example-auth/mfa')
-        .set('Cookie', sessionCookie(first)!)
-        .send({ code })
-        .expect(expected);
+    for (const expected of [200, 422]) {
+      const first = await request(server()).post(SIGN_IN).send({ email: staff.email, password: staff.password });
+      await request(server()).post(MFA).set('Cookie', sessionCookie(first)!).send({ code }).expect(expected);
     }
   });
 
   it('sessão com segundo fator pendente expira em 10 min', async () => {
     const staff = await newStaff();
-    const first = await request(server())
-      .post('/api/admin/v1/example-auth/sign-in')
-      .send({ email: staff.email, password: staff.password });
+    const first = await request(server()).post(SIGN_IN).send({ email: staff.email, password: staff.password });
     clock.advance(11 * MINUTE);
     await request(server())
-      .post('/api/admin/v1/example-auth/mfa')
+      .post(MFA)
       .set('Cookie', sessionCookie(first)!)
       .send({ code: totp(staff.secret!, clock.now()) })
       .expect(401);
@@ -100,7 +94,7 @@ describe('Login com senha e segundo fator (e2e, teste de contrato)', () => {
   it('usuário sem segundo fator cadastrado não abre rota administrativa (MFA obrigatório)', async () => {
     const staff = await createStaff(t.app, [Role.ANALYST], { mfa: false });
     const first = await request(server())
-      .post('/api/admin/v1/example-auth/sign-in')
+      .post(SIGN_IN)
       .send({ email: staff.email, password: staff.password })
       .expect(200);
     await request(server()).get(ME).set('Cookie', sessionCookie(first)!).expect(401);
@@ -109,11 +103,9 @@ describe('Login com senha e segundo fator (e2e, teste de contrato)', () => {
   it('e-mail inexistente e senha errada: mesma resposta', async () => {
     const staff = await newStaff();
     const unknown = await request(server())
-      .post('/api/admin/v1/example-auth/sign-in')
+      .post(SIGN_IN)
       .send({ email: 'ninguem@equipe.test', password: staff.password });
-    const wrong = await request(server())
-      .post('/api/admin/v1/example-auth/sign-in')
-      .send({ email: staff.email, password: SHORT });
+    const wrong = await request(server()).post(SIGN_IN).send({ email: staff.email, password: SHORT });
     expect(unknown.status).toBe(401);
     expect(wrong.status).toBe(401);
     const { requestId: _a, ...unknownBody } = unknown.body as Record<string, unknown>;
@@ -121,39 +113,9 @@ describe('Login com senha e segundo fator (e2e, teste de contrato)', () => {
     expect(unknownBody).toEqual(wrongBody);
   });
 
-  it('e-mail inexistente e senha errada: diferença de tempo menor que 10% da verificação (20 de cada)', async () => {
-    // Custo maior que o dos testes (logN 14) para o sinal da verificação dominar o ruído da máquina.
-    const hasher = new PasswordHasher({ logN: 14 });
-    const creds = t.app.get(ExampleCredentials);
-    const email = `tempo-${Date.now()}@equipe.test`;
-    await ds.query(`INSERT INTO users (name, email, password_hash) VALUES ('Tempo', $1, $2)`, [
-      email,
-      await hasher.hash('senha-certa-de-teste'),
-    ]);
-    const time = async (fn: () => Promise<unknown>) => {
-      const start = performance.now();
-      await fn();
-      return performance.now() - start;
-    };
-    const unknown: number[] = [];
-    const wrong: number[] = [];
-    for (let i = 0; i < 20; i++) {
-      unknown.push(await time(() => creds.verify('ninguem@equipe.test', 'qualquer', hasher)));
-      wrong.push(await time(() => creds.verify(email, 'senha-errada', hasher)));
-    }
-    const median = (xs: number[]) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
-    const diff = Math.abs(median(unknown) - median(wrong));
-    process.stderr.write(
-      `[SC-006] mediana e-mail inexistente ${median(unknown).toFixed(1)} ms; senha errada ${median(wrong).toFixed(1)} ms; diferença ${diff.toFixed(1)} ms\n`,
-    );
-    expect(diff).toBeLessThan(0.1 * median(wrong));
-  }, 60_000);
-
   it('cookie __Host-sid HttpOnly, Secure, SameSite=Strict, Path=/; token fora do corpo e da URL', async () => {
     const staff = await newStaff();
-    const res = await request(server())
-      .post('/api/admin/v1/example-auth/sign-in')
-      .send({ email: staff.email, password: staff.password });
+    const res = await request(server()).post(SIGN_IN).send({ email: staff.email, password: staff.password });
     const raw = rawSetCookie(res)!;
     expect(raw).toMatch(/^__Host-sid=[^;]+;/);
     expect(raw).toMatch(/; HttpOnly/);
@@ -172,17 +134,11 @@ describe('Login com senha e segundo fator (e2e, teste de contrato)', () => {
   it('a trilha registra login, código errado e saída, sem segredo na metadata', async () => {
     const staff = await newStaff();
     // Código errado primeiro.
-    const first = await request(server())
-      .post('/api/admin/v1/example-auth/sign-in')
-      .send({ email: staff.email, password: staff.password });
-    await request(server())
-      .post('/api/admin/v1/example-auth/mfa')
-      .set('Cookie', sessionCookie(first)!)
-      .send({ code: '000000' })
-      .expect(401);
+    const first = await request(server()).post(SIGN_IN).send({ email: staff.email, password: staff.password });
+    await request(server()).post(MFA).set('Cookie', sessionCookie(first)!).send({ code: '000000' }).expect(422);
     clock.advance(30_000);
     const cookie = await signInFully(t.app, staff, clock.now());
-    await request(server()).post('/api/admin/v1/example-auth/sign-out').set('Cookie', cookie).expect(204);
+    await request(server()).post('/api/admin/v1/auth/sign-out').set('Cookie', cookie).expect(204);
 
     const signedIn = await waitForAudit(t.app, staff.id, 'AUTH_SIGNED_IN');
     const failed = await waitForAudit(t.app, staff.id, 'AUTH_MFA_FAILED');

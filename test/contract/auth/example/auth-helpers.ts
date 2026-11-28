@@ -36,19 +36,27 @@ export interface Staff {
   secret: string | null;
 }
 
-/** Cria um membro da equipe com senha (hash do pacote, D32), perfis e, opcionalmente, TOTP confirmado. */
+/**
+ * Cria um membro da equipe com senha (hash do pacote, D32), perfis e, opcionalmente, TOTP confirmado. Por padrão a
+ * senha já foi trocada (fora do primeiro acesso, feature 006); `passwordChanged: false` simula o primeiro acesso.
+ */
 export async function createStaff(
   app: INestApplication,
   roles: Role[],
-  { mfa = true, nowMs = Date.now() }: { mfa?: boolean; nowMs?: number } = {},
+  {
+    mfa = true,
+    nowMs = Date.now(),
+    passwordChanged = true,
+  }: { mfa?: boolean; nowMs?: number; passwordChanged?: boolean } = {},
 ): Promise<Staff> {
   const ds = app.get<DataSource>(getDataSourceToken());
   const hasher = app.get(PasswordHasher);
   const password = `Senha-de-teste-${randomUUID()}`;
   const email = `${randomUUID()}@equipe.test`;
   const rows = (await ds.query(
-    `INSERT INTO users (name, email, password_hash) VALUES ('Equipe', $1, $2) RETURNING id`,
-    [email, await hasher.hash(password)],
+    `INSERT INTO users (name, email, password_hash, password_changed_at)
+     VALUES ('Equipe', $1, $2, CASE WHEN $3 THEN now() END) RETURNING id`,
+    [email, await hasher.hash(password), passwordChanged],
   )) as Array<{ id: string }>;
   const id = rows[0].id;
   for (const role of roles) await ds.query(`INSERT INTO user_roles (user_id, role) VALUES ($1, $2)`, [id, role]);
@@ -75,18 +83,18 @@ export function rawSetCookie(res: request.Response): string | undefined {
   return ([] as string[]).concat(res.headers['set-cookie'] ?? []).find((c) => c.includes('sid='));
 }
 
-/** Entra com senha e, se houver segredo, com o TOTP; devolve o cookie final. */
+/** Entra pelas rotas definitivas da feature 006 (senha e, se houver segredo, o TOTP); devolve o cookie final. */
 export async function signInFully(app: INestApplication, staff: Staff, nowMs: number, step = 0): Promise<string> {
   const server = app.getHttpServer();
   const first = await request(server)
-    .post('/api/admin/v1/example-auth/sign-in')
+    .post('/api/admin/v1/auth/sign-in')
     .send({ email: staff.email, password: staff.password })
     .expect(200);
   let cookie = sessionCookie(first);
   if (!cookie) throw new Error('sem cookie de sessão');
   if (staff.secret) {
     const second = await request(server)
-      .post('/api/admin/v1/example-auth/mfa')
+      .post('/api/admin/v1/auth/mfa/challenge')
       .set('Cookie', cookie)
       .send({ code: totp(staff.secret, nowMs, step) })
       .expect(200);

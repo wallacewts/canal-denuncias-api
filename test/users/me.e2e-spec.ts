@@ -49,7 +49,7 @@ describe('Meu perfil (e2e)', () => {
       id: staff.id,
       email: staff.email,
       roles: [Role.ANALYST],
-      passwordChangeRequired: true,
+      passwordChangeRequired: false, // senha já trocada (createStaff, feature 006)
       abilities: abilitiesFor([Role.ANALYST]),
     });
     // A resposta real obedece ao schema publicado no OpenAPI (o mesmo comparado com o contrato do front).

@@ -39,7 +39,7 @@ describe('Equipe: último login (e2e)', () => {
   it('só a senha (MFA pendente) não grava', async () => {
     const staff = await createStaff(t.app, [Role.ANALYST], { nowMs: t.clock.now() });
     const res = await request(t.app.getHttpServer())
-      .post('/api/admin/v1/example-auth/sign-in')
+      .post('/api/admin/v1/auth/sign-in')
       .send({ email: staff.email, password: staff.password })
       .expect(200);
     expect(sessionCookie(res)).not.toBeNull();

@@ -4,11 +4,19 @@ import { RecoveryCode } from './entities/recovery-code.entity.js';
 import { Session } from './entities/session.entity.js';
 import { passwordHasherProvider } from './password/password-hasher.provider.js';
 import { PasswordHasher } from '@nestjs/authentication';
+import { AuditModule } from '../audit/audit.module.js';
+import { AuthController } from './auth.controller.js';
+import { CredentialsService } from './credentials.service.js';
+import { StaffCredentialsRepository } from './staff-credentials.repository.js';
 
-/** Login, MFA TOTP, códigos de recuperação, refresh token com rotação, bloqueio progressivo. */
+/**
+ * Login da equipe (feature 006, D57): entrada com senha, desafio do segundo fator, bloqueio progressivo e saída, sobre
+ * o `@nestjs/authentication` e os stores da feature 004. Sem renovação por tokens (D53).
+ */
 @Module({
-  imports: [TypeOrmModule.forFeature([RecoveryCode, Session])],
-  providers: [passwordHasherProvider],
+  imports: [TypeOrmModule.forFeature([RecoveryCode, Session]), AuditModule],
+  controllers: [AuthController],
+  providers: [passwordHasherProvider, StaffCredentialsRepository, CredentialsService],
   exports: [TypeOrmModule, PasswordHasher],
 })
 export class AuthModule {}

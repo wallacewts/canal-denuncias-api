@@ -82,27 +82,32 @@ próprio de segurança.
 Onde cada linha da matriz (`docs/tarefas/05-access-control.md`) é aplicada. **Rota** = `@Can(Política, 'habilidade')`
 no handler (o guard nega antes de chegar ao serviço). **Serviço** = `authorize()` (ou `can()`) depois de carregar o
 registro, porque a regra depende dele. **Consulta** = função de escopo no `WHERE`, da qual a política deriva a mesma
-regra (padrão provado em `test/contract/auth/example/report-scope.ts`). Bloqueio por conflito
+regra (`src/modules/access-control/report-scope.ts`, D60). Bloqueio por conflito
 (`report_access_blocks`) nega sempre, para qualquer perfil, nas três camadas.
 
-| Habilidade                                        | Rota                                | Serviço                                              | Consulta                                              |
-| ------------------------------------------------- | ----------------------------------- | ---------------------------------------------------- | ----------------------------------------------------- |
-| Gerenciar usuários e categorias                   | ADMIN                               | perfis: ninguém altera os próprios (D21), com o id   | —                                                     |
-| Alterar SLA                                       | ADMIN                               | —                                                    | —                                                     |
-| Alterar retenção e legal hold                     | DPO                                 | bloqueio por conflito, quando for de uma denúncia    | —                                                     |
-| Listar todas as denúncias                         | Gestor, DPO, Analista (mesma rota)  | —                                                    | Gestor e DPO: todas menos as bloqueadas               |
-| Listar denúncias atribuídas a si                  | idem                                | —                                                    | Analista: `assigned_to_id` = ele, menos as bloqueadas |
-| Ver conteúdo da denúncia (somente leitura)        | equipe com sessão (`@Can.Anyone()`) | `read`: Gestor, DPO, Analista se atribuída; 404 (\*) | —                                                     |
-| Triar, atribuir, priorizar, bloquear por conflito | Gestor                              | bloqueio por conflito                                | —                                                     |
-| Mudar status, mensagens e notas                   | equipe com sessão                   | `treat`: Gestor, Analista se atribuída; DPO nunca    | —                                                     |
-| Pedir revelação de identidade                     | equipe com sessão                   | igual a `treat`                                      | —                                                     |
-| Aprovar ou rejeitar revelação                     | DPO                                 | bloqueio por conflito                                | —                                                     |
-| Ver trilha de auditoria                           | AUDITOR (hoje checado no handler)   | —                                                    | —                                                     |
-| Ver indicadores                                   | Gestor, DPO, AUDITOR                | —                                                    | só agregados, sem conteúdo                            |
+| Habilidade                                        | Rota (D62)                                    | Serviço                                                                      | Consulta                                              |
+| ------------------------------------------------- | --------------------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Gerenciar usuários e categorias                   | `UsersPolicy`, `CatalogPolicy` (ADMIN)        | perfis: ninguém altera os próprios (D21), com o id                           | —                                                     |
+| Alterar SLA                                       | `SettingsPolicy.sla` (ADMIN)                  | —                                                                            | —                                                     |
+| Alterar retenção e legal hold                     | `RetentionPolicy.manage` (DPO)                | `resolve(..., 'retention.manage')` quando for de uma denúncia                | —                                                     |
+| Listar todas as denúncias                         | `ReportsPolicy.list` (Gestor, DPO, Analista)  | —                                                                            | Gestor e DPO: todas menos as bloqueadas               |
+| Listar denúncias atribuídas a si                  | idem                                          | —                                                                            | Analista: `assigned_to_id` = ele, menos as bloqueadas |
+| Ver conteúdo da denúncia (somente leitura)        | `ReportsPolicy.readAny`                       | `resolve(..., 'reports.read')`: Gestor, DPO, Analista se atribuída; 404 (\*) | —                                                     |
+| Triar, atribuir, priorizar, bloquear por conflito | `ReportsPolicy.triageAny` (Gestor)            | `resolve(..., 'reports.triage')`                                             | —                                                     |
+| Mudar status, mensagens e notas                   | `ReportsPolicy.treatAny`                      | `resolve` + `treat`: Gestor, Analista se atribuída; DPO nunca                | —                                                     |
+| Pedir revelação de identidade                     | `IdentityRevealPolicy.requestAny`             | igual a `treat`                                                              | —                                                     |
+| Aprovar ou rejeitar revelação                     | `IdentityRevealPolicy.decideAny` (DPO)        | `resolve` + `decide` (four-eyes)                                             | —                                                     |
+| Ver trilha de auditoria                           | `AuditPolicy.read` (AUDITOR)                  | —                                                                            | —                                                     |
+| Ver indicadores                                   | `DashboardPolicy.read` (Gestor, DPO, AUDITOR) | —                                                                            | só agregados, sem conteúdo                            |
 
-(\*) Registro de outro analista responde 404, não 403 (ACL-02): o serviço usa `can()`, responde 404 e grava o
-`ACCESS_DENIED` com `AuditService.record()` (ACL-04). ADMIN e AUDITOR nunca passam no `read`. Denúncia expurgada
-responde 410 antes da política.
+Sem a habilidade, a rota responde 403 (quem não tem a habilidade não alcança nenhuma denúncia, então não há existência
+a esconder). Rota de denúncia não usa `@Can.Anyone()`.
+
+(\*) Denúncia fora do escopo (de outro analista ou bloqueada por conflito) e id inexistente respondem o mesmo 404,
+não 403 (ACL-02): o `ReportAccessService.resolve` faz a mesma consulta e grava o mesmo `ACCESS_DENIED` com
+`AuditService.record()` nos dois casos, só com `reason` diferente (`OUT_OF_SCOPE` ou `NOT_FOUND`; ACL-04, D59).
+ADMIN e AUDITOR nunca passam no `read`. O escopo vem antes: denúncia expurgada responde 410 só para quem está no escopo
+dela; fora dele, 404 (D59).
 
 ## O que já existe e o que cada tarefa seguinte constrói
 

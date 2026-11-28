@@ -1,8 +1,10 @@
-import { ForbiddenException, Get, InternalServerErrorException, Module, Param, Post } from '@nestjs/common';
+import { Body, ForbiddenException, Get, InternalServerErrorException, Module, Param, Post } from '@nestjs/common';
 import { AuditResult } from '../../../src/common/enums/audit-result.enum.js';
 import { AuditAction, AuditResourceType } from '../../../src/modules/audit/audit-action.enum.js';
 import { AuditModule } from '../../../src/modules/audit/audit.module.js';
 import { AuditService } from '../../../src/modules/audit/audit.service.js';
+import { Audited } from '../../../src/modules/audit/audited.decorator.js';
+import { strictObject, text } from '../../../src/common/validation/schemas.js';
 import { AdminApi, PublicApi } from '../../../src/common/http/route-decorators.js';
 import { uuid } from '../../../src/common/validation/schemas.js';
 
@@ -49,18 +51,38 @@ export class AdminAuditFixtureController {
   }
 
   @Get('items/:id')
+  @Audited(AuditAction.REPORT_VIEWED, AuditResourceType.REPORT, (params) => params.id ?? null)
   read(@Param('id', { schema: uuid() }) id: string) {
-    return { id };
+    return { id, conteudo: 'resposta que nunca vai para a trilha' };
   }
 
   @Get('forbidden/:id')
+  @Audited(AuditAction.REPORT_VIEWED, AuditResourceType.REPORT, (params) => params.id ?? null)
   forbidden(@Param('id', { schema: uuid() }) _id: string) {
     throw new ForbiddenException();
   }
 
   @Get('broken/:id')
+  @Audited(AuditAction.REPORT_VIEWED, AuditResourceType.REPORT, (params) => params.id ?? null)
   broken(@Param('id', { schema: uuid() }) _id: string) {
     throw new InternalServerErrorException();
+  }
+
+  /** O corpo nunca vai para a trilha. */
+  @Post('notes/:id')
+  @Audited(AuditAction.INTERNAL_NOTES_VIEWED, AuditResourceType.REPORT, (params) => params.id ?? null)
+  withBody(
+    @Param('id', { schema: uuid() }) id: string,
+    @Body({ schema: strictObject({ texto: text({ max: 50 }) }) }) _body: unknown,
+  ) {
+    return { id };
+  }
+
+  /** Força a gravação a falhar (identificador recusado pelo catálogo) depois de um handler bem-sucedido. */
+  @Get('unrecordable')
+  @Audited(AuditAction.REPORT_VIEWED, AuditResourceType.REPORT, () => 'id com espaço')
+  unrecordable() {
+    return { segredo: 'XQZ' };
   }
 }
 

@@ -171,7 +171,7 @@ grava equipe com IP real; comando grava sistema; fora de contexto, recusa.
 
 ### Tests for User Story 3 (mandatory for security and privacy rules) ⚠️
 
-- [ ] T025 [US3] Teste de integração em `test/audit/audited.e2e-spec.ts`: rota marcada grava exatamente um registro
+- [x] T025 [US3] Teste de integração em `test/audit/audited.e2e-spec.ts`: rota marcada grava exatamente um registro
       `SUCCESS` com o id do recurso; rota que lança 403 grava `DENIED`; rota que lança erro grava `FAILURE` e a resposta
       continua sem dado da requisição; com a gravação forçada a falhar (provider substituído), a rota de sucesso
       responde 500 genérico; o registro nunca contém corpo nem resposta (enviar `XQZ` no corpo e conferir); operação
@@ -179,9 +179,9 @@ grava equipe com IP real; comando grava sistema; fora de contexto, recusa.
 
 ### Implementation for User Story 3
 
-- [ ] T026 [P] [US3] Criar o decorator `@Audited(action, resourceType, resolveId?)` em
+- [x] T026 [P] [US3] Criar o decorator `@Audited(action, resourceType, resolveId?)` em
       `src/modules/audit/audited.decorator.ts`
-- [ ] T027 [US3] Criar o `AuditInterceptor` (sucesso, negado em `ForbiddenException`, falha nos demais erros, 500
+- [x] T027 [US3] Criar o `AuditInterceptor` (sucesso, negado em `ForbiddenException`, falha nos demais erros, 500
       genérico se a gravação de um sucesso falhar; `resolveId` só com parâmetros e query) em
       `src/modules/audit/audit.interceptor.ts`
 

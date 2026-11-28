@@ -1,5 +1,6 @@
 import { Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
 import { AuthenticationEvents, type AuthenticationEvent } from '@nestjs/authentication';
+import { AuthorizationEvents, type AuthorizationEvent } from '@nestjs/authorization';
 import type { Subscription } from 'rxjs';
 import { ActorType } from '../../common/enums/actor-type.enum.js';
 import { AuditResult } from '../../common/enums/audit-result.enum.js';
@@ -11,7 +12,8 @@ import { AuditService } from '../../modules/audit/audit.service.js';
  * Leva os eventos de autenticação para a trilha (R7, FR-015), sem senha, código, token nem id de sessão:
  * - login verificado (sessão sem MFA pendente, ou MFA aceito) → `AUTH_SIGNED_IN`;
  * - código recusado → `AUTH_MFA_FAILED`;
- * - saída → `AUTH_SIGNED_OUT`; saída de todos os lugares → `AUTH_SESSION_REVOKED`.
+ * - saída → `AUTH_SIGNED_OUT`; saída de todos os lugares → `AUTH_SESSION_REVOKED`;
+ * - negação de permissão (403) → `ACCESS_DENIED`, só com o nome da política e da habilidade (FR-020).
  *
  * O evento chega dentro da requisição (o contexto do ator está aberto pelo interceptor); o usuário vem do evento,
  * porque nas rotas de entrar ainda não há identidade. Fora de requisição, o ator é a equipe sem IP.
@@ -19,35 +21,59 @@ import { AuditService } from '../../modules/audit/audit.service.js';
 @Injectable()
 export class AuthAuditSubscriber implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(AuthAuditSubscriber.name);
-  private subscription?: Subscription;
+  private readonly subscriptions: Subscription[] = [];
 
   constructor(
     private readonly events: AuthenticationEvents,
+    private readonly authorizationEvents: AuthorizationEvents,
     private readonly audit: AuditService,
   ) {}
 
   onModuleInit(): void {
-    this.subscription = this.events.events$.subscribe((event) => this.handle(event));
+    this.subscriptions.push(
+      this.events.events$.subscribe((event) => this.handle(event)),
+      this.authorizationEvents.events$.subscribe((event) => this.handleDenied(event)),
+    );
   }
 
   onModuleDestroy(): void {
-    this.subscription?.unsubscribe();
+    for (const s of this.subscriptions) s.unsubscribe();
+  }
+
+  /**
+   * A negação pelo guard acontece antes do interceptor que abre o contexto: aí o ator vem do usuário do evento, sem
+   * IP. Negações em serviços (`authorize()`) acontecem dentro do contexto e levam o IP da requisição.
+   */
+  private handleDenied(event: AuthorizationEvent): void {
+    if (event.type !== 'denied' || event.reason !== 'forbidden') return;
+    const userId = (event.user as { id?: unknown } | null)?.id;
+    if (typeof userId !== 'string') return;
+    this.write(userId, {
+      userId,
+      action: AuditAction.ACCESS_DENIED,
+      result: AuditResult.DENIED,
+      metadata: { policy: event.policy, ability: event.ability },
+    });
   }
 
   private handle(event: AuthenticationEvent): void {
     const entry = toAuditEntry(event);
-    if (!entry) return;
+    if (entry) this.write(entry.userId, entry);
+  }
+
+  private write(userId: string, entry: AuthAuditEntry): void {
     const current = AuditContext.current();
     const actor: ActorContext = {
       actorType: ActorType.STAFF,
-      actorUserId: entry.userId,
+      actorUserId: userId,
       ip: current?.actorType === ActorType.STAFF ? current.ip : null,
       userAgent: current?.actorType === ActorType.STAFF ? current.userAgent : null,
     };
     AuditContext.run(actor, () =>
       this.audit.record({
         action: entry.action,
-        resourceType: AuditResourceType.SESSION,
+        // A negação não carrega o registro (só nomes de código): o recurso é registrado como sistema.
+        resourceType: entry.action === AuditAction.ACCESS_DENIED ? AuditResourceType.SYSTEM : AuditResourceType.SESSION,
         resourceId: null,
         result: entry.result,
         metadata: entry.metadata,

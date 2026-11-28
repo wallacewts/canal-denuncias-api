@@ -157,22 +157,22 @@ e encerramento de todas as sessões do usuário.
 
 ### Testes da US3 (escrever antes)
 
-- [ ] T024 [P] [US3] Autorização em `test/contract/auth/authorization.e2e-spec.ts`: rota sem regra → 403 e listada no
+- [x] T024 [P] [US3] Autorização em `test/contract/auth/authorization.e2e-spec.ts`: rota sem regra → 403 e listada no
       log da inicialização; regra "só Gestor" → Analista 403, Gestor 200; Analista lista só os atribuídos e sem o
       bloqueado por conflito, com a condição já na consulta (capturar o SQL); DPO lê e recebe 403 ao tratar (D20);
       autoalteração de perfis → 403 (D21); toda negação grava `ACCESS_DENIED` sem conteúdo; sem sessão → 401
-- [ ] T025 [P] [US3] Concordância política × consulta em `test/contract/auth/example/report-scope.e2e-spec.ts`: para
+- [x] T025 [P] [US3] Concordância política × consulta em `test/contract/auth/example/report-scope.e2e-spec.ts`: para
       combinações geradas de perfis, atribuições e bloqueios sobre `reports` e `report_access_blocks`, o conjunto
       listado pelo repositório é exatamente o conjunto em que a política permite leitura
 
 ### Implementação da US3
 
-- [ ] T026 [US3] Função de escopo única (predicado para a política e condição de consulta para o repositório) em
+- [x] T026 [US3] Função de escopo única (predicado para a política e condição de consulta para o repositório) em
       `test/contract/auth/example/report-scope.ts`, com política de exemplo `test/contract/auth/example/example.policy.ts`
       e repositório de exemplo `test/contract/auth/example/example.repository.ts`
-- [ ] T027 [US3] Rotas de exemplo com `@Can()` (sem regra, só Gestor, leitura do DPO, tratar, alterar os próprios
+- [x] T027 [US3] Rotas de exemplo com `@Can()` (sem regra, só Gestor, leitura do DPO, tratar, alterar os próprios
       perfis, listagem) em `test/contract/auth/example/example-admin.controller.ts`
-- [ ] T028 [US3] Assinar `AuthorizationEvents` (`denied`) no `src/infra/auth/auth-audit.subscriber.ts` para gravar
+- [x] T028 [US3] Assinar `AuthorizationEvents` (`denied`) no `src/infra/auth/auth-audit.subscriber.ts` para gravar
       `ACCESS_DENIED` com `{ policy, ability }`
 
 **Checkpoint**: princípio IV provado com o pacote escolhido.

@@ -60,22 +60,22 @@ stories.
 
 **⚠️ CRITICAL**: nenhuma user story começa antes desta fase.
 
-- [ ] T006 Extrair de `src/main.ts` a configuração do app (prefixo `api` com exclusão de health, helmet, CORS,
+- [x] T006 Extrair de `src/main.ts` a configuração do app (prefixo `api` com exclusão de health, helmet, CORS,
       `trust proxy`, shutdown hooks e Swagger fora de produção) para `setupApp(app)` em `src/app.setup.ts`, e fazer
       `src/main.ts` usá-la
-- [ ] T007 Permitir destino de log injetável em `src/config/logger.config.ts` (parâmetro opcional `DestinationStream`),
+- [x] T007 Permitir destino de log injetável em `src/config/logger.config.ts` (parâmetro opcional `DestinationStream`),
       mantendo os serializers que descartam IP, cabeçalhos e query string
-- [ ] T008 [P] Criar `test/support/log-capture.ts`: stream em memória que guarda as linhas JSON de log e permite
+- [x] T008 [P] Criar `test/support/log-capture.ts`: stream em memória que guarda as linhas JSON de log e permite
       filtrar por `req.id`
-- [ ] T009 [P] Criar `test/support/global-setup.ts` e registrá-lo em `globalSetup` no `vitest.config.e2e.ts`: com `TEST_ADMIN_DATABASE_URL`, recriar `canal_test_template`,
+- [x] T009 [P] Criar `test/support/global-setup.ts` e registrá-lo em `globalSetup` no `vitest.config.e2e.ts`: com `TEST_ADMIN_DATABASE_URL`, recriar `canal_test_template`,
       rodar as migrations nele com o data source da CLI e garantir os perfis `app_migrator` e `app_runtime`
-- [ ] T010 [P] Criar `test/support/test-database.ts`: `createSuiteDatabase()` com
+- [x] T010 [P] Criar `test/support/test-database.ts`: `createSuiteDatabase()` com
       `CREATE DATABASE canal_test_<id> TEMPLATE canal_test_template` e `dropSuiteDatabase()` no fim da suíte
-- [ ] T011 Criar `test/support/test-app.ts`: `createTestApp({ imports })` que sobe o `AppModule` com `setupApp`, o
+- [x] T011 Criar `test/support/test-app.ts`: `createTestApp({ imports })` que sobe o `AppModule` com `setupApp`, o
       banco da suíte (perfil `app_runtime`), a captura de log e módulos de fixture opcionais, e devolve
       `{ app, logs, close }`
-- [ ] T012 Migrar `test/health.e2e-spec.ts` para `createTestApp` (prova que o harness funciona)
-- [ ] T013 Passar `TEST_ADMIN_DATABASE_URL` (superusuário do serviço Postgres) e os segredos de teste ao job `e2e` em
+- [x] T012 Migrar `test/health.e2e-spec.ts` para `createTestApp` (prova que o harness funciona)
+- [x] T013 Passar `TEST_ADMIN_DATABASE_URL` (superusuário do serviço Postgres) e os segredos de teste ao job `e2e` em
       `.github/workflows/ci.yml`
 
 **Checkpoint**: harness pronto. As user stories podem começar.

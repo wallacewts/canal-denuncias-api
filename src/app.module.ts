@@ -2,7 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from 'nestjs-pino';
+import type { DestinationStream } from 'pino';
 import { envSchema, type Env } from './config/env.schema.js';
+import { LOG_DESTINATION } from './config/log-destination.js';
 import { buildLoggerParams } from './config/logger.config.js';
 import { buildDataSourceOptions } from './database/database.options.js';
 import { AccessControlModule } from './modules/access-control/access-control.module.js';
@@ -30,12 +32,17 @@ import { UsersModule } from './modules/users/users.module.js';
       validate: (raw) => envSchema.parse(raw),
     }),
     LoggerModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService<Env, true>) =>
-        buildLoggerParams({
-          NODE_ENV: config.get('NODE_ENV', { infer: true }),
-          LOG_LEVEL: config.get('LOG_LEVEL', { infer: true }),
-        }),
+      // null em produção (stdout). Os testes substituem por um stream em memória.
+      providers: [{ provide: LOG_DESTINATION, useValue: null }],
+      inject: [ConfigService, LOG_DESTINATION],
+      useFactory: (config: ConfigService<Env, true>, destination: DestinationStream | null) =>
+        buildLoggerParams(
+          {
+            NODE_ENV: config.get('NODE_ENV', { infer: true }),
+            LOG_LEVEL: config.get('LOG_LEVEL', { infer: true }),
+          },
+          destination ?? undefined,
+        ),
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],

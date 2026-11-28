@@ -102,6 +102,13 @@ jobs:
           -v "$PWD/docker/vault/init-transit.sh:/init-transit.sh:ro"
           -v "$PWD/docker/vault/api-dev-policy.hcl:/api-dev-policy.hcl:ro"
           --entrypoint /bin/sh hashicorp/vault:2.2 /init-transit.sh
+      - name: Sobe o storage S3 de teste (SeaweedFS, como no docker compose)
+        run: |
+          docker run -d --name s3 -p 8333:8333 \
+            -v "$PWD/docker/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro" \
+            chrislusf/seaweedfs:4.55 server -dir=/data -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json
+          for i in $(seq 1 60); do curl -s -o /dev/null http://127.0.0.1:8333 && exit 0; sleep 1; done
+          docker logs s3; exit 1
       - run: npm run migration:run
       - name: Entidades e banco sem divergência (falha se gerar migration)
         run: |

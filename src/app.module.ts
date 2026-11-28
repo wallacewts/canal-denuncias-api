@@ -9,6 +9,7 @@ import { LOG_DESTINATION } from './config/log-destination.js';
 import { buildLoggerParams } from './config/logger.config.js';
 import { buildDataSourceOptions } from './database/database.options.js';
 import { QueueModule } from './infra/queue/queue.module.js';
+import { StorageModule } from './infra/storage/storage.module.js';
 import { VaultModule } from './infra/vault/vault.module.js';
 import { AccessControlModule } from './modules/access-control/access-control.module.js';
 import { AttachmentsModule } from './modules/attachments/attachments.module.js';
@@ -58,6 +59,7 @@ import { UsersModule } from './modules/users/users.module.js';
     HealthModule,
     VaultModule,
     QueueModule,
+    StorageModule,
     CryptoModule,
     AuditModule,
     UsersModule,

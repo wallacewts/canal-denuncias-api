@@ -355,15 +355,15 @@ publica (TRV-11, FR-038, FR-038a).
 
 ### Tests for User Story 10
 
-- [ ] T060 [US10] Teste de integração em `test/infra/storage.e2e-spec.ts`: `put` e `get` de 20 MB em stream sem
+- [x] T060 [US10] Teste de integração em `test/infra/storage.e2e-spec.ts`: `put` e `get` de 20 MB em stream sem
       carregar em memória, `head` de existente e inexistente, `deleteMany` em lote; bucket criado só com
       `NODE_ENV=development`
 
 ### Implementation for User Story 10
 
-- [ ] T061 [US10] Implementar `src/infra/storage/storage.service.ts` com `@aws-sdk/client-s3` e `Upload` do
+- [x] T061 [US10] Implementar `src/infra/storage/storage.service.ts` com `@aws-sdk/client-s3` e `Upload` do
       `@aws-sdk/lib-storage` (`forcePathStyle`), conforme `contracts/storage.md`
-- [ ] T062 [US10] Criar `src/infra/storage/storage.module.ts` (criação do bucket só em desenvolvimento) e importá-lo
+- [x] T062 [US10] Criar `src/infra/storage/storage.module.ts` (criação do bucket só em desenvolvimento) e importá-lo
       em `src/app.module.ts`
 
 **Checkpoint**: attachments (feature futura) usa o `StorageService`.

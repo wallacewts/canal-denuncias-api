@@ -25,6 +25,8 @@ export default defineConfig({
         'src/infra/auth/**': { lines: 80, functions: 80, statements: 80, branches: 70 },
         'src/modules/crypto/**': { lines: 80, functions: 80, statements: 80, branches: 70 },
         'src/modules/audit/**': { lines: 80, functions: 80, statements: 80, branches: 70 },
+        'src/modules/users/**': { lines: 80, functions: 80, statements: 80, branches: 70 },
+        'src/modules/access-control/**': { lines: 80, functions: 80, statements: 80, branches: 70 },
       },
     },
   },

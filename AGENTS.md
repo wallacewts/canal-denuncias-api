@@ -55,8 +55,10 @@ Regras que não podem ser quebradas:
   identidade do guard. Fora de requisição (CLI, jobs), rode dentro de `runAsSystem()`; processador de fila usa
   `systemJob()`. A entrada de `record()` não aceita ator, IP nem user-agent.
 - Leituras sensíveis em rotas: `@Audited(ação, tipo, resolveId)`. O `resolveId` só lê parâmetros e query.
-- Toda rota `@AdminApi` exige identidade (401 sem ela, D47). Nos testes: `createTestApp({ identity: true })` e o
-  cabeçalho de `testIdentity()`; nunca importe `test/` de `src/` (teste de convenção).
+- Toda rota `@AdminApi` exige identidade (401 sem ela, D47). Nos testes, rota sem política (fixtures da auditoria,
+  por exemplo) pode usar `createTestApp({ identity: true })` e o cabeçalho de `testIdentity()`; rota com política sobre
+  o usuário da sessão (como as de `users` e `me`) usa a sessão real pelo login de exemplo da feature 004
+  (`test/users/support.ts`, `test/contract/auth/example/`). Nunca importe `test/` de `src/` (teste de convenção).
 - Autenticação só pelo `@nestjs/authentication` e autorização só pelo `@nestjs/authorization`, em versões exatas
   (D53, D54, `docs/adr/0053-autenticacao-e-autorizacao.md`). A área administrativa autentica só pela sessão por
   cookie: nenhum token portador nem refresh token (canal de tokens só por decisão própria futura). Sessões e MFA só
@@ -66,6 +68,15 @@ Regras que não podem ser quebradas:
   `@Can.Anyone()` com `authorize()` no serviço; sem declaração, responde 403 e aparece no log da inicialização.
 - Eventos de autenticação e negações entram na trilha só pelo `AuthAuditSubscriber`; evento novo do pacote = entrada
   no mapeamento dele e no catálogo da auditoria. Tempo de sessão e MFA nos testes: `TestClock` no `AUTH_CLOCK`.
+  Tempos da sessão só em `src/infra/auth/session-policy.ts`.
+- Habilidade nova só no catálogo `src/modules/access-control/abilities.ts` (D55), no formato
+  `^[a-z][a-z-]*\.[a-z][a-z-]*$`; políticas consultam `hasAbility`, nunca o perfil direto. O `GET /me` devolve o
+  catálogo: renomear ou remover um código quebra o front. Mudou a matriz do ACL-01, mude o catálogo junto (teste).
+- Erro de regra de negócio com `DomainError`/`DomainConflictError` e `code` estável em maiúsculas (D56); `details` só
+  com inteiros e códigos, nunca valor recebido.
+- Operação que pode mudar a quantidade de Administradores ativos roda com o lock de `src/modules/users/admin-lock.ts`
+  e confere a contagem na mesma transação; escrita sobre outra pessoa trava as linhas de quem age e do alvo
+  (`UsersRepository.lockPair`) e confere de novo quem age.
 - A trilha é particionada por mês (D48). Ninguém altera nem apaga registro; a única remoção é a do comando
   `audit-maintenance`, com o perfil `app_audit_maintenance`, de partições com mais de 5 anos (D49 a D51). Partição nova
   só pela função `audit_ensure_partitions`.

@@ -40,10 +40,12 @@
 
 **Critérios de aceite**
 
-- [ ] Recebe nome, e-mail e perfis. Gera uma senha provisória forte, exibida **uma única vez** na resposta.
-- [ ] `password_changed_at` fica nulo, o que obriga a troca de senha e o cadastro do MFA no primeiro login.
-- [ ] Respeita a regra de segregação de USERS-05.
-- [ ] Teste: senha provisória não aparece em log nem na auditoria.
+- [x] Recebe nome, e-mail e perfis. Gera uma senha provisória forte, exibida **uma única vez** na resposta.
+- [ ] `password_changed_at` fica nulo, o que obriga a troca de senha e o cadastro do MFA no primeiro login. (Feature
+      005: o cadastro já deixa nulo e o `/me` informa `passwordChangeRequired`; a obrigação no primeiro login é aplicada
+      pelo AUTH-03 e pelo AUTH-05.)
+- [x] Respeita a regra de segregação de USERS-05.
+- [x] Teste: senha provisória não aparece em log nem na auditoria (feature 005).
 
 ### USERS-03 · Listar e detalhar usuários
 
@@ -55,7 +57,7 @@
 
 **Critérios de aceite**
 
-- [ ] Resposta sem hash, sem segredo de MFA, com `mfaEnabled` (booleano) e `lastLoginAt`.
+- [x] Resposta sem hash, sem segredo de MFA, com `mfaEnabled` (booleano) e `lastLoginAt` (feature 005).
 
 ### USERS-04 · Alterar dados e status
 
@@ -67,11 +69,11 @@
 
 **Critérios de aceite**
 
-- [ ] Bloquear ou desativar revoga todas as sessões do usuário na hora.
-- [ ] Usuário com denúncias atribuídas não pode ser desativado: a operação é recusada (409, informando a quantidade)
+- [x] Bloquear ou desativar revoga todas as sessões do usuário na hora (feature 005).
+- [x] Usuário com denúncias atribuídas não pode ser desativado: a operação é recusada (409, informando a quantidade)
       até o Gestor reatribuir. Bloquear continua sempre permitido e imediato (para conta comprometida, bloquear antes
       e desativar depois). Decidido em 28/11/2026 (feature 005).
-- [ ] O ADMIN não pode desativar a si mesmo.
+- [x] O ADMIN não pode desativar a si mesmo.
 
 ### USERS-05 · Gerenciar perfis
 
@@ -82,12 +84,12 @@
 
 **Critérios de aceite**
 
-- [ ] Não permite ficar sem nenhum ADMIN ativo (contagem e alteração na mesma transação).
-- [ ] `ADMIN` pode acumular perfis que leem denúncias (decidido em 27/11/2026).
-- [ ] Ninguém altera os próprios perfis: a mudança precisa ser feita por outro `ADMIN` (403). Sem isso, um `ADMIN`
+- [x] Não permite ficar sem nenhum ADMIN ativo (contagem e alteração na mesma transação).
+- [x] `ADMIN` pode acumular perfis que leem denúncias (decidido em 27/11/2026).
+- [x] Ninguém altera os próprios perfis: a mudança precisa ser feita por outro `ADMIN` (403). Sem isso, um `ADMIN`
       poderia se conceder acesso às denúncias sozinho.
-- [ ] Mudança de perfil vale na próxima requisição (perfis lidos do banco, não do token).
-- [ ] Remover `ANALYST` de quem tem denúncias atribuídas segue a mesma regra de USERS-04.
+- [x] Mudança de perfil vale na próxima requisição (perfis lidos do banco, não do token).
+- [x] Remover `ANALYST` de quem tem denúncias atribuídas segue a mesma regra de USERS-04.
 
 ### USERS-06 · Resetar MFA de outro usuário
 
@@ -98,8 +100,8 @@
 
 **Critérios de aceite**
 
-- [ ] Limpa `mfa_secret_enc` e `mfa_enabled_at`, apaga os códigos de recuperação e revoga as sessões.
-- [ ] O ADMIN não reseta o próprio MFA por esta rota.
+- [x] Limpa `mfa_secret_enc` e `mfa_enabled_at`, apaga os códigos de recuperação e revoga as sessões.
+- [x] O ADMIN não reseta o próprio MFA por esta rota (feature 005).
 
 ### USERS-07 · Meu perfil
 
@@ -110,15 +112,15 @@
 
 **Critérios de aceite**
 
-- [ ] Retorna id, nome, e-mail, perfis, situação do MFA e se a troca de senha é obrigatória.
-- [ ] As permissões efetivas (lista de habilidades) vêm junto, calculadas pelas mesmas políticas do servidor (D54). O
+- [x] Retorna id, nome, e-mail, perfis, situação do MFA e se a troca de senha é obrigatória.
+- [x] As permissões efetivas (lista de habilidades) vêm junto, calculadas pelas mesmas políticas do servidor (D54). O
       front decide menu e rotas só por elas e não copia a matriz de perfis; o servidor continua checando cada rota.
       (Proposta do front, feature 004 do backoffice.)
-- [ ] Formato das permissões: códigos estáveis `recurso.ação` (ex.: `reports.list`, `reports.read`, `users.manage`,
+- [x] Formato das permissões: códigos estáveis `recurso.ação` (ex.: `reports.list`, `reports.read`, `users.manage`,
       `audit.read`), um por habilidade da matriz do ACL-01 (mapeamento em
       `docs/adr/0053-autenticacao-e-autorizacao.md`). Habilidade que depende do registro (ex.: ler uma denúncia só se
       atribuída) indica só que o usuário pode exercê-la em algum registro; a decisão final continua no servidor.
       (Proposta do front.)
-- [ ] Devolve os horários de expiração da sessão em ISO 8601 UTC: inatividade (último uso + 15 min) e absoluta
+- [x] Devolve os horários de expiração da sessão em ISO 8601 UTC: inatividade (último uso + 15 min) e absoluta
       (login + 8 h), para o front avisar antes de cada um. Como toda requisição autenticada conta como uso, o front não
       deve chamar `/me` só para manter a sessão viva. (Proposta do front, feature 004 do backoffice.)

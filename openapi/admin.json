@@ -5,6 +5,27 @@
         "additionalProperties": false,
         "description": "Corpo de toda resposta de erro. Nunca contém valores recebidos na requisição.",
         "properties": {
+          "code": {
+            "description": "Código estável de regra de negócio (D56), só em erros de domínio.",
+            "pattern": "^[A-Z][A-Z0-9_]{1,63}$",
+            "type": "string"
+          },
+          "details": {
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "pattern": "^[A-Z][A-Z0-9_]{1,63}$",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Detalhes do erro de domínio (D56): só inteiros não negativos e códigos em maiúsculas.",
+            "type": "object"
+          },
           "error": {
             "type": "string"
           },
@@ -266,7 +287,101 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "abilities": {
+                      "items": {
+                        "enum": [
+                          "users.manage",
+                          "categories.manage",
+                          "settings.sla",
+                          "retention.manage",
+                          "reports.list",
+                          "reports.read",
+                          "reports.triage",
+                          "reports.treat",
+                          "identity.request",
+                          "identity.approve",
+                          "audit.read",
+                          "dashboard.read"
+                        ],
+                        "type": "string"
+                      },
+                      "maxItems": 12,
+                      "type": "array"
+                    },
+                    "absoluteExpiresAt": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                      "type": "string"
+                    },
+                    "email": {
+                      "maxLength": 254,
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string"
+                    },
+                    "idleExpiresAt": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                      "type": "string"
+                    },
+                    "mfaEnabledAt": {
+                      "anyOf": [
+                        {
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "name": {
+                      "maxLength": 120,
+                      "type": "string"
+                    },
+                    "passwordChangeRequired": {
+                      "type": "boolean"
+                    },
+                    "roles": {
+                      "items": {
+                        "enum": [
+                          "ADMIN",
+                          "COMPLIANCE_MANAGER",
+                          "ANALYST",
+                          "DPO",
+                          "AUDITOR"
+                        ],
+                        "type": "string"
+                      },
+                      "maxItems": 5,
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "email",
+                    "roles",
+                    "mfaEnabledAt",
+                    "passwordChangeRequired",
+                    "abilities",
+                    "idleExpiresAt",
+                    "absoluteExpiresAt"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Meu perfil, no formato do CurrentUser do backoffice."
           }
         },
         "tags": [

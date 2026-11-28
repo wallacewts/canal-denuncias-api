@@ -3,6 +3,7 @@ import request from 'supertest';
 import type { DataSource } from 'typeorm';
 import { Role } from '../../src/common/enums/role.enum.js';
 import { abilitiesFor } from '../../src/modules/access-control/abilities.js';
+import { currentUserResponseSchema } from '../../src/modules/users/me.schema.js';
 import { MINUTE, TestClock } from '../support/auth-clock.js';
 import type { TestApp } from '../support/test-app.js';
 import { createUsersApp, staffWithSession } from './support.js';
@@ -51,6 +52,8 @@ describe('Meu perfil (e2e)', () => {
       passwordChangeRequired: true,
       abilities: abilitiesFor([Role.ANALYST]),
     });
+    // A resposta real obedece ao schema publicado no OpenAPI (o mesmo comparado com o contrato do front).
+    expect(currentUserResponseSchema.safeParse(body).success).toBe(true);
     expect(body.mfaEnabledAt).toMatch(ISO_UTC);
     expect(body.idleExpiresAt).toMatch(ISO_UTC);
     expect(body.absoluteExpiresAt).toMatch(ISO_UTC);

@@ -216,19 +216,19 @@ com operações simultâneas.
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T034 `npm run openapi:export` e commit de `openapi/admin.json`; conferir o schema do `/me` contra o `CurrentUser`
+- [x] T034 `npm run openapi:export` e commit de `openapi/admin.json`; conferir o schema do `/me` contra o `CurrentUser`
       de `../canal-denuncias-web/specs/004-backoffice-sign-in/contracts/auth-api.md` (só leitura)
-- [ ] T035 [P] Regras novas no `AGENTS.md`: habilidade nova só no catálogo `abilities.ts` (D55) e política consulta
+- [x] T035 [P] Regras novas no `AGENTS.md`: habilidade nova só no catálogo `abilities.ts` (D55) e política consulta
       `hasAbility`; erro de regra de negócio com `DomainConflictError` e `code` estável (D56); operação que reduz
       Administradores usa o lock de `admin-lock.ts`; e ajuste da regra de testes: rotas com política e sessão real (como
       as da feature 005) usam o login de exemplo da 004 (`test/contract/auth/example/`), não
       `createTestApp({ identity: true })`
-- [ ] T036 [P] Backlog: marcar os critérios atendidos do USERS-02 a USERS-07 em `docs/tarefas/03-users.md` (com
+- [x] T036 [P] Backlog: marcar os critérios atendidos do USERS-02 a USERS-07 em `docs/tarefas/03-users.md` (com
       "feature 005"), deixando abertos os que dependem do AUTH-03/AUTH-05 (troca obrigatória e cadastro do MFA no
       primeiro login são aplicados lá)
-- [ ] T037 Cobertura mínima de 80% em `src/modules/users` e `src/modules/access-control` no
+- [x] T037 Cobertura mínima de 80% em `src/modules/users` e `src/modules/access-control` no
       `vitest.config.coverage.ts`
-- [ ] T038 Rodar os cenários de `quickstart.md`, a suíte completa (lint, typecheck, unitários, e2e, build, openapi em
+- [x] T038 Rodar os cenários de `quickstart.md`, a suíte completa (lint, typecheck, unitários, e2e, build, openapi em
       dia, cada um separado), o compose `--profile app` (`GET /api/admin/v1/me` e `/users` → 401 sem sessão), Trivy e
       gitleaks
 

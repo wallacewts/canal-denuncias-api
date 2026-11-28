@@ -39,6 +39,21 @@ const BASE_SCHEMAS: Record<string, object> = {
           },
         ],
       },
+      code: {
+        type: 'string',
+        pattern: '^[A-Z][A-Z0-9_]{1,63}$',
+        description: 'Código estável de regra de negócio (D56), só em erros de domínio.',
+      },
+      details: {
+        type: 'object',
+        description: 'Detalhes do erro de domínio (D56): só inteiros não negativos e códigos em maiúsculas.',
+        additionalProperties: {
+          oneOf: [
+            { type: 'integer', minimum: 0 },
+            { type: 'string', pattern: '^[A-Z][A-Z0-9_]{1,63}$' },
+          ],
+        },
+      },
       requestId: { type: 'string', format: 'uuid' },
     },
   },

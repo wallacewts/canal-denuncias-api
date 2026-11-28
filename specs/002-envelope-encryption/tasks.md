@@ -147,23 +147,23 @@ chamada ao Vault acontece com transação aberta.
 
 ### Tests for User Story 3 (mandatory for security and privacy rules) ⚠️
 
-- [ ] T018 [P] [US3] Testes de `src/modules/crypto/record-cipher.service.spec.ts`: `ReportContentV1` sela e abre igual;
+- [x] T018 [P] [US3] Testes de `src/modules/crypto/record-cipher.service.spec.ts`: `ReportContentV1` sela e abre igual;
       `v` fora do mapa gera erro; objeto com campo a mais ou faltando gera `ContentSchemaError` sem devolver parcial e
       sem as issues do zod na mensagem; texto sela e abre; texto de uma mensagem não abre com o contexto de outra
-- [ ] T019 [P] [US3] Testes de `src/modules/crypto/record-id.spec.ts`: `newRecordId()` gera UUID v7 válido, ids gerados
+- [x] T019 [P] [US3] Testes de `src/modules/crypto/record-id.spec.ts`: `newRecordId()` gera UUID v7 válido, ids gerados
       em sequência ordenam por tempo e o formato é aceito pelo cursor da 001 (`src/common/pagination/cursor.ts`)
-- [ ] T020 [P] [US3] Teste de integração de latência em `test/crypto/latency.e2e-spec.ts`, com o AppRole `api`: 50
+- [x] T020 [P] [US3] Teste de integração de latência em `test/crypto/latency.e2e-spec.ts`, com o AppRole `api`: 50
       repetições de selar e abrir o conteúdo de uma denúncia, incluindo abrir a DEK no Vault local. Sempre escreve o p95
       medido no relatório do teste; **fora do CI** (`CI` não definido), falha se o p95 passar de 100 ms; no CI, só
       registra o valor (SC-003)
 
 ### Implementation for User Story 3
 
-- [ ] T021 [P] [US3] Acrescentar `ReportContentV1Schema` (zod, `strictObject`, helpers `text({ max })` de
+- [x] T021 [P] [US3] Acrescentar `ReportContentV1Schema` (zod, `strictObject`, helpers `text({ max })` de
       `src/common/validation/schemas.ts`; `dataTypes` restrito a `PERSONAL`, `FINANCIAL`, `CREDENTIALS` e `OTHER`, sem
       repetição, conforme o REP-02) em `src/modules/reports/report-content.ts`
-- [ ] T022 [P] [US3] Implementar `newRecordId()` em `src/modules/crypto/record-id.ts` com `crypto.randomUUIDv7()` (R8)
-- [ ] T023 [US3] Implementar `sealJson`/`openJson`/`sealText`/`openText` em `src/modules/crypto/record-cipher.service.ts`
+- [x] T022 [P] [US3] Implementar `newRecordId()` em `src/modules/crypto/record-id.ts` com `crypto.randomUUIDv7()` (R8)
+- [x] T023 [US3] Implementar `sealJson`/`openJson`/`sealText`/`openText` em `src/modules/crypto/record-cipher.service.ts`
       (R5) e registrar/exportar no `CryptoModule`
 
 **Checkpoint**: US3 verde; os módulos do MVP já têm a interface que vão usar.
@@ -410,11 +410,11 @@ Task: "T022 newRecordId() em src/modules/crypto/record-id.ts"
 
 ## Pendências do analyze
 
-| ID  | Situação | Pendência                                                                                                                       | Onde resolver |
-| --- | -------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| G3  | Aberto   | Cobrir a queda do Vault no meio da recifragem: execução com `FAILURE` e nova execução terminando o serviço                      | T032          |
-| I1  | Aberto   | O R7 do `research.md` dizia que a KEK ia na metadata; o data-model coloca em `resource_id`. Vale o data-model                   | T034          |
-| U1  | Aberto   | Medição de memória do streaming estável: amostrar o pico e chamar `gc()` antes de medir (`--expose-gc`) ou medir `arrayBuffers` | T030          |
-| U2  | Aberto   | Detalhar o mecanismo da T016 (ex.: `queryRunner.isTransactionActive` no momento da chamada) e conferir a fixture da T011        | T011, T016    |
-| I2  | Aberto   | `EncryptedColumn` inclui `attachments.object`, que não é coluna: renomear para `EncryptedField` ou documentar a exceção         | T010          |
-| I3  | Aberto   | O Prettier precisa de duas passadas no `tasks.md`: rodar duas vezes antes do commit da fase                                     | cada commit   |
+| ID  | Situação  | Pendência                                                                                                                       | Onde resolver |
+| --- | --------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| G3  | Aberto    | Cobrir a queda do Vault no meio da recifragem: execução com `FAILURE` e nova execução terminando o serviço                      | T032          |
+| I1  | Aberto    | O R7 do `research.md` dizia que a KEK ia na metadata; o data-model coloca em `resource_id`. Vale o data-model                   | T034          |
+| U1  | Aberto    | Medição de memória do streaming estável: amostrar o pico e chamar `gc()` antes de medir (`--expose-gc`) ou medir `arrayBuffers` | T030          |
+| U2  | Aberto    | Detalhar o mecanismo da T016 (ex.: `queryRunner.isTransactionActive` no momento da chamada) e conferir a fixture da T011        | T011, T016    |
+| I2  | Resolvido | `EncryptedColumn` inclui `attachments.object`, que não é coluna: renomear para `EncryptedField` ou documentar a exceção         | T010          |
+| I3  | Aberto    | O Prettier precisa de duas passadas no `tasks.md`: rodar duas vezes antes do commit da fase                                     | cada commit   |

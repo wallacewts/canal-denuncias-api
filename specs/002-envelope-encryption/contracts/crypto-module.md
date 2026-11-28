@@ -4,8 +4,8 @@ O que o `CryptoModule` exporta para os módulos reports, messages, case-manageme
 fala com o Vault para cifrar conteúdo por outro caminho.
 
 ```ts
-/** Colunas cifradas conhecidas (lista fechada, encryption-context.ts). */
-type EncryptedColumn =
+/** Campos cifrados conhecidos (lista fechada `ENCRYPTED_FIELDS`, encryption-context.ts). Inclui `attachments.object`, que não é coluna. */
+type EncryptedField =
   | 'reports.content_enc'
   | 'messages.body_enc'
   | 'internal_notes.body_enc'
@@ -18,11 +18,11 @@ type EncryptedColumn =
 
 /** Contexto já validado (ids UUID). Não é guardado; é recalculado na abertura. */
 interface EncryptionContext {
-  readonly column: EncryptedColumn;
+  readonly field: EncryptedField;
   readonly aad: Buffer; // UTF-8 de "<tabela>.<campo>:<id>[.<id2>]"
 }
 
-function encryptionContext(column: EncryptedColumn, ...ids: [string, ...string[]]): EncryptionContext;
+function encryptionContext(field: EncryptedField, ...ids: [string, ...string[]]): EncryptionContext;
 
 function newRecordId(): string; // UUID v7
 
@@ -34,10 +34,15 @@ class DataKeyService {
 }
 
 class RecordCipher {
-  sealJson(dek: Buffer, ctx: EncryptionContext, value: { v: number }): Buffer;
-  openJson<T>(dek: Buffer, ctx: EncryptionContext, schemas: Record<number, StandardSchema<T>>): T;
+  sealJson(dek: Buffer, ctx: EncryptionContext, value: { v: number; [field: string]: unknown }): Buffer;
+  openJson<S extends Record<number, ZodType>>(
+    dek: Buffer,
+    ctx: EncryptionContext,
+    sealed: Buffer,
+    schemas: S,
+  ): z.infer<S[keyof S]>;
   sealText(dek: Buffer, ctx: EncryptionContext, text: string): Buffer;
-  openText(dek: Buffer, ctx: EncryptionContext): string;
+  openText(dek: Buffer, ctx: EncryptionContext, sealed: Buffer): string;
 }
 
 class AppSecretService {

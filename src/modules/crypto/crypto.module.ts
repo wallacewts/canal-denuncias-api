@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { VaultModule } from '../../infra/vault/vault.module.js';
 import { DataKeyService } from './data-key.service.js';
+import { RecordCipher } from './record-cipher.service.js';
 
 /**
  * Envelope encryption (AES-256-GCM) sobre o Vault Transit (contracts/crypto-module.md da feature 002).
@@ -8,7 +9,7 @@ import { DataKeyService } from './data-key.service.js';
  */
 @Module({
   imports: [VaultModule],
-  providers: [DataKeyService],
-  exports: [DataKeyService],
+  providers: [DataKeyService, RecordCipher],
+  exports: [DataKeyService, RecordCipher],
 })
 export class CryptoModule {}

@@ -1,3 +1,4 @@
+import type { ObjectLiteral, SelectQueryBuilder } from 'typeorm';
 import type { Role } from '../../common/enums/role.enum.js';
 import { ABILITY_CATALOG, type Ability, type CatalogEntry } from './abilities.js';
 
@@ -45,4 +46,26 @@ export function reportScope(user: ScopedUser | null | undefined, ability: Report
 export function allowsReport(scope: ReportScope, facts: ReportAccessFacts): boolean {
   if (scope.kind === 'none' || !facts.exists || facts.blockedForUser) return false;
   return scope.kind === 'all' || facts.assignedToId === scope.userId;
+}
+
+/**
+ * Intérprete da consulta (ACL-03): aplica no `WHERE` da própria listagem o escopo de `reports.list` — nunca carrega
+ * para filtrar depois (princípio IV). `alias` é o da tabela `reports` no query builder. Os parâmetros têm nome
+ * reservado (`acl_scope_*`) para não colidir com os filtros e o cursor da listagem. Sem a habilidade: `FALSE`.
+ */
+export function scopeReportsFor<T extends ObjectLiteral>(
+  user: ScopedUser | null | undefined,
+  queryBuilder: SelectQueryBuilder<T>,
+  alias = queryBuilder.alias,
+): SelectQueryBuilder<T> {
+  const scope = reportScope(user, 'reports.list');
+  if (scope.kind === 'none') return queryBuilder.andWhere('FALSE');
+  queryBuilder.andWhere(
+    `NOT EXISTS (SELECT 1 FROM report_access_blocks acl_b WHERE acl_b.report_id = ${alias}.id AND acl_b.user_id = :acl_scope_user)`,
+    { acl_scope_user: scope.userId },
+  );
+  if (scope.kind === 'assigned') {
+    queryBuilder.andWhere(`${alias}.assigned_to_id = :acl_scope_user`, { acl_scope_user: scope.userId });
+  }
+  return queryBuilder;
 }

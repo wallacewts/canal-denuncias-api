@@ -38,6 +38,14 @@ describe('reportScope (D60)', () => {
   it('sem pessoa, nenhum alcance', () => {
     expect(reportScope(null, 'reports.read').kind).toBe('none');
   });
+
+  it('listar e ler têm o mesmo alcance (a listagem usa list, o registro usa read: precisam concordar)', () => {
+    for (const roles of [[MANAGER], [ANALYST], [DPO], [ADMIN], [AUDITOR], [DPO, ANALYST], [ADMIN, ANALYST]]) {
+      expect(reportScope(staff(...roles), 'reports.list'), roles.join()).toEqual(
+        reportScope(staff(...roles), 'reports.read'),
+      );
+    }
+  });
 });
 
 describe('allowsReport', () => {

@@ -98,9 +98,11 @@ describe('Autorização: negação por padrão e escopo na consulta (e2e, teste 
     expect(ids).toContain(mine);
     expect(ids).not.toContain(blocked);
     expect(ids).not.toContain(notMine);
-    const listing = sqls.find((s) => s.includes('FROM reports r WHERE'))!;
-    expect(listing).toContain('r.assigned_to_id =');
-    expect(listing).toContain('report_access_blocks');
+    // Uma consulta só, já com a atribuição e o bloqueio no WHERE (função de escopo real, feature 007).
+    const listings = sqls.filter((s) => /FROM "?reports"? "?r"? WHERE/.test(s));
+    expect(listings).toHaveLength(1);
+    expect(listings[0]).toMatch(/"?r"?\."?assigned_to_id"? = /);
+    expect(listings[0]).toContain('report_access_blocks');
   });
 
   it('DPO lê, mas recebe 403 ao tratar (D20)', async () => {

@@ -180,7 +180,7 @@ permitida" no Postgres real.
 
 ### Tests for User Story 3 ⚠️ (escrever antes, devem falhar)
 
-- [ ] T027 [P] [US3] E2e `test/access-control/report-scope.e2e-spec.ts`: (a) cenário do ACL-03 — 3 analistas, 1
+- [x] T027 [P] [US3] E2e `test/access-control/report-scope.e2e-spec.ts`: (a) cenário do ACL-03 — 3 analistas, 1
       Gestora com bloqueio, 1 DPO com bloqueio, 10 denúncias (algumas sem atribuição): conjunto de cada pessoa igual
       ao esperado escrito à mão; ADMIN e AUDITOR → vazio (SC-002); (b) prova exaustiva com perfis isolados e
       combinados e bloqueios determinísticos: para toda pessoa e denúncia, listado por `scopeReportsFor` ⇔
@@ -189,10 +189,10 @@ permitida" no Postgres real.
 
 ### Implementation for User Story 3
 
-- [ ] T028 [US3] `scopeReportsFor(user, qb, alias = 'r')` em `src/modules/access-control/report-scope.ts` (depois do
+- [x] T028 [US3] `scopeReportsFor(user, qb, alias = 'r')` em `src/modules/access-control/report-scope.ts` (depois do
       T027): `NOT EXISTS` em `report_access_blocks`, `assigned_to_id` quando `assigned`, `FALSE` quando `none`,
       habilidade `reports.list`
-- [ ] T029 [US3] Exemplo da feature 004 (R7): remover `test/contract/auth/example/report-scope.ts` e
+- [x] T029 [US3] Exemplo da feature 004 (R7): remover `test/contract/auth/example/report-scope.ts` e
       `test/contract/auth/example/report-scope.e2e-spec.ts`; `example.policy.ts` e `example.repository.ts` passam a
       usar `src/modules/access-control/report-scope.ts`; `test/contract/auth/authorization.e2e-spec.ts` e
       `session-expiry.e2e-spec.ts` continuam verdes (depois do T028)

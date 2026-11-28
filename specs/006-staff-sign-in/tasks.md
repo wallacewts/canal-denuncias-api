@@ -133,13 +133,13 @@ now)` (incremento e bloqueio numa instrução, `RETURNING`), `resetLoginFailures
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T022 [P] [US3] e2e `test/auth/password-change.e2e-spec.ts`: sucesso → 200 com `nextStep`, horários, cookie novo,
+- [x] T022 [P] [US3] e2e `test/auth/password-change.e2e-spec.ts`: sucesso → 200 com `nextStep`, horários, cookie novo,
       outra sessão da pessoa cai, `AUTH_PASSWORD_CHANGED`; curta, comum e igual à atual → 422 com
       `PASSWORD_TOO_SHORT`, `PASSWORD_COMMON`, `PASSWORD_SAME_AS_CURRENT` (não contam); senha atual errada 1 a 4 →
       422 `CURRENT_PASSWORD_INVALID` com `AUTH_PASSWORD_CHANGE_FAILED` (`attempt` 1..4, `locked: false`); 5º → 429,
       sessão apagada, cookie apagado, mesmo cookie 401, registro `locked: true`; 5 simultâneos → sessão encerrada uma
       vez; sessão nova começa do zero; senha (inteira e `XQZ`) fora de resposta, logs e trilha
-- [ ] T023 [P] [US3] e2e `test/auth/password-change-gate.e2e-spec.ts` (R11): pessoa com autenticador e troca
+- [x] T023 [P] [US3] e2e `test/auth/password-change-gate.e2e-spec.ts` (R11): pessoa com autenticador e troca
       obrigatória, depois do desafio → `GET /users` (como ADMIN) e outras rotas dão 403 `PASSWORD_CHANGE_REQUIRED`; `GET
 /me` 200 com `passwordChangeRequired: true`; `sign-out` funciona; depois da troca, tudo volta; e teste
       `test/auth/route-walk.e2e-spec.ts` que percorre **todas** as rotas administrativas registradas no roteador
@@ -149,15 +149,15 @@ now)` (incremento e bloqueio numa instrução, `RETURNING`), `resetLoginFailures
 
 ### Implementation for User Story 3
 
-- [ ] T024 [US3] Contador em `src/infra/auth/stores/pg-session.store.ts`: `registerPasswordChangeFailure(sessionId)`
+- [x] T024 [US3] Contador em `src/infra/auth/stores/pg-session.store.ts`: `registerPasswordChangeFailure(sessionId)`
       com `UPDATE` condicional e `RETURNING` (R6)
-- [ ] T025 [US3] `PasswordChangeService` em `src/modules/auth/password-change.service.ts`: política e
+- [x] T025 [US3] `PasswordChangeService` em `src/modules/auth/password-change.service.ts`: política e
       `PASSWORD_SAME_AS_CURRENT` (códigos novos mapeados em `src/modules/auth/password/password-policy.ts`), contador
       e encerramento no 5º erro, hash fora da transação, troca + `AUTH_PASSWORD_CHANGED` na transação, `revokeAll`
       com `except` e `rotate` depois (R6, R7)
-- [ ] T026 [US3] `PUT /me/password` em `src/modules/auth/me-security.controller.ts` (`StepRoute` em
+- [x] T026 [US3] `PUT /me/password` em `src/modules/auth/me-security.controller.ts` (`StepRoute` em
       `PASSWORD_CHANGE_REQUIRED` e `DONE`)
-- [ ] T027 [US3] Guard `src/infra/auth/password-change-gate.guard.ts` (depois do guard de identidade, no
+- [x] T027 [US3] Guard `src/infra/auth/password-change-gate.guard.ts` (depois do guard de identidade, no
       `AdminAreaGuardModule`): 403 `PASSWORD_CHANGE_REQUIRED` com sessão verificada e troca pendente, exceto
       `PUT /me/password`, `sign-out` e `GET /me` (R11)
 

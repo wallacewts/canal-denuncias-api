@@ -18,6 +18,6 @@ export class StaffSessionProvider extends SessionCookieProvider<StaffUser> {
   protected validate(session: SessionRecord): StaffUser | null {
     const user = (session.extra as { user?: StaffUser } | undefined)?.user;
     if (!user || user.status !== UserStatus.ACTIVE) return null;
-    return user;
+    return { ...user, mfaVerified: session.mfa === 'verified' };
   }
 }

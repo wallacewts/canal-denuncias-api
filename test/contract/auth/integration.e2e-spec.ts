@@ -8,7 +8,7 @@ import { CreateAdminCommand } from '../../../src/cli/create-admin.command.js';
 import { PasswordPrompt } from '../../../src/cli/password-prompt.js';
 import { AuditFixtureModule } from '../../support/fixtures/audit-fixture.module.js';
 import { createTestApp, type TestApp } from '../../support/test-app.js';
-import { signInFully, totp } from './example/auth-helpers.js';
+import { sessionCookie, signInFully, totp } from './example/auth-helpers.js';
 
 /**
  * Encaixe com o que já existe (US4, T029, FR-013, FR-014): o administrador do `create-admin` entra sem migração de
@@ -65,6 +65,14 @@ describe('Encaixe da autenticação com create-admin, AUTH_IDENTITY e auditoria 
   });
 
   it('rota @AdminApi auditada grava ator equipe com o id do usuário da sessão e o IP', async () => {
+    // O admin do create-admin troca a senha no primeiro acesso (feature 006, R11): antes disso, só /me e a troca abrem.
+    await request(server()).get(`/api/admin/v1/audit-fixtures/items/${REPORT}`).set('Cookie', admin.cookie).expect(403);
+    const changed = await request(server())
+      .put('/api/admin/v1/me/password')
+      .set('Cookie', admin.cookie)
+      .send({ currentPassword: SENHA, newPassword: 'outra frase senha forte 2026' })
+      .expect(200);
+    admin.cookie = sessionCookie(changed)!;
     await request(server()).get(`/api/admin/v1/audit-fixtures/items/${REPORT}`).set('Cookie', admin.cookie).expect(200);
     const rows = (await ds.query(
       `SELECT actor_type::text, actor_user_id::text, host(ip) AS ip, result::text FROM audit_logs

@@ -4,6 +4,13 @@ import { join } from 'node:path';
 export const MIN_PASSWORD_LENGTH = 12;
 export const MAX_PASSWORD_LENGTH = 128;
 
+/** Código estável de cada regra violada (D56), devolvido na troca de senha (feature 006). */
+export const PASSWORD_POLICY_CODES = {
+  too_short: 'PASSWORD_TOO_SHORT',
+  too_long: 'PASSWORD_TOO_LONG',
+  common: 'PASSWORD_COMMON',
+} as const;
+
 export type PasswordPolicyResult =
   { ok: true } | { ok: false; reason: 'too_short' | 'too_long' | 'common'; message: string };
 

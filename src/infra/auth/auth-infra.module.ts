@@ -7,6 +7,7 @@ import type { Env } from '../../config/env.schema.js';
 import { AuditModule } from '../../modules/audit/audit.module.js';
 import { CryptoModule } from '../../modules/crypto/crypto.module.js';
 import { AdminIdentityGuard } from './admin-identity.guard.js';
+import { LoginStepGuard } from './login-step.guard.js';
 import { AUTH_CLOCK, systemClock, type AuthClock } from './auth-clock.js';
 import { AUTH_IDENTITY } from './auth-identity.port.js';
 import { AuthAuditSubscriber } from './auth-audit.subscriber.js';
@@ -39,6 +40,8 @@ export class AuthClockModule {}
   providers: [
     { provide: AUTH_IDENTITY, useClass: SessionAuthIdentity },
     { provide: APP_GUARD, useClass: AdminIdentityGuard },
+    // Depois da identidade: etapas do login e troca obrigatória pendente (feature 006).
+    { provide: APP_GUARD, useClass: LoginStepGuard },
   ],
   exports: [AUTH_IDENTITY],
 })

@@ -9,6 +9,10 @@ export interface StaffUser {
   id: string;
   roles: Role[];
   status: UserStatus;
+  /** Troca de senha obrigatória pendente (`password_changed_at` nulo; feature 006). */
+  passwordChangeRequired?: boolean;
+  /** A sessão desta requisição tem o segundo fator verificado (feature 006). */
+  mfaVerified?: boolean;
 }
 
 declare module '@nestjs/authentication' {

@@ -2,7 +2,7 @@ import { Get, Inject, UnauthorizedException } from '@nestjs/common';
 import { CurrentSession, CurrentUser, type SessionRecord } from '@nestjs/authentication';
 import { Can } from '@nestjs/authorization';
 import { ApiOkResponse } from '@nestjs/swagger';
-import { AdminApi } from '../../common/http/route-decorators.js';
+import { AdminApi, AllowDuringPasswordChange } from '../../common/http/route-decorators.js';
 import { AUTH_CLOCK, type AuthClock } from '../../infra/auth/auth-clock.js';
 import { SESSION_IDLE_TTL_MS, SESSION_TOUCH_INTERVAL_MS } from '../../infra/auth/session-policy.js';
 import type { StaffUser } from '../../infra/auth/staff-user.js';
@@ -24,6 +24,8 @@ export class MeController {
   ) {}
 
   @Can.Anyone()
+  // Liberado com a troca de senha obrigatória pendente (feature 006, R11): devolve `passwordChangeRequired: true`.
+  @AllowDuringPasswordChange()
   @ApiOkResponse({
     description: 'Meu perfil, no formato do CurrentUser do backoffice.',
     schema: currentUserOpenApiSchema(),

@@ -41,18 +41,28 @@ export class PgSessionStore implements SessionStore {
 
   async getSession(id: string): Promise<SessionRecord | undefined> {
     const rows = (await this.ds.query(
-      `SELECT s.*, u.status AS user_status,
+      `SELECT s.*, u.status AS user_status, u.password_changed_at IS NULL AS user_password_change_required,
               COALESCE(array_agg(r.role::text) FILTER (WHERE r.role IS NOT NULL), '{}') AS user_roles
        FROM sessions s
        JOIN users u ON u.id = s.user_id
        LEFT JOIN user_roles r ON r.user_id = s.user_id
        WHERE s.id = $1
-       GROUP BY s.id, u.status`,
+       GROUP BY s.id, u.status, u.password_changed_at`,
       [id],
-    )) as Array<SessionRow & { user_status: UserStatus; user_roles: Role[] }>;
+    )) as Array<SessionRow & { user_status: UserStatus; user_roles: Role[]; user_password_change_required: boolean }>;
     const row = rows[0];
     if (!row) return undefined;
-    return { ...toRecord(row), extra: { user: { id: row.user_id, roles: row.user_roles, status: row.user_status } } };
+    return {
+      ...toRecord(row),
+      extra: {
+        user: {
+          id: row.user_id,
+          roles: row.user_roles,
+          status: row.user_status,
+          passwordChangeRequired: row.user_password_change_required,
+        },
+      },
+    };
   }
 
   async createSession(record: SessionRecord): Promise<void> {
@@ -91,6 +101,19 @@ export class PgSessionStore implements SessionStore {
   async listUserSessions(userId: string): Promise<SessionRecord[]> {
     const rows = (await this.ds.query(`SELECT * FROM sessions WHERE user_id = $1`, [userId])) as SessionRow[];
     return rows.map(toRecord);
+  }
+
+  /**
+   * Erro de senha atual na troca de senha (feature 006, R6): incrementa o contador desta sessão numa instrução, até 5.
+   * Devolve o valor novo, ou `null` se a sessão já estava em 5 ou sumiu.
+   */
+  async registerPasswordChangeFailure(sessionId: string): Promise<number | null> {
+    const result = (await this.ds.query(
+      `UPDATE sessions SET password_change_failures = password_change_failures + 1
+        WHERE id = $1 AND password_change_failures < 5 RETURNING password_change_failures`,
+      [sessionId],
+    )) as [Array<{ password_change_failures: number }>, number];
+    return result[0]?.[0]?.password_change_failures ?? null;
   }
 
   async deleteUserSessions(userId: string): Promise<void> {

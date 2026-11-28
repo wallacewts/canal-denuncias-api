@@ -1,5 +1,5 @@
 import { applyDecorators, Controller, SetMetadata, UseInterceptors } from '@nestjs/common';
-import { Public } from '@nestjs/authentication';
+import { Authenticate, Public } from '@nestjs/authentication';
 import { ApiTags } from '@nestjs/swagger';
 import { NoStoreInterceptor } from './no-store.interceptor.js';
 
@@ -32,6 +32,8 @@ export function AdminApi(resource: string): ClassDecorator {
     Controller(`admin/v1/${resource}`),
     ApiTags('admin'),
     SetMetadata(API_AREA_METADATA, 'admin'),
+    // Segundo fator obrigatório (D03, FR-005): sessão sem MFA verificado não abre rota administrativa.
+    Authenticate({ mfa: true }),
     UseInterceptors(NoStoreInterceptor),
   );
 }

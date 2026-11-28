@@ -123,14 +123,14 @@ e encerramento de todas as sessões do usuário.
 
 ### Testes da US2 (escrever antes)
 
-- [ ] T020 [P] [US2] Login e MFA em `test/contract/auth/sign-in-mfa.e2e-spec.ts`: só senha → rota protegida 401;
+- [x] T020 [P] [US2] Login e MFA em `test/contract/auth/sign-in-mfa.e2e-spec.ts`: só senha → rota protegida 401;
       senha + TOTP → 200; mesmo código recusado na segunda vez; sessão pendente expira em 10 min; e-mail inexistente e
       senha errada com a mesma resposta e diferença de tempo menor que 10% da verificação em 20 tentativas de cada;
       cookie `__Host-sid` com `HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/`; token fora do corpo e da URL; id da
       sessão trocado depois do login e depois do MFA; `Authorization: Bearer` numa rota protegida → 401; a trilha recebe `AUTH_SIGNED_IN` no login
       verificado, `AUTH_MFA_FAILED` no código errado e `AUTH_SIGNED_OUT` na saída, sem senha, código, token ou id de
       sessão na metadata (conferir também com valores curtos como `XQZ`)
-- [ ] T021 [P] [US2] Expirações, persistência e encerramento em `test/contract/auth/session-expiry.e2e-spec.ts`: com
+- [x] T021 [P] [US2] Expirações, persistência e encerramento em `test/contract/auth/session-expiry.e2e-spec.ts`: com
       relógio controlado, 401 depois de 15 min sem uso e depois de 8 h de uso contínuo; sessão válida depois de
       reiniciar o app; `NODE_ENV=production` com store em memória não sobe; falha do store no login não deixa nada em
       memória; com várias sessões do usuário, `revokeAll` faz nenhuma autenticar a requisição seguinte; usuário
@@ -139,11 +139,11 @@ e encerramento de todas as sessões do usuário.
 
 ### Implementação da US2
 
-- [ ] T022 [US2] Rotas de exemplo só de teste em `test/contract/auth/example/example-auth.controller.ts`: entrar com
+- [x] T022 [US2] Rotas de exemplo só de teste em `test/contract/auth/example/example-auth.controller.ts`: entrar com
       senha, cadastrar e confirmar TOTP do usuário de teste, verificar o código, sair, sair de todos os lugares (chama
       `signOutEverywhere`/`revokeAll` e grava `AUTH_SESSION_REVOKED` explicitamente pelo `AuditService`, porque o pacote
       não emite evento para isso) e uma rota protegida
-- [ ] T023 [US2] Assinante de `AuthenticationEvents.events$` (`sign-in`, `sign-out`, `mfa-failed`) gravando pelo `AuditService` no contexto da requisição em `src/infra/auth/auth-audit.subscriber.ts`
+- [x] T023 [US2] Assinante de `AuthenticationEvents.events$` (`sign-in`, `sign-out`, `mfa-failed`) gravando pelo `AuditService` no contexto da requisição em `src/infra/auth/auth-audit.subscriber.ts`
 
 **Checkpoint**: US2 provada; o pacote atende sem código próprio de criptografia ou protocolo.
 
@@ -188,7 +188,7 @@ e encerramento de todas as sessões do usuário.
 - [ ] T029 [P] [US4] Encaixe em `test/contract/auth/integration.e2e-spec.ts`: administrador criado por `create-admin`
       entra sem migração de hash; rota `@AdminApi` auditada grava ator equipe com o id do usuário da sessão; sem
       sessão continua 401 (D47); a área pública não recebe nem lê cookie
-- [ ] T030 [US4] `SessionAuthIdentity` em `src/infra/auth/session-auth-identity.ts` (lê o `AuthenticationContext`;
+- [x] T030 [US4] (antecipada para a US2: sem a ponte, nenhuma rota administrativa autentica pela sessão) `SessionAuthIdentity` em `src/infra/auth/session-auth-identity.ts` (lê o `AuthenticationContext`;
       `null` sem sessão verificada) substituindo o `NoAuthIdentity` no `AUTH_IDENTITY` de
       `src/infra/auth/auth-infra.module.ts`; manter a identidade simulada dos testes existentes funcionando
 - [ ] T031 [US4] Mapear cada linha da matriz do ACL-01 (regra por rota, checagem no serviço ou filtro na consulta) no

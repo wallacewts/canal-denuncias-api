@@ -33,6 +33,8 @@ export interface CreateTestAppOptions {
    * esta opção, vale a porta padrão e toda rota admin responde 401, como em produção até a AUTH-06.
    */
   identity?: boolean;
+  /** Reaproveita o banco de outra suíte (simula reiniciar a API); o `close()` não o apaga. */
+  database?: SuiteDatabase;
 }
 
 const APPROLES = {
@@ -48,7 +50,7 @@ export async function createTestApp(options: CreateTestAppOptions = {}): Promise
   loadLocalEnv();
   applyTestEnv();
 
-  const database = await createSuiteDatabase();
+  const database = options.database ?? (await createSuiteDatabase());
   // O ConfigModule lê o ambiente ao importar o AppModule. O Vitest isola cada arquivo de teste,
   // então o import dinâmico abaixo enxerga a URL do banco desta suíte.
   process.env.DATABASE_URL = database.runtimeUrl;
@@ -78,7 +80,7 @@ export async function createTestApp(options: CreateTestAppOptions = {}): Promise
     database,
     close: async () => {
       await app.close();
-      await database.drop();
+      if (!options.database) await database.drop();
     },
   };
 }

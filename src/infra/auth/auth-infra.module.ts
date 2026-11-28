@@ -4,11 +4,14 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthenticationModule } from '@nestjs/authentication';
 import { AuthorizationModule } from '@nestjs/authorization';
 import type { Env } from '../../config/env.schema.js';
+import { AuditModule } from '../../modules/audit/audit.module.js';
 import { CryptoModule } from '../../modules/crypto/crypto.module.js';
 import { AdminIdentityGuard } from './admin-identity.guard.js';
 import { AUTH_CLOCK, systemClock, type AuthClock } from './auth-clock.js';
-import { AUTH_IDENTITY, NoAuthIdentity } from './auth-identity.port.js';
+import { AUTH_IDENTITY } from './auth-identity.port.js';
+import { AuthAuditSubscriber } from './auth-audit.subscriber.js';
 import { AuthStorageRegistration } from './auth-storage.provider.js';
+import { SessionAuthIdentity } from './session-auth-identity.js';
 import { StaffSessionProvider } from './staff-session.provider.js';
 import { PgMfaStore } from './stores/pg-mfa.store.js';
 import { PgSessionStore } from './stores/pg-session.store.js';
@@ -26,10 +29,25 @@ import { PgSessionStore } from './stores/pg-session.store.js';
 @Module({ providers: [{ provide: AUTH_CLOCK, useValue: systemClock }], exports: [AUTH_CLOCK] })
 export class AuthClockModule {}
 
+/**
+ * Guard da área administrativa (D47) num módulo próprio, importado DEPOIS dos módulos de autenticação e autorização:
+ * os guards globais rodam na ordem em que os módulos são encontrados, e este precisa do usuário que o guard do pacote
+ * deixa em `request.user`.
+ */
+@Module({
+  providers: [
+    { provide: AUTH_IDENTITY, useClass: SessionAuthIdentity },
+    { provide: APP_GUARD, useClass: AdminIdentityGuard },
+  ],
+  exports: [AUTH_IDENTITY],
+})
+export class AdminAreaGuardModule {}
+
 @Global()
 @Module({
   imports: [
     CryptoModule,
+    AuditModule,
     AuthClockModule,
     AuthenticationModule.forRootAsync({
       imports: [AuthClockModule],
@@ -57,15 +75,9 @@ export class AuthClockModule {}
       }),
     }),
     AuthorizationModule.forRoot(),
+    AdminAreaGuardModule,
   ],
-  providers: [
-    PgSessionStore,
-    PgMfaStore,
-    AuthStorageRegistration,
-    StaffSessionProvider,
-    { provide: AUTH_IDENTITY, useClass: NoAuthIdentity },
-    { provide: APP_GUARD, useClass: AdminIdentityGuard },
-  ],
-  exports: [AUTH_IDENTITY, PgSessionStore, PgMfaStore],
+  providers: [PgSessionStore, PgMfaStore, AuthStorageRegistration, StaffSessionProvider, AuthAuditSubscriber],
+  exports: [AdminAreaGuardModule, PgSessionStore, PgMfaStore],
 })
 export class AuthInfraModule {}

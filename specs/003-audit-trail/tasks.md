@@ -73,19 +73,19 @@ da equipe.
 
 ### Tests (escritos antes, falhando)
 
-- [ ] T008 [P] Teste de integração da área administrativa em `test/audit/admin-identity.e2e-spec.ts`: rota de fixture
+- [x] T008 [P] Teste de integração da área administrativa em `test/audit/admin-identity.e2e-spec.ts`: rota de fixture
       `@AdminApi` responde 401 sem identidade (com e sem cabeçalhos) e 200 com a identidade de teste; o corpo do 401
       segue o `ApiError` da 001
-- [ ] T009 [P] Teste de convenção em `test/conventions/test-only-imports.e2e-spec.ts`: nenhum arquivo de `src/` importa
+- [x] T009 [P] Teste de convenção em `test/conventions/test-only-imports.e2e-spec.ts`: nenhum arquivo de `src/` importa
       `test/support/fake-identity.ts` nem qualquer arquivo de `test/`
 
 ### Implementation
 
-- [ ] T010 Criar a porta `AUTH_IDENTITY` com implementação padrão que devolve `null` em
+- [x] T010 Criar a porta `AUTH_IDENTITY` com implementação padrão que devolve `null` em
       `src/infra/auth/auth-identity.port.ts` e o guard global `AdminIdentityGuard` (401 sem identidade só na área
       `admin`, lida pelo `API_AREA_METADATA`) em `src/infra/auth/admin-identity.guard.ts`, registrados em
       `src/app.module.ts` (contrato `contracts/audit-module.md`)
-- [ ] T011 [P] Criar `test/support/fixtures/audit-fixture.module.ts` com rotas `@PublicApi` e `@AdminApi` de teste
+- [x] T011 [P] Criar `test/support/fixtures/audit-fixture.module.ts` com rotas `@PublicApi` e `@AdminApi` de teste
       (leitura simples, rota que lança 403, rota que lança erro e rota que registra uma ação) usadas pelas histórias
 
 **Checkpoint**: tudo em `/api/admin` responde 401 em produção; os testes têm identidade e rotas de fixture.

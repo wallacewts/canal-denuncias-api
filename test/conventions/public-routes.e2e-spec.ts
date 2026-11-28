@@ -5,6 +5,8 @@ import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { API_AREA_METADATA, PublicApi } from '../../src/common/http/route-decorators.js';
 import { PublicFixtureModule } from '../support/fixtures/public-fixture.module.js';
+import { Role } from '../../src/common/enums/role.enum.js';
+import { testIdentity } from '../support/fake-identity.js';
 import { createTestApp, type TestApp } from '../support/test-app.js';
 
 /** Único parâmetro de caminho aceito em rota pública: o UUID aleatório do anexo (FR-023). */
@@ -43,7 +45,7 @@ describe('Convenções das rotas públicas e administrativas (e2e)', () => {
   let t: TestApp;
 
   beforeAll(async () => {
-    t = await createTestApp({ imports: [PublicFixtureModule, DiscoveryModule] });
+    t = await createTestApp({ imports: [PublicFixtureModule, DiscoveryModule], identity: true });
   });
 
   afterAll(async () => {
@@ -93,7 +95,10 @@ describe('Convenções das rotas públicas e administrativas (e2e)', () => {
   });
 
   it('rota administrativa também proíbe cache', async () => {
-    const res = await request(t.app.getHttpServer()).get('/api/admin/v1/fixtures/sensitive').expect(200);
+    const res = await request(t.app.getHttpServer())
+      .get('/api/admin/v1/fixtures/sensitive')
+      .set(testIdentity('0190a6e2-7c1b-7d3e-9f00-1a2b3c4d5e6f', Role.ANALYST))
+      .expect(200);
     expect(res.headers['cache-control']).toBe('no-store');
     expect(res.headers['pragma']).toBe('no-cache');
   });

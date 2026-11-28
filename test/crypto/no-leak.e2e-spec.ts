@@ -4,7 +4,12 @@ import { DataKeyService } from '../../src/modules/crypto/data-key.service.js';
 import { RecordCipher } from '../../src/modules/crypto/record-cipher.service.js';
 import { createEncryptedReport, cryptoDeps, type CryptoDeps } from '../support/factories.js';
 import { CryptoFixtureModule, type CryptoFailureMode } from '../support/fixtures/crypto-fixture.module.js';
+import { Role } from '../../src/common/enums/role.enum.js';
+import { testIdentity } from '../support/fake-identity.js';
 import { createTestApp, type TestApp } from '../support/test-app.js';
+
+/** Membro da equipe simulado: a área admin exige identidade (D47). */
+const STAFF = testIdentity('0190a6e2-7c1b-7d3e-9f00-1a2b3c4d5e6f', Role.COMPLIANCE_MANAGER);
 
 const RELATOS: Array<[string, string]> = [
   ['curto', 'XQZ'],
@@ -27,7 +32,7 @@ describe('Não vazamento nas falhas de criptografia (e2e)', () => {
   let deps: CryptoDeps;
 
   beforeAll(async () => {
-    t = await createTestApp({ vault: 'api', imports: [CryptoFixtureModule] });
+    t = await createTestApp({ vault: 'api', imports: [CryptoFixtureModule], identity: true });
     ds = t.app.get(DataSource);
     deps = cryptoDeps(t.app);
   });
@@ -44,7 +49,9 @@ describe('Não vazamento nas falhas de criptografia (e2e)', () => {
 
   it('a rota de fixture abre a denúncia quando nada está errado', async () => {
     const { report } = await createEncryptedReport(ds, deps, { v: 1, description: 'XQZ' });
-    const res = await request(t.app.getHttpServer()).get(`/api/admin/v1/fixtures/crypto/reports/${report.id}/ok`);
+    const res = await request(t.app.getHttpServer())
+      .get(`/api/admin/v1/fixtures/crypto/reports/${report.id}/ok`)
+      .set(STAFF);
     expect(res.status).toBe(200);
     expect(res.text).not.toContain('XQZ');
   });
@@ -66,9 +73,9 @@ describe('Não vazamento nas falhas de criptografia (e2e)', () => {
       const dekCopy = await t.app.get(DataKeyService).withReportKey(wrapped, (dek) => Buffer.from(dek));
 
       t.logs.clear();
-      const res = await request(t.app.getHttpServer()).get(
-        `/api/admin/v1/fixtures/crypto/reports/${report.id}/${mode}`,
-      );
+      const res = await request(t.app.getHttpServer())
+        .get(`/api/admin/v1/fixtures/crypto/reports/${report.id}/${mode}`)
+        .set(STAFF);
       expect(res.status).toBe(status);
 
       const secrets = [...forms(relato), ...forms(dekCopy), ...forms(row.content_enc), wrapped];

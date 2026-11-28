@@ -32,7 +32,11 @@ de apuração".
 **Critérios de aceite**
 
 - [ ] Mensagens da equipe saem com autor "Equipe de apuração", sem id e sem nome.
-- [ ] Data e hora exibidas com precisão de minuto.
+- [ ] A rota pública devolve só a **data** de cada mensagem (`AAAA-MM-DD`, sem hora), tanto das mensagens da equipe
+      quanto das do próprio denunciante: o denunciante e as exportações veem só datas, para que o horário não possa
+      ser cruzado com crachá ou VPN (decidido pelo usuário em 2026-11-28). A equipe continua vendo o horário exato
+      nas rotas administrativas (MSG-04).
+- [ ] Teste: a resposta da rota pública não contém nenhum horário (nem `T`, nem fuso), só a data.
 - [ ] Marca as mensagens da equipe como lidas (`read_at`).
 
 ### MSG-03 · Equipe envia mensagem

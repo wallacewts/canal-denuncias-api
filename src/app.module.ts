@@ -8,6 +8,7 @@ import { validateEnv } from './config/env.validate.js';
 import { LOG_DESTINATION } from './config/log-destination.js';
 import { buildLoggerParams } from './config/logger.config.js';
 import { buildDataSourceOptions } from './database/database.options.js';
+import { AuthInfraModule } from './infra/auth/auth-infra.module.js';
 import { QueueModule } from './infra/queue/queue.module.js';
 import { StorageModule } from './infra/storage/storage.module.js';
 import { VaultModule } from './infra/vault/vault.module.js';
@@ -58,6 +59,7 @@ import { UsersModule } from './modules/users/users.module.js';
     }),
     HealthModule,
     VaultModule,
+    AuthInfraModule,
     QueueModule,
     StorageModule,
     CryptoModule,

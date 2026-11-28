@@ -300,15 +300,15 @@ contém o relato.
 
 ### Tests for User Story 8
 
-- [ ] T053 [US8] Teste de integração em `test/support/factories.e2e-spec.ts`: as factories criam usuário com perfis,
+- [x] T053 [US8] Teste de integração em `test/support/factories.e2e-spec.ts`: as factories criam usuário com perfis,
       categoria e denúncia cuja `content_enc` decifra com a DEK aberta pelo `KeyService` e AAD
       `reports.content_enc:<id>`; uma requisição pública de fixture não deixa o texto do relato no log capturado
 
 ### Implementation for User Story 8
 
-- [ ] T054 [US8] Implementar `createUser({ roles })`, `createCategory()` e `createEncryptedReport(content)` (DEK do
+- [x] T054 [US8] Implementar `createUser({ roles })`, `createCategory()` e `createEncryptedReport(content)` (DEK do
       `KeyService`, AES-256-GCM com o formato e o AAD da constituição) em `test/support/factories.ts`
-- [ ] T055 [US8] Documentar o uso do harness (banco por suíte, log capture, factories, fixtures) em
+- [x] T055 [US8] Documentar o uso do harness (banco por suíte, log capture, factories, fixtures) em
       `test/support/README.md`
 
 **Checkpoint**: novos testes de "não vazou" saem sem preparar infraestrutura à mão (SC-009).

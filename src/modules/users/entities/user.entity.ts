@@ -6,6 +6,7 @@ import { UserRole } from './user-role.entity.js';
 /** Equipe interna. Usuários nunca são apagados fisicamente, só desativados (status DISABLED). */
 @Entity('users')
 @Check('CHK_users_mfa_enabled_secret', `"mfa_enabled_at" IS NULL OR "mfa_secret_enc" IS NOT NULL`)
+@Check('CHK_users_lockout_level', `"lockout_level" BETWEEN 0 AND 16`)
 export class User {
   @UuidV7PrimaryColumn()
   id: string;
@@ -43,6 +44,10 @@ export class User {
 
   @Column({ type: 'timestamptz', nullable: true })
   lockedUntil: Date | null;
+
+  /** Nível do bloqueio progressivo: cada série de falhas dobra o tempo (feature 006). Zera na entrada completa. */
+  @Column({ type: 'smallint', default: 0 })
+  lockoutLevel: number;
 
   @Column({ type: 'timestamptz', nullable: true })
   passwordChangedAt: Date | null;

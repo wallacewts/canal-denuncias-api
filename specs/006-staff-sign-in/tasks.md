@@ -48,25 +48,25 @@ porque o primeiro acesso usa a troca.
 **Purpose**: schema, catálogo da trilha, cálculo da etapa, decorador de etapa e schemas de resposta. Nenhuma user
 story começa antes.
 
-- [ ] T004 [P] Teste da migration `test/auth/staff-sign-in.migration.e2e-spec.ts`: colunas `users.lockout_level` e
+- [x] T004 [P] Teste da migration `test/auth/staff-sign-in.migration.e2e-spec.ts`: colunas `users.lockout_level` e
       `sessions.password_change_failures` com padrão 0 e CHECK (valores fora da faixa recusados), `down()` volta ao
       schema anterior, drift check sem diferenças
-- [ ] T005 Migration à mão `src/database/migrations/<ts>-StaffSignIn.ts` e colunas nas entidades `User`
+- [x] T005 Migration à mão `src/database/migrations/<ts>-StaffSignIn.ts` e colunas nas entidades `User`
       (`lockoutLevel`) e `Session` (`passwordChangeFailures`) (depois do T004)
-- [ ] T006 [P] Catálogo da trilha (teste antes em `src/modules/audit/audit-action.enum.spec.ts` e
+- [x] T006 [P] Catálogo da trilha (teste antes em `src/modules/audit/audit-action.enum.spec.ts` e
       `audit-metadata.schemas.spec.ts`): ação nova `AUTH_PASSWORD_CHANGE_FAILED`
       `{ reason: CURRENT_PASSWORD_INVALID, attempt: 1..5, locked }`; `AUTH_LOGIN_FAILED` `{ reason }` (enum de
       `UNKNOWN_ACCOUNT`, `BAD_CREDENTIALS`, `TEMPORARILY_LOCKED`, `BLOCKED`, `DISABLED`) e `{ locked? }`;
       `AUTH_MFA_ENROLLED` `{ replaced }`; nada de texto livre (senha ou e-mail recusados, inclusive `XQZ`)
-- [ ] T007 [P] Teste do mapeamento em `src/infra/auth/auth-audit.subscriber.spec.ts`: `mfa-enabled` →
+- [x] T007 [P] Teste do mapeamento em `src/infra/auth/auth-audit.subscriber.spec.ts`: `mfa-enabled` →
       `AUTH_MFA_ENROLLED`; `mfa-verified` com `recovery-code` → `AUTH_RECOVERY_CODE_USED` além do `AUTH_SIGNED_IN`
-- [ ] T008 Mapeamento no `src/infra/auth/auth-audit.subscriber.ts` (depois do T007)
-- [ ] T009 [P] Teste em tabela `src/modules/auth/next-step.spec.ts`: as cinco combinações da R2 (pendente;
+- [x] T008 Mapeamento no `src/infra/auth/auth-audit.subscriber.ts` (depois do T007)
+- [x] T009 [P] Teste em tabela `src/modules/auth/next-step.spec.ts`: as cinco combinações da R2 (pendente;
       verificada com e sem troca; sem MFA com e sem troca)
-- [ ] T010 Cálculo da etapa em `src/modules/auth/next-step.ts` (depois do T009)
-- [ ] T011 [P] `StepRoute(etapas)` em `src/common/http/route-decorators.ts` (`Authenticate({ mfa: false })`,
+- [x] T010 Cálculo da etapa em `src/modules/auth/next-step.ts` (depois do T009)
+- [x] T011 [P] `StepRoute(etapas)` em `src/common/http/route-decorators.ts` (`Authenticate({ mfa: false })`,
       `@Can.Anyone()` e metadado das etapas aceitas), com teste em `src/common/http/route-decorators.spec.ts`
-- [ ] T012 [P] Schemas em `src/modules/auth/auth.schemas.ts` (entrada `strictObject`: credenciais, desafio com
+- [x] T012 [P] Schemas em `src/modules/auth/auth.schemas.ts` (entrada `strictObject`: credenciais, desafio com
       exatamente um de `code`/`recoveryCode`, confirmação, troca de senha; respostas: `StepResponse`, `Enrollment`,
       `Confirmation`, `OwnSession`, com o JSON Schema para o OpenAPI) e teste `src/modules/auth/auth.schemas.spec.ts`
       (campos extras, os dois códigos juntos ou nenhum, tamanhos, sem ecoar valor)
@@ -141,7 +141,7 @@ now)` (incremento e bloqueio numa instrução, `RETURNING`), `resetLoginFailures
       vez; sessão nova começa do zero; senha (inteira e `XQZ`) fora de resposta, logs e trilha
 - [ ] T023 [P] [US3] e2e `test/auth/password-change-gate.e2e-spec.ts` (R11): pessoa com autenticador e troca
       obrigatória, depois do desafio → `GET /users` (como ADMIN) e outras rotas dão 403 `PASSWORD_CHANGE_REQUIRED`; `GET
-  /me` 200 com `passwordChangeRequired: true`; `sign-out` funciona; depois da troca, tudo volta; e teste
+/me` 200 com `passwordChangeRequired: true`; `sign-out` funciona; depois da troca, tudo volta; e teste
       `test/auth/route-walk.e2e-spec.ts` que percorre **todas** as rotas administrativas registradas no roteador
       (SC-004, G1): com sessão pendente, 401 em todas exceto `mfa/challenge` e `sign-out`; com troca pendente e sessão
       verificada, 403 `PASSWORD_CHANGE_REQUIRED` em todas exceto `PUT /me/password`, `sign-out` e `GET /me`; rota de

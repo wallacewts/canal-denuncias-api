@@ -114,4 +114,49 @@ describe('Metadata por ação (AUDIT-05, D45)', () => {
       rejection(AuditAction.USER_MFA_RESET, { secret: SHORT });
     });
   });
+
+  describe('ações do login da equipe (feature 006, T006)', () => {
+    it('aceitam só os formatos do contrato', () => {
+      for (const reason of ['UNKNOWN_ACCOUNT', 'BAD_CREDENTIALS', 'TEMPORARILY_LOCKED', 'BLOCKED', 'DISABLED']) {
+        expect(() => validateAuditMetadata(AuditAction.AUTH_LOGIN_FAILED, { reason })).not.toThrow();
+      }
+      expect(() =>
+        validateAuditMetadata(AuditAction.AUTH_LOGIN_FAILED, { reason: 'BAD_CREDENTIALS', locked: true }),
+      ).not.toThrow();
+      expect(() => validateAuditMetadata(AuditAction.AUTH_MFA_ENROLLED, { replaced: false })).not.toThrow();
+      expect(() => validateAuditMetadata(AuditAction.AUTH_RECOVERY_CODE_USED, undefined)).not.toThrow();
+      expect(() => validateAuditMetadata(AuditAction.AUTH_PASSWORD_CHANGED, undefined)).not.toThrow();
+      expect(() =>
+        validateAuditMetadata(AuditAction.AUTH_PASSWORD_CHANGE_FAILED, {
+          reason: 'CURRENT_PASSWORD_INVALID',
+          attempt: 5,
+          locked: true,
+        }),
+      ).not.toThrow();
+    });
+
+    it('recusam texto livre, e-mail, senha e tentativas fora da faixa', () => {
+      rejection(AuditAction.AUTH_LOGIN_FAILED, { reason: SHORT });
+      rejection(AuditAction.AUTH_LOGIN_FAILED, { reason: 'BAD_CREDENTIALS', email: SHORT });
+      rejection(AuditAction.AUTH_LOGIN_FAILED, undefined);
+      rejection(AuditAction.AUTH_PASSWORD_CHANGE_FAILED, {
+        reason: 'CURRENT_PASSWORD_INVALID',
+        attempt: 6,
+        locked: true,
+      });
+      rejection(AuditAction.AUTH_PASSWORD_CHANGE_FAILED, {
+        reason: 'CURRENT_PASSWORD_INVALID',
+        attempt: 0,
+        locked: false,
+      });
+      rejection(AuditAction.AUTH_PASSWORD_CHANGE_FAILED, {
+        reason: 'CURRENT_PASSWORD_INVALID',
+        attempt: 1,
+        locked: false,
+        password: SHORT,
+      });
+      rejection(AuditAction.AUTH_RECOVERY_CODE_USED, { code: SHORT });
+      rejection(AuditAction.AUTH_MFA_ENROLLED, { replaced: false, secret: SHORT });
+    });
+  });
 });

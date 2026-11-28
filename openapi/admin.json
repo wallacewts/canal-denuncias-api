@@ -137,6 +137,7 @@
                 "AUTH_MFA_FAILED",
                 "AUTH_RECOVERY_CODE_USED",
                 "AUTH_PASSWORD_CHANGED",
+                "AUTH_PASSWORD_CHANGE_FAILED",
                 "AUTH_SESSION_REVOKED",
                 "USER_CREATED",
                 "USER_UPDATED",

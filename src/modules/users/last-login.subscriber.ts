@@ -4,12 +4,13 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import type { Subscription } from 'rxjs';
 import type { DataSource } from 'typeorm';
 import { AUTH_CLOCK, type AuthClock } from '../../infra/auth/auth-clock.js';
-import { toAuditEntry } from '../../infra/auth/auth-audit.subscriber.js';
+import { toAuditEntries } from '../../infra/auth/auth-audit.subscriber.js';
 import { AuditAction } from '../audit/audit-action.enum.js';
 
 /**
  * Grava `users.last_login_at` quando a entrada termina (feature 005, research R9): o mesmo critério do
- * `AUTH_SIGNED_IN` (senha sem MFA pendente, ou MFA aceito). Erro só é logado pelo nome.
+ * `AUTH_SIGNED_IN` (MFA aceito, ou primeiro cadastro do autenticador confirmado; feature 006). Erro só é logado pelo
+ * nome.
  */
 @Injectable()
 export class LastLoginSubscriber implements OnModuleInit, OnModuleDestroy {
@@ -24,8 +25,8 @@ export class LastLoginSubscriber implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit(): void {
     this.subscription = this.events.events$.subscribe((event) => {
-      const entry = toAuditEntry(event);
-      if (entry?.action !== AuditAction.AUTH_SIGNED_IN) return;
+      const entry = toAuditEntries(event).find((e) => e.action === AuditAction.AUTH_SIGNED_IN);
+      if (!entry) return;
       this.ds
         .query(`UPDATE users SET last_login_at = $2 WHERE id = $1`, [entry.userId, new Date(this.clock.now())])
         .catch((error: unknown) => {

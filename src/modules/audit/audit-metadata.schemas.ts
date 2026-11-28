@@ -61,6 +61,17 @@ const SPECIFIC: Partial<Record<AuditAction, z.ZodType>> = {
   [AuditAction.AUTH_SIGNED_IN]: z.strictObject({ method: z.enum(['password']) }),
   [AuditAction.AUTH_MFA_FAILED]: z.strictObject({ locked: z.boolean() }).optional(),
   [AuditAction.AUTH_SESSION_REVOKED]: z.strictObject({ scope: z.enum(['all']) }),
+  // Login da equipe (feature 006): só motivos codificados e contadores, nunca e-mail, senha ou código.
+  [AuditAction.AUTH_LOGIN_FAILED]: z.strictObject({
+    reason: z.enum(['UNKNOWN_ACCOUNT', 'BAD_CREDENTIALS', 'TEMPORARILY_LOCKED', 'BLOCKED', 'DISABLED']),
+    locked: z.boolean().optional(),
+  }),
+  [AuditAction.AUTH_MFA_ENROLLED]: z.strictObject({ replaced: z.boolean() }),
+  [AuditAction.AUTH_PASSWORD_CHANGE_FAILED]: z.strictObject({
+    reason: z.enum(['CURRENT_PASSWORD_INVALID']),
+    attempt: z.int().min(1).max(5),
+    locked: z.boolean(),
+  }),
   // Política e habilidade são nomes de código (classe e método), nunca texto livre nem dado do registro.
   [AuditAction.ACCESS_DENIED]: z
     .strictObject({

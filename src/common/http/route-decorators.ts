@@ -1,5 +1,6 @@
 import { applyDecorators, Controller, SetMetadata, UseInterceptors } from '@nestjs/common';
 import { Authenticate, Public } from '@nestjs/authentication';
+import { Can } from '@nestjs/authorization';
 import { ApiTags } from '@nestjs/swagger';
 import { NoStoreInterceptor } from './no-store.interceptor.js';
 
@@ -45,4 +46,25 @@ export function AdminApi(resource: string): ClassDecorator {
  */
 export function OpenAdminRoute(): MethodDecorator & ClassDecorator {
   return applyDecorators(Public(), SetMetadata(ADMIN_OPEN_METADATA, true));
+}
+
+export const STEP_ROUTE_METADATA = 'canal:step-route';
+export const ALLOW_DURING_PASSWORD_CHANGE_METADATA = 'canal:allow-during-password-change';
+
+/** Etapas do login (mesmos códigos de `NextStep`, feature 006). */
+export type LoginStep = 'MFA_REQUIRED' | 'MFA_ENROLLMENT_REQUIRED' | 'PASSWORD_CHANGE_REQUIRED' | 'DONE';
+
+/**
+ * Rota de uma etapa do login (troca de senha, cadastro do autenticador; feature 006, R2): aceita sessão sem segundo
+ * fator verificado e qualquer pessoa da equipe com sessão; o `LoginStepGuard` confere a etapa atual e responde 403
+ * `STEP_NOT_ALLOWED` fora dela (I1). A sessão com segundo fator pendente continua recusada pelo pacote (401).
+ */
+export function StepRoute(...steps: LoginStep[]): MethodDecorator {
+  if (steps.length === 0) throw new Error('StepRoute precisa de ao menos uma etapa');
+  return applyDecorators(Authenticate({ mfa: false }), Can.Anyone(), SetMetadata(STEP_ROUTE_METADATA, steps));
+}
+
+/** Rota liberada com sessão verificada e troca de senha obrigatória pendente (R11): só o `GET /me`. */
+export function AllowDuringPasswordChange(): MethodDecorator {
+  return SetMetadata(ALLOW_DURING_PASSWORD_CHANGE_METADATA, true);
 }

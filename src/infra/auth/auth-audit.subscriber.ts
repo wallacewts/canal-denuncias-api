@@ -57,8 +57,7 @@ export class AuthAuditSubscriber implements OnModuleInit, OnModuleDestroy {
   }
 
   private handle(event: AuthenticationEvent): void {
-    const entry = toAuditEntry(event);
-    if (entry) this.write(entry.userId, entry);
+    for (const entry of toAuditEntries(event)) this.write(entry.userId, entry);
   }
 
   private write(userId: string, entry: AuthAuditEntry): void {
@@ -73,8 +72,10 @@ export class AuthAuditSubscriber implements OnModuleInit, OnModuleDestroy {
       this.audit.record({
         action: entry.action,
         // A negação não carrega o registro (só nomes de código): o recurso é registrado como sistema.
-        resourceType: entry.action === AuditAction.ACCESS_DENIED ? AuditResourceType.SYSTEM : AuditResourceType.SESSION,
-        resourceId: null,
+        resourceType:
+          entry.resourceType ??
+          (entry.action === AuditAction.ACCESS_DENIED ? AuditResourceType.SYSTEM : AuditResourceType.SESSION),
+        resourceId: entry.resourceType === AuditResourceType.USER ? userId : null,
         result: entry.result,
         metadata: entry.metadata,
       }),
@@ -90,43 +91,66 @@ interface AuthAuditEntry {
   action: AuditAction;
   result: AuditResult;
   metadata?: Record<string, unknown>;
+  resourceType?: AuditResourceType;
 }
 
-export function toAuditEntry(event: AuthenticationEvent): AuthAuditEntry | null {
+const signedIn = (userId: string): AuthAuditEntry => ({
+  userId,
+  action: AuditAction.AUTH_SIGNED_IN,
+  result: AuditResult.SUCCESS,
+  metadata: { method: 'password' },
+});
+
+/**
+ * Registros da trilha para um evento do pacote. O login só conta quando a sessão fica verificada: no `mfa-verified`
+ * (desafio). A confirmação do primeiro cadastro no login é registrada pelo serviço de cadastro, que sabe que está no
+ * fluxo de entrada (o mesmo evento `mfa-enabled` sai de qualquer confirmação). A senha sozinha nunca é login.
+ */
+export function toAuditEntries(event: AuthenticationEvent): AuthAuditEntry[] {
   switch (event.type) {
-    case 'sign-in':
-      // Sessão com segundo fator pendente ainda não é login: ele fecha no `mfa-verified`.
-      if (event.mfa === 'pending' || event.method !== 'password') return null;
-      return {
-        userId: event.userId,
-        action: AuditAction.AUTH_SIGNED_IN,
-        result: AuditResult.SUCCESS,
-        metadata: { method: 'password' },
-      };
     case 'mfa-verified':
-      return {
+      return event.method === 'recovery-code'
+        ? [
+            signedIn(event.userId),
+            { userId: event.userId, action: AuditAction.AUTH_RECOVERY_CODE_USED, result: AuditResult.SUCCESS },
+          ]
+        : [signedIn(event.userId)];
+    case 'mfa-enabled': {
+      const enrolled: AuthAuditEntry = {
         userId: event.userId,
-        action: AuditAction.AUTH_SIGNED_IN,
+        action: AuditAction.AUTH_MFA_ENROLLED,
         result: AuditResult.SUCCESS,
-        metadata: { method: 'password' },
+        metadata: { replaced: event.replaced },
+        resourceType: AuditResourceType.USER,
       };
+      return [enrolled];
+    }
     case 'mfa-failed':
-      return {
-        userId: event.userId,
-        action: AuditAction.AUTH_MFA_FAILED,
-        result: AuditResult.FAILURE,
-        metadata: { locked: Boolean(event.locked) },
-      };
+      return [
+        {
+          userId: event.userId,
+          action: AuditAction.AUTH_MFA_FAILED,
+          result: AuditResult.FAILURE,
+          metadata: { locked: Boolean(event.locked) },
+        },
+      ];
     case 'sign-out':
-      return event.everywhere
-        ? {
-            userId: event.userId,
-            action: AuditAction.AUTH_SESSION_REVOKED,
-            result: AuditResult.SUCCESS,
-            metadata: { scope: 'all' },
-          }
-        : { userId: event.userId, action: AuditAction.AUTH_SIGNED_OUT, result: AuditResult.SUCCESS };
+      return [
+        event.everywhere
+          ? {
+              userId: event.userId,
+              action: AuditAction.AUTH_SESSION_REVOKED,
+              result: AuditResult.SUCCESS,
+              metadata: { scope: 'all' },
+            }
+          : { userId: event.userId, action: AuditAction.AUTH_SIGNED_OUT, result: AuditResult.SUCCESS },
+      ];
     default:
-      return null;
+      return [];
   }
+}
+
+/** Primeiro registro do evento (o login, quando houver), usado pelo último login (feature 005). */
+export function toAuditEntry(event: AuthenticationEvent): AuthAuditEntry | null {
+  return toAuditEntries(event)[0] ?? null;
 }

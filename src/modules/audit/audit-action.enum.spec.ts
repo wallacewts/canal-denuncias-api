@@ -56,10 +56,11 @@ const AUDIT_01 = [
 describe('Catálogo da auditoria (AUDIT-01, D45)', () => {
   const actions = Object.values(AuditAction);
 
-  it('contém as ações da AUDIT-01, mais KEYS_REWRAP_RUN e AUDIT_LOG_PURGED, e nada repetido', () => {
+  it('contém as ações da AUDIT-01, mais KEYS_REWRAP_RUN, AUDIT_LOG_PURGED e AUTH_PASSWORD_CHANGE_FAILED', () => {
     expect(new Set(actions).size).toBe(actions.length);
-    expect(actions).toEqual(expect.arrayContaining([...AUDIT_01, 'KEYS_REWRAP_RUN', 'AUDIT_LOG_PURGED']));
-    expect(actions).toHaveLength(AUDIT_01.length + 2);
+    const extra = ['KEYS_REWRAP_RUN', 'AUDIT_LOG_PURGED', 'AUTH_PASSWORD_CHANGE_FAILED'];
+    expect(actions).toEqual(expect.arrayContaining([...AUDIT_01, ...extra]));
+    expect(actions).toHaveLength(AUDIT_01.length + extra.length);
   });
 
   it('toda ação cabe em action varchar(60) e todo tipo de recurso em resource_type varchar(40)', () => {

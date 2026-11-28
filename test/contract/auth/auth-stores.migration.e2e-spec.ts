@@ -25,6 +25,18 @@ describe('Migration AuthStores (e2e)', () => {
       return r.rows[0].ok as boolean;
     });
 
+  /** Desfaz migrations da mais nova para a mais antiga até desfazer `name` (inclusive). */
+  const undoUntil = async (name: string) => {
+    for (let i = 0; i < 10; i++) {
+      const [last] = (await ds.query(`SELECT name FROM typeorm_migrations ORDER BY id DESC LIMIT 1`)) as Array<{
+        name: string;
+      }>;
+      await ds.undoLastMigration({ transaction: 'each' });
+      if (last.name === name) return;
+    }
+    throw new Error(`migration ${name} não encontrada`);
+  };
+
   beforeAll(async () => {
     loadLocalEnv();
     applyTestEnv();
@@ -45,6 +57,7 @@ describe('Migration AuthStores (e2e)', () => {
       'last_active_at',
       'metadata',
       'mfa',
+      'password_change_failures', // feature 006 (StaffSignIn)
       'user_id',
     ]);
   });
@@ -74,7 +87,8 @@ describe('Migration AuthStores (e2e)', () => {
   });
 
   it('down(): volta ao formato anterior e up() reaplica', async () => {
-    await ds.undoLastMigration({ transaction: 'each' });
+    // As migrations posteriores (StaffSignIn, feature 006) saem antes, na ordem inversa.
+    await undoUntil('AuthStores1795900000000');
     expect(await columns('sessions')).toEqual(expect.arrayContaining(['refresh_token_hash', 'family_id']));
     expect(await tableExists('mfa_failures')).toBe(false);
     expect(await columns('recovery_codes')).toContain('used_at');

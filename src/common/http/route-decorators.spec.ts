@@ -1,7 +1,15 @@
 import { INTERCEPTORS_METADATA, PATH_METADATA } from '@nestjs/common/constants.js';
 import { DECORATORS } from '@nestjs/swagger';
 import { NoStoreInterceptor } from './no-store.interceptor.js';
-import { AdminApi, API_AREA_METADATA, PublicApi } from './route-decorators.js';
+import {
+  AdminApi,
+  ALLOW_DURING_PASSWORD_CHANGE_METADATA,
+  AllowDuringPasswordChange,
+  API_AREA_METADATA,
+  PublicApi,
+  STEP_ROUTE_METADATA,
+  StepRoute,
+} from './route-decorators.js';
 
 @PublicApi('reports')
 class PublicController {}
@@ -25,5 +33,32 @@ describe('@PublicApi e @AdminApi', () => {
 
   it.each([PublicController, AdminController])('%o aplica o interceptor de no-store', (controller) => {
     expect(Reflect.getMetadata(INTERCEPTORS_METADATA, controller)).toContain(NoStoreInterceptor);
+  });
+});
+
+describe('@StepRoute e @AllowDuringPasswordChange (feature 006, R2 e R11)', () => {
+  class Steps {
+    @StepRoute('PASSWORD_CHANGE_REQUIRED', 'DONE')
+    change() {}
+
+    @AllowDuringPasswordChange()
+    me() {}
+  }
+
+  it('StepRoute guarda as etapas aceitas e abre a rota para sessão sem segundo fator', () => {
+    const handler = Object.getOwnPropertyDescriptor(Steps.prototype, 'change')!.value as object;
+    expect(Reflect.getMetadata(STEP_ROUTE_METADATA, handler)).toEqual(['PASSWORD_CHANGE_REQUIRED', 'DONE']);
+    const keys = Reflect.getMetadataKeys(handler) as string[];
+    // Autenticação sem exigir MFA verificado e autorização aberta a quem tem sessão.
+    expect(keys.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('StepRoute sem etapas é erro de programação', () => {
+    expect(() => StepRoute()).toThrow();
+  });
+
+  it('AllowDuringPasswordChange marca a rota', () => {
+    const handler = Object.getOwnPropertyDescriptor(Steps.prototype, 'me')!.value as object;
+    expect(Reflect.getMetadata(ALLOW_DURING_PASSWORD_CHANGE_METADATA, handler)).toBe(true);
   });
 });

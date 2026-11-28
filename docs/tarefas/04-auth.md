@@ -158,6 +158,9 @@ Ler antes: `.claude/skills/nestjs-auth/` e https://docs.nestjs.com/security/auth
 - [ ] Trocar a senha revoga as outras sessões do usuário.
 - [ ] Nova senha que viola a política responde 422 com o código da regra violada (ex.: `PASSWORD_TOO_SHORT`,
       `PASSWORD_COMMON`), sem ecoar a senha na resposta, no log ou na auditoria. (Proposta do front.)
+- [ ] Senha atual errada responde 422 com o código `CURRENT_PASSWORD_INVALID`, no mesmo formato dos outros erros da
+      troca de senha, sem ecoar a senha na resposta, no log ou na auditoria. 401 continua significando só sessão
+      ausente ou expirada. (Proposta do front, decidida pelo usuário em 28/11/2026.)
 
 ### AUTH-06 · Guard global e usuário atual
 

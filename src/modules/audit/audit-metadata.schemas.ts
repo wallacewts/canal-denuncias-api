@@ -12,7 +12,6 @@ import { AuditEntryRejected, type AuditRejectionReason } from './audit.errors.js
  * booleanos e códigos fechados. Nunca `text()` nem `z.string()` livre: a trilha é permanente e não pode guardar texto.
  */
 const count = () => z.int().nonnegative();
-const code = () => z.string().regex(/^[A-Z0-9_]{1,40}$/);
 const numericId = () => z.string().regex(/^\d{1,19}$/);
 const isoDate = () => z.iso.datetime({ offset: true });
 const none = () => z.strictObject({}).optional();

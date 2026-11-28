@@ -6,6 +6,7 @@ import { ActorType } from '../../common/enums/actor-type.enum.js';
 import type { AuditResult } from '../../common/enums/audit-result.enum.js';
 import { z } from 'zod';
 import { AuditAction, AuditResourceType } from './audit-action.enum.js';
+import { AuditActorUndetermined, AuditContext, type ActorContext } from './audit-context.js';
 import { computeAuditHash, GENESIS_HASH } from './audit-hash.js';
 import { AUDIT_RESOURCE_ID, toRejectionReasons, validateAuditMetadata } from './audit-metadata.schemas.js';
 import { AuditEntryRejected } from './audit.errors.js';
@@ -15,19 +16,15 @@ import { AuditLog } from './entities/audit-log.entity.js';
 const AUDIT_CHAIN_LOCK = 0x41_55_44_49; // "AUDI"
 
 export interface AuditEntry {
-  actorType: ActorType;
-  actorUserId?: string | null;
   /** Do catálogo fechado (D45). */
   action: AuditAction;
   resourceType: AuditResourceType;
   /** Até 64 caracteres, só letras, dígitos e `_.:-`. */
   resourceId?: string | null;
   result: AuditResult;
-  /** Só para ator STAFF. Para REPORTER e SYSTEM é descartado (constituição, princípio I). */
-  ip?: string | null;
-  userAgent?: string | null;
   /** Validada pelo schema da ação (`AUDIT_METADATA_SCHEMAS`): só IDs, códigos, números, datas e booleanos. */
   metadata?: Record<string, unknown> | null;
+  // Ator, usuário, IP e user-agent não existem aqui: vêm do AuditContext (D46, FR-012).
 }
 
 const entryShape = z.object({
@@ -49,29 +46,32 @@ export class AuditService {
     const shape = entryShape.safeParse(entry);
     if (!shape.success) throw new AuditEntryRejected(toRejectionReasons(shape.error.issues));
     const metadata = validateAuditMetadata(entry.action, entry.metadata ?? undefined);
-    const valid = { ...entry, metadata };
+    const actor = AuditContext.current();
+    if (!actor) throw new AuditActorUndetermined();
+    const valid = { ...entry, metadata, actor };
     return manager ? this.write(valid, manager) : this.dataSource.transaction((m) => this.write(valid, m));
   }
 
-  private async write(entry: AuditEntry, manager: EntityManager): Promise<AuditLog> {
+  private async write(entry: AuditEntry & { actor: ActorContext }, manager: EntityManager): Promise<AuditLog> {
     await manager.query('SELECT pg_advisory_xact_lock($1)', [AUDIT_CHAIN_LOCK]);
     const [last] = (await manager.query(`SELECT hash FROM audit_logs ORDER BY id DESC LIMIT 1`)) as Array<{
       hash: Buffer;
     }>;
     const prevHash = last?.hash ?? GENESIS_HASH;
 
-    const isStaff = entry.actorType === ActorType.STAFF;
+    const { actor } = entry;
+    const isStaff = actor.actorType === ActorType.STAFF;
     const row = {
       // Definido pela aplicação antes do hash, para o hash bater com o valor salvo.
       occurredAt: new Date(),
-      actorType: entry.actorType,
-      actorUserId: entry.actorUserId ?? null,
+      actorType: actor.actorType,
+      actorUserId: isStaff ? actor.actorUserId : null,
       action: entry.action,
       resourceType: entry.resourceType,
       resourceId: entry.resourceId ?? null,
       result: entry.result,
-      ip: isStaff ? (entry.ip ?? null) : null,
-      userAgent: isStaff ? (entry.userAgent?.slice(0, 255) ?? null) : null,
+      ip: isStaff ? actor.ip : null,
+      userAgent: isStaff ? (actor.userAgent?.slice(0, 255) ?? null) : null,
       metadata: entry.metadata ?? null,
     };
     const hash = computeAuditHash(prevHash, row);

@@ -1,8 +1,8 @@
 import { DataSource } from 'typeorm';
-import { ActorType } from '../../src/common/enums/actor-type.enum.js';
 import { AuditResult } from '../../src/common/enums/audit-result.enum.js';
 import { Role } from '../../src/common/enums/role.enum.js';
 import { AuditAction, AuditResourceType } from '../../src/modules/audit/audit-action.enum.js';
+import { runAsSystem } from '../../src/modules/audit/audit-context.js';
 import { AuditEntryRejected } from '../../src/modules/audit/audit.errors.js';
 import { AuditService, type AuditEntry } from '../../src/modules/audit/audit.service.js';
 import { createTestApp, type TestApp } from '../support/test-app.js';
@@ -29,7 +29,6 @@ describe('AuditService.record: catálogo e metadata (e2e)', () => {
     Number(((await ds.query(`SELECT count(*)::int AS n FROM audit_logs`)) as Array<{ n: number }>)[0]!.n);
 
   const base = {
-    actorType: ActorType.SYSTEM,
     action: AuditAction.USER_CREATED,
     resourceType: AuditResourceType.USER,
     resourceId: '0190a6e2-7c1b-7d3e-9f00-1a2b3c4d5e6f',
@@ -48,7 +47,7 @@ describe('AuditService.record: catálogo e metadata (e2e)', () => {
     ],
   ])('recusa %s antes de abrir a transação, sem eco no erro nem no log', async (_caso, entry) => {
     const before = await count();
-    const error = await audit.record(entry as AuditEntry).catch((e: unknown) => e);
+    const error = await runAsSystem(() => audit.record(entry as AuditEntry)).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(AuditEntryRejected);
     expect(JSON.stringify({ m: (error as Error).message, r: (error as AuditEntryRejected).reasons })).not.toContain(
       'XQZ',
@@ -58,21 +57,25 @@ describe('AuditService.record: catálogo e metadata (e2e)', () => {
   });
 
   it('as ações já gravadas hoje continuam gravando (FR-006)', async () => {
-    await audit.record(base);
-    await audit.record({
-      ...base,
-      action: AuditAction.KEYS_REWRAPPED,
-      resourceType: AuditResourceType.KEK,
-      resourceId: 'report-kek',
-      metadata: { latestVersion: 2, batch: 1, rewrapped: 3, skipped: 0 },
-    } as AuditEntry);
-    await audit.record({
-      ...base,
-      action: AuditAction.KEYS_REWRAP_RUN,
-      resourceType: AuditResourceType.KEK,
-      resourceId: 'report-kek',
-      metadata: { latestVersion: 2, batches: 1, rewrapped: 3, skipped: 0, failed: 0 },
-    } as AuditEntry);
+    await runAsSystem(() => audit.record(base));
+    await runAsSystem(() =>
+      audit.record({
+        ...base,
+        action: AuditAction.KEYS_REWRAPPED,
+        resourceType: AuditResourceType.KEK,
+        resourceId: 'report-kek',
+        metadata: { latestVersion: 2, batch: 1, rewrapped: 3, skipped: 0 },
+      } as AuditEntry),
+    );
+    await runAsSystem(() =>
+      audit.record({
+        ...base,
+        action: AuditAction.KEYS_REWRAP_RUN,
+        resourceType: AuditResourceType.KEK,
+        resourceId: 'report-kek',
+        metadata: { latestVersion: 2, batches: 1, rewrapped: 3, skipped: 0, failed: 0 },
+      } as AuditEntry),
+    );
     const rows = (await ds.query(`SELECT action FROM audit_logs ORDER BY id DESC LIMIT 3`)) as Array<{
       action: string;
     }>;

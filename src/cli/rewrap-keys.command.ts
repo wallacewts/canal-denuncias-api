@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { KeyServiceRequestError, KeyServiceUnavailableError } from '../infra/vault/key-service.errors.js';
 import { DEFAULT_REWRAP_BATCH, RewrapService } from '../modules/crypto/rewrap.service.js';
 import { CliOutput } from './cli-output.js';
+import { runAsSystem } from '../modules/audit/audit-context.js';
 
 export interface RewrapKeysOptions {
   kek?: string;
@@ -54,8 +55,12 @@ export class RewrapKeysCommand extends CommandRunner {
     return value;
   }
 
-  /** Executa e devolve o código de saída (0 sucesso, 1 recusa ou falha). */
-  async execute(options: RewrapKeysOptions, signal?: AbortSignal): Promise<number> {
+  /** Executa com ator sistema na auditoria (D46) e devolve o código de saída (0 sucesso, 1 recusa ou falha). */
+  execute(options: RewrapKeysOptions, signal?: AbortSignal): Promise<number> {
+    return runAsSystem(() => this.executeAsSystem(options, signal));
+  }
+
+  private async executeAsSystem(options: RewrapKeysOptions, signal?: AbortSignal): Promise<number> {
     const parsed = optionsSchema.safeParse(options);
     if (!parsed.success) {
       this.output.error('Use --kek report-kek e, se quiser, --batch-size de 1 a 1000.');

@@ -24,7 +24,7 @@ Comportamentos do PostgreSQL 18 citados abaixo foram **testados** num banco temp
 - **Rationale**: o tipo impede ação fora do catálogo em tempo de compilação, e a validação em tempo de execução cobre
   chamadas montadas dinamicamente. Sem `text()`, não existe caminho para texto livre (princípio II). O teste do
   catálogo confere que cada nome cabe em `varchar(60)` e que toda ação tem schema.
-- **Erros**: `AuditMetadataRejected` com mensagem fixa e sem `cause`, com a lista de códigos de issue do zod e os
+- **Erros**: `AuditEntryRejected` com mensagem fixa e sem `cause`, com a lista de códigos de issue do zod e os
   caminhos, nunca os valores (mesmo mapeamento da feature 001; `unrecognized_keys` não lista as chaves).
 - **Alternativas**: tabela de ações no banco (rejeitada: o catálogo muda junto com o código, e uma tabela exigiria
   migration para cada ação); metadata livre com lista de chaves proibidas (rejeitada: lista negra sempre falha aberta).

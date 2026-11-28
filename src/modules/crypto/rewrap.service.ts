@@ -1,11 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, type EntityManager } from 'typeorm';
-import { ActorType } from '../../common/enums/actor-type.enum.js';
 import { AuditResult } from '../../common/enums/audit-result.enum.js';
 import { KEY_SERVICE, type KeyService } from '../../infra/vault/key-service.js';
 import { KeyServiceRequestError } from '../../infra/vault/key-service.errors.js';
 import { AuditAction, AuditResourceType } from '../audit/audit-action.enum.js';
+import { runAsSystem } from '../audit/audit-context.js';
 import { AuditService } from '../audit/audit.service.js';
 import { Report } from '../reports/entities/report.entity.js';
 
@@ -49,7 +49,12 @@ export class RewrapService {
     private readonly audit: AuditService,
   ) {}
 
-  async run(options: RewrapOptions = {}): Promise<RewrapResult> {
+  /** A recifragem é sempre uma operação do sistema: os registros de auditoria saem com ator sistema (D46). */
+  run(options: RewrapOptions = {}): Promise<RewrapResult> {
+    return runAsSystem(() => this.execute(options));
+  }
+
+  private async execute(options: RewrapOptions): Promise<RewrapResult> {
     const batchSize = options.batchSize ?? DEFAULT_REWRAP_BATCH;
     const result: RewrapResult = {
       latestVersion: 0,
@@ -84,7 +89,6 @@ export class RewrapService {
       throw error;
     } finally {
       await this.audit.record({
-        actorType: ActorType.SYSTEM,
         action: AuditAction.KEYS_REWRAP_RUN,
         resourceType: AuditResourceType.KEK,
         resourceId: KEK,
@@ -140,7 +144,6 @@ export class RewrapService {
       await options.inBatchTransaction?.(manager);
       await this.audit.record(
         {
-          actorType: ActorType.SYSTEM,
           action: AuditAction.KEYS_REWRAPPED,
           resourceType: AuditResourceType.KEK,
           resourceId: KEK,

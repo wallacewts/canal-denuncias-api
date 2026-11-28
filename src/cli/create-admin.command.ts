@@ -3,10 +3,10 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { Command, CommandRunner, Option } from 'nest-commander';
 import { DataSource } from 'typeorm';
 import { z } from 'zod';
-import { ActorType } from '../common/enums/actor-type.enum.js';
 import { AuditResult } from '../common/enums/audit-result.enum.js';
 import { Role } from '../common/enums/role.enum.js';
 import { AuditAction, AuditResourceType } from '../modules/audit/audit-action.enum.js';
+import { runAsSystem } from '../modules/audit/audit-context.js';
 import { AuditService } from '../modules/audit/audit.service.js';
 import { checkPasswordPolicy } from '../modules/auth/password/password-policy.js';
 import { EmailAlreadyRegisteredError, UsersRepository } from '../modules/users/users.repository.js';
@@ -64,8 +64,12 @@ export class CreateAdminCommand extends CommandRunner {
     return true;
   }
 
-  /** Executa o comando e devolve o código de saída (0 sucesso, 1 recusa). */
-  async execute(options: CreateAdminOptions): Promise<number> {
+  /** Executa o comando com ator sistema na auditoria (D46) e devolve o código de saída (0 sucesso, 1 recusa). */
+  execute(options: CreateAdminOptions): Promise<number> {
+    return runAsSystem(() => this.executeAsSystem(options));
+  }
+
+  private async executeAsSystem(options: CreateAdminOptions): Promise<number> {
     const parsed = optionsSchema.safeParse(options);
     if (!parsed.success) {
       this.output.error('Informe um nome (até 120 caracteres) e um e-mail válido.');
@@ -87,7 +91,6 @@ export class CreateAdminCommand extends CommandRunner {
         const user = await this.users.createWithRoles({ name, email, passwordHash, roles: [Role.ADMIN] }, manager);
         await this.audit.record(
           {
-            actorType: ActorType.SYSTEM,
             action: AuditAction.USER_CREATED,
             resourceType: AuditResourceType.USER,
             resourceId: user.id,

@@ -3,7 +3,8 @@ import { ActorType } from '../../src/common/enums/actor-type.enum.js';
 import { AuditResult } from '../../src/common/enums/audit-result.enum.js';
 import { AuditAction, AuditResourceType } from '../../src/modules/audit/audit-action.enum.js';
 import { computeAuditHash, GENESIS_HASH } from '../../src/modules/audit/audit-hash.js';
-import { AuditService } from '../../src/modules/audit/audit.service.js';
+import { AuditContext, runAsSystem } from '../../src/modules/audit/audit-context.js';
+import { AuditService, type AuditEntry } from '../../src/modules/audit/audit.service.js';
 import type { AuditLog } from '../../src/modules/audit/entities/audit-log.entity.js';
 import { createTestApp, type TestApp } from '../support/test-app.js';
 
@@ -23,8 +24,7 @@ describe('AuditService.record (e2e)', () => {
   });
 
   /** Uma ação do catálogo; o marcador vai no id do recurso. A metadata aninhada exercita a forma canônica. */
-  const entry = (tag: string) => ({
-    actorType: ActorType.SYSTEM,
+  const entry = (tag: string): AuditEntry => ({
     action: AuditAction.AUDIT_LOG_VIEWED,
     resourceType: AuditResourceType.AUDIT_LOG,
     resourceId: tag,
@@ -62,14 +62,14 @@ describe('AuditService.record (e2e)', () => {
   }
 
   it('o primeiro registro usa a gênese (32 bytes zerados) e o hash confere com o que foi salvo', async () => {
-    await audit.record(entry('PRIMEIRO'));
+    await runAsSystem(() => audit.record(entry('PRIMEIRO')));
     const [first] = await chain();
     expect(first!.prevHash.equals(Buffer.alloc(32))).toBe(true);
     assertValidChain(await chain());
   });
 
   it('50 gravações concorrentes formam uma cadeia única, sem bifurcação', async () => {
-    await Promise.all(Array.from({ length: 50 }, (_, i) => audit.record(entry(`CONCORRENTE_${i}`))));
+    await Promise.all(Array.from({ length: 50 }, (_, i) => runAsSystem(() => audit.record(entry(`CONCORRENTE_${i}`)))));
     const rows = await chain();
     expect(rows.length).toBeGreaterThanOrEqual(51);
     expect(new Set(rows.map((r) => r.prevHash.toString('hex'))).size).toBe(rows.length);
@@ -80,20 +80,16 @@ describe('AuditService.record (e2e)', () => {
     const before = (await chain()).length;
     await ds
       .transaction(async (manager) => {
-        await audit.record(entry('DESFEITO'), manager);
+        await runAsSystem(() => audit.record(entry('DESFEITO'), manager));
         throw new Error('rollback');
       })
       .catch(() => undefined);
     expect((await chain()).length).toBe(before);
   });
 
-  it('ator que não é STAFF nunca grava IP nem user-agent', async () => {
-    const saved = await audit.record({
-      ...entry('SEM_IP'),
-      actorType: ActorType.REPORTER,
-      ip: '203.0.113.9',
-      userAgent: 'X',
-    });
+  it('ator que não é STAFF nunca grava usuário, IP nem user-agent, mesmo que o contexto traga', async () => {
+    const reporter = { actorType: ActorType.REPORTER, actorUserId: 'u', ip: '203.0.113.9', userAgent: 'X' };
+    const saved = await AuditContext.run(reporter, () => audit.record(entry('SEM_IP')));
     const [row] = await ds.query(`SELECT ip, user_agent FROM audit_logs WHERE id = $1`, [saved.id]);
     expect(row).toEqual({ ip: null, user_agent: null });
   });
@@ -101,6 +97,7 @@ describe('AuditService.record (e2e)', () => {
   it('a metadata canônica não depende da ordem das chaves', () => {
     const base = {
       ...entry('X'),
+      actorType: ActorType.SYSTEM,
       occurredAt: new Date('2026-11-27T12:00:00.000Z'),
       actorUserId: null,
       resourceId: null,

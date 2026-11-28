@@ -118,7 +118,7 @@ campo extra ou texto livre (recusadas, sem o valor na mensagem nem no log).
       `src/modules/audit/audit-metadata.schemas.ts`, com os tipos restritos de `contracts/audit-catalog.md` (sem
       `text()` nem `z.string()` livre)
 - [x] T017 [US1] Fazer `AuditService.record()` exigir `AuditAction`/`AuditResourceType` e validar a metadata antes da
-      transação, com o erro `AuditMetadataRejected` de mensagem fixa e sem `cause`, em
+      transação, com o erro `AuditEntryRejected` de mensagem fixa e sem `cause`, em
       `src/modules/audit/audit.service.ts` e `src/modules/audit/audit.errors.ts`
 - [x] T018 [US1] Ajustar os chamadores atuais ao catálogo tipado: `src/cli/create-admin.command.ts`,
       `src/modules/crypto/rewrap.service.ts` e `test/support/factories.ts`
@@ -136,9 +136,9 @@ grava equipe com IP real; comando grava sistema; fora de contexto, recusa.
 
 ### Tests for User Story 2 (mandatory for security and privacy rules) ⚠️
 
-- [ ] T019 [P] [US2] Teste unitário em `src/modules/audit/audit-context.spec.ts`: `runAsSystem` define ator sistema,
+- [x] T019 [P] [US2] Teste unitário em `src/modules/audit/audit-context.spec.ts`: `runAsSystem` define ator sistema,
       `current()` é `null` fora de contexto, o contexto sobrevive a `await` e não vaza entre execuções paralelas
-- [ ] T020 [US2] Teste de integração em `test/audit/audit-context.e2e-spec.ts`: rota pública de fixture com
+- [x] T020 [US2] Teste de integração em `test/audit/audit-context.e2e-spec.ts`: rota pública de fixture com
       `X-Forwarded-For` e `User-Agent` grava `REPORTER` sem usuário, IP e user-agent; rota admin com identidade de teste
       grava `STAFF` com o id, o IP real (trust proxy) e user-agent de 300 caracteres truncado em 255; o comando
       `create-admin` grava `SYSTEM` sem IP; `record()` fora de contexto lança `AuditActorUndetermined` sem gravar nada;
@@ -146,14 +146,14 @@ grava equipe com IP real; comando grava sistema; fora de contexto, recusa.
 
 ### Implementation for User Story 2
 
-- [ ] T021 [P] [US2] Criar `AuditContext` sobre `AsyncLocalStorage`, `runAsSystem` e `AuditActorUndetermined` em
+- [x] T021 [P] [US2] Criar `AuditContext` sobre `AsyncLocalStorage`, `runAsSystem` e `AuditActorUndetermined` em
       `src/modules/audit/audit-context.ts`
-- [ ] T022 [US2] Criar o interceptor global `AuditContextInterceptor` (área `public` → `REPORTER` sem ler cabeçalhos;
+- [x] T022 [US2] Criar o interceptor global `AuditContextInterceptor` (área `public` → `REPORTER` sem ler cabeçalhos;
       área `admin` → `STAFF` com usuário da porta `AUTH_IDENTITY`, `request.ip` e user-agent truncado) em
       `src/modules/audit/audit-context.interceptor.ts`, registrado em `src/app.module.ts`
-- [ ] T023 [US2] Tirar `actorType`, `actorUserId`, `ip` e `userAgent` da `AuditEntry` e fazer `record()` usar o
+- [x] T023 [US2] Tirar `actorType`, `actorUserId`, `ip` e `userAgent` da `AuditEntry` e fazer `record()` usar o
       contexto em `src/modules/audit/audit.service.ts`
-- [ ] T024 [US2] Envolver em `runAsSystem` os chamadores fora de requisição: `src/cli/create-admin.command.ts`,
+- [x] T024 [US2] Envolver em `runAsSystem` os chamadores fora de requisição: `src/cli/create-admin.command.ts`,
       `src/cli/rewrap-keys.command.ts` (e o `RewrapService` chamado por ele). Ainda não existe processador de fila:
       criar o helper `src/infra/queue/system-job.ts` (roda o handler de um job dentro de `runAsSystem`), com teste
       unitário em `src/infra/queue/system-job.spec.ts`, para todo processador futuro usar

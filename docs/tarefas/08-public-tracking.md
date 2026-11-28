@@ -44,12 +44,21 @@ porta de entrada para mensagens e anexos.
 
 **Critérios de aceite**
 
-- [ ] Status traduzido para rótulos públicos: `RECEIVED` → Recebida; `IN_TRIAGE` e `UNDER_INVESTIGATION` → Em
-      análise; `AWAITING_REPORTER` → Aguardando sua resposta (com prazo); `INVALID` → Encerrada; `CONCLUDED` e `ARCHIVED` →
-      Concluída, com o desfecho.
+- [ ] A resposta devolve o status público em **código**, mapeado a partir do status interno: `RECEIVED` → `RECEIVED`;
+      `IN_TRIAGE` e `UNDER_INVESTIGATION` → `IN_REVIEW`; `AWAITING_REPORTER` → `AWAITING_REPORTER` (com o prazo de
+      resposta, só a data); `INVALID` → `CLOSED`; `CONCLUDED` e `ARCHIVED` → `CONCLUDED`. Os rótulos em português
+      ("Recebida", "Em análise", "Aguardando sua resposta", "Encerrada", "Concluída") ficam no front, que não recebe
+      nem copia o status interno (proposta do plano da feature 003 do front, aprovada em 2026-11-28).
+- [ ] O desfecho vem em código, com os valores do enum de outcome (`SUBSTANTIATED`, `PARTIALLY_SUBSTANTIATED`,
+      `UNSUBSTANTIATED`), só quando o status público for `CONCLUDED`; nos demais, `null`.
+- [ ] Campo booleano `canReply`: `true` quando o denunciante ainda pode enviar mensagem pela regra do MSG-01 (denúncia
+      não encerrada); `false` para `CLOSED` e `CONCLUDED`. O front usa só esse campo para mostrar ou esconder a
+      resposta, sem repetir a regra.
+- [ ] Teste: cada status interno gera o código público esperado e o `canReply` coerente com o MSG-01; o status
+      interno nunca aparece na resposta pública.
 - [ ] Linha do tempo só com datas (sem hora), sem justificativas internas e sem nome de quem tratou.
-- [ ] O denunciante vê o desfecho: Procedente, Parcialmente procedente ou Improcedente (decidido em 27/11/2026). As
-      justificativas internas continuam sem aparecer.
+- [ ] O denunciante vê o desfecho (decidido em 27/11/2026); os rótulos Procedente, Parcialmente procedente e
+      Improcedente ficam no front. As justificativas internas continuam sem aparecer.
 - [ ] Mostra a categoria e a data de recebimento. O relato original não é devolvido (minimização).
 
 ### PUB-04 · Encerrar o acesso
